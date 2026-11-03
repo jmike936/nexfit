@@ -173,7 +173,7 @@ create policy programs_read on public.training_programs for select using(public.
 drop policy if exists programs_insert on public.training_programs;
 create policy programs_insert on public.training_programs for insert with check(
  athlete_id=auth.uid() or (created_by=auth.uid() and exists(select 1 from athlete_professional_access a
- where a.athlete_id=athlete_id and a.professional_id=auth.uid() and a.status='active' and a.can_manage_programs))
+ where a.athlete_id=training_programs.athlete_id and a.professional_id=auth.uid() and a.status='active' and a.can_manage_programs))
 );
 drop policy if exists programs_update on public.training_programs;
 create policy programs_update on public.training_programs for update using(public.nexfit_can_manage_program(id)) with check(public.nexfit_can_manage_program(id));
@@ -212,3 +212,42 @@ create policy notifications_self on public.app_notifications for all using(user_
 drop policy if exists audit_read on public.training_audit_events;
 create policy audit_read on public.training_audit_events for select using(athlete_id=auth.uid() or actor_id=auth.uid());
 grant execute on function public.nexfit_confirm_program_version(uuid) to authenticated;
+
+-- Solicitação de vínculo por e-mail: cria apenas pedido pendente; o atleta decide.
+create or replace function public.nexfit_request_access_by_email(p_email text)
+returns uuid language plpgsql security definer set search_path=public as $$
+declare v_athlete uuid; v_access uuid;
+begin
+ if auth.uid() is null then raise exception 'Autenticação necessária.'; end if;
+ select id into v_athlete from auth.users where lower(email)=lower(trim(p_email)) limit 1;
+ if v_athlete is null then raise exception 'Não foi possível localizar uma conta com esse e-mail.'; end if;
+ if v_athlete=auth.uid() then raise exception 'Use outra conta para solicitar acesso.'; end if;
+ insert into public.athlete_professional_access(athlete_id,professional_id,status)
+ values(v_athlete,auth.uid(),'pending')
+ on conflict(athlete_id,professional_id) do update set status='pending',requested_at=now(),decided_at=null
+ returning id into v_access;
+ insert into public.app_notifications(user_id,type,title,body)
+ values(v_athlete,'professional_access_request','Pedido de acesso profissional','Um profissional solicitou acesso. Revise as permissões antes de aprovar.');
+ return v_access;
+end $$;
+create or replace function public.nexfit_create_program_for_athlete(p_email text,p_title text,p_description text default null)
+returns uuid language plpgsql security definer set search_path=public as $$
+declare v_athlete uuid; v_program uuid; v_version uuid;
+begin
+ if auth.uid() is null then raise exception 'Autenticação necessária.'; end if;
+ select id into v_athlete from auth.users where lower(email)=lower(trim(p_email)) limit 1;
+ if v_athlete is null then raise exception 'Atleta não encontrado.'; end if;
+ if not exists(select 1 from public.athlete_professional_access a where a.athlete_id=v_athlete and a.professional_id=auth.uid() and a.status='active' and a.can_manage_programs) then
+  raise exception 'O atleta ainda não autorizou a gestão de programas.';
+ end if;
+ insert into public.training_programs(athlete_id,created_by,title,description,status)
+ values(v_athlete,auth.uid(),p_title,p_description,'pending') returning id into v_program;
+ insert into public.training_program_versions(program_id,version_number,created_by,change_note)
+ values(v_program,1,auth.uid(),'Versão inicial') returning id into v_version;
+ update public.training_programs set current_version_id=v_version where id=v_program;
+ insert into public.app_notifications(user_id,type,title,body,entity_id)
+ values(v_athlete,'program_received','Novo programa recebido','Um profissional enviou um programa para sua análise.',v_program);
+ return v_program;
+end $$;
+grant execute on function public.nexfit_request_access_by_email(text) to authenticated;
+grant execute on function public.nexfit_create_program_for_athlete(text,text,text) to authenticated;
