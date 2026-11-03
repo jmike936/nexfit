@@ -59,7 +59,14 @@
   if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');home();
  }
  async function decideAccess(id,approve){
-  const db=dbRef(),u=userRef();const {error}=await db.from('athlete_professional_access').update({status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',u.id);
+  const db=dbRef(),u=userRef();
+  let permissions={can_view_history:false,can_manage_programs:false};
+  if(approve){
+   permissions.can_view_history=confirm('Permitir que este profissional visualize seu histórico de treinos?');
+   permissions.can_manage_programs=confirm('Permitir que este profissional crie e gerencie os programas que ele próprio criar para você?');
+   if(!permissions.can_view_history&&!permissions.can_manage_programs&&!confirm('Nenhuma permissão foi concedida. Deseja aprovar mesmo assim?'))return;
+  }
+  const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',u.id);
   if(error)return alert(error.message);home();
  }
  async function openProgram(id){
@@ -79,8 +86,23 @@
  async function newVersion(){
   const db=dbRef(),q=await db.from('training_program_versions').select('version_number').eq('program_id',current.id).order('version_number',{ascending:false}).limit(1);
   if(q.error)return alert(q.error.message);const next=(q.data?.[0]?.version_number||0)+1;
+  const previous=version;
   const {data,error}=await db.from('training_program_versions').insert({program_id:current.id,version_number:next,created_by:userRef().id,change_note:prompt('Resumo das alterações desta versão:')||'Atualização do programa'}).select().single();
-  if(error)return alert(error.message);await db.from('app_notifications').insert({user_id:current.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:current.id});version=data;openProgram(current.id);
+  if(error)return alert(error.message);
+  const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
+  if(oldSubs.error)return alert('A versão foi criada, mas não foi possível copiar os subtreinos: '+oldSubs.error.message);
+  for(const oldSub of (oldSubs.data||[])){
+   const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
+   if(subErr)return alert('A versão foi criada, mas houve erro ao copiar um subtreino: '+subErr.message);
+   const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
+   if(oldExercises.error)return alert(oldExercises.error.message);
+   if(oldExercises.data?.length){
+    const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
+    const {error:exErr}=await db.from('training_exercises').insert(copied);
+    if(exErr)return alert('A versão foi criada, mas houve erro ao copiar exercícios: '+exErr.message);
+   }
+  }
+  await db.from('app_notifications').insert({user_id:current.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:current.id});version=data;openProgram(current.id);
  }
  async function addSubworkout(){
   const title=prompt('Nome do subtreino (ex.: A — Peito e tríceps):');if(!title?.trim())return;
@@ -113,8 +135,50 @@
   alert('Pedido enviado ao atleta para aprovação.');
  }
  async function startSession(subId){
-  const {data,error}=await dbRef().from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
-  if(error)return alert(error.message);session=data;alert('Sessão iniciada. Registre as séries nos exercícios do subtreino; o histórico ficará vinculado a esta versão.');
+  const db=dbRef();
+  const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
+  if(error)return alert(error.message);session=data;
+  const sub=subworkouts.find(s=>s.id===subId);
+  const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
+  if(ex.error)return alert(ex.error.message);
+  shell('Sessão em andamento',`<div class="panel"><h3>${esc(current.title)} · ${esc(sub?.title||'Treino')}</h3><p class="muted">Registre as repetições e cargas realizadas em cada série. A sessão ficará vinculada à versão do programa.</p><div id="sessionExercises"></div><button class="btn" id="finishSession">Finalizar treino</button><button class="btn alt" id="cancelSession">Voltar ao programa</button></div>`);
+  $('sessionExercises').innerHTML=(ex.data||[]).map(e=>`<div class="item"><strong>${esc(e.name)}</strong><div class="muted">Planejado: ${(e.sets||[]).length} séries · descanso ${e.rest_seconds||0}s</div>${(e.sets||[]).map((set,i)=>`<div class="rowf"><div><label>Série ${i+1} · repetições</label><input type="number" min="0" id="reps-${e.id}-${i+1}" value="${Number(set.reps)||''}" placeholder="Reps realizadas"></div><div><label>Carga (kg)</label><input type="number" min="0" step="0.25" id="load-${e.id}-${i+1}" value="${set.load_kg??''}" placeholder="Carga"></div></div>`).join('')}</div>`).join('')||'<p class="muted">Nenhum exercício cadastrado neste subtreino.</p>';
+  $('finishSession').onclick=()=>finishSession(ex.data||[]);
+  $('cancelSession').onclick=()=>openProgram(current.id);
  }
+ async function finishSession(exercises){
+  const db=dbRef();const rows=[];
+  for(const e of exercises)for(let i=0;i<(e.sets||[]).length;i++){
+   const n=i+1,reps=$('reps-'+e.id+'-'+n)?.value,load=$('load-'+e.id+'-'+n)?.value;
+   if(reps!==''||load!=='')rows.push({session_id:session.id,exercise_id:e.id,set_number:n,reps_completed:reps===''?null:Number(reps),load_kg:load===''?null:Number(load)});
+  }
+  if(rows.length){const {error}=await db.from('training_set_logs').insert(rows);if(error)return alert('Não foi possível salvar as séries: '+error.message)}
+  const {error}=await db.from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
+  if(error)return alert(error.message);
+  const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
+  const sub=subworkouts.find(s=>s.id===session.subworkout_id);
+  const {error:activityError}=await db.from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:new Date().toISOString().slice(0,10),duration_minutes:minutes,distance_km:null,notes:current.title+' · '+(sub?.title||'Treino')});
+  if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
+  else alert('Treino finalizado e registrado no seu histórico!');
+  session=null;home();
+ }
+ window.beginStrengthActivity=async function(){
+  const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
+  const q=await db.from('training_programs').select('*').eq('athlete_id',u.id).eq('status','active').order('updated_at',{ascending:false});
+  if(q.error)return alert(q.error.message);
+  if(!q.data?.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou receber um programa.');
+  const choices=q.data.map((p,i)=>(i+1)+'. '+p.title).join('\\n');
+  const chosen=Number(prompt('Qual programa deseja iniciar?\\n'+choices,'1'));
+  const program=q.data[chosen-1];if(!program)return;
+  const vq=await db.from('training_program_versions').select('*').eq('id',program.current_version_id).maybeSingle();
+  if(vq.error||!vq.data)return alert('Não foi possível localizar a versão vigente deste programa.');
+  const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
+  if(sq.error)return alert(sq.error.message);
+  if(!sq.data?.length)return alert('Este programa ainda não possui subtreinos. Adicione A, B, C… na aba Musculação.');
+  const subChoice=Number(prompt('Qual treino deseja iniciar?\\n'+sq.data.map((s,i)=>(i+1)+'. '+s.title).join('\\n'),'1'));
+  const sub=sq.data[subChoice-1];if(!sub)return;
+  current=program;version=vq.data;subworkouts=sq.data;go();
+  await startSession(sub.id);
+ };
  home();
 })();
