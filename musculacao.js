@@ -57,14 +57,41 @@ const name=$('exName').value.trim(),rest=Number($('exRest').value||60),pres=$('e
 }
 function renderExercises(){const root=$('exerciseList');root.innerHTML=exerciseList.length?exerciseList.map((e,i)=>`<div class="exercise"><strong>${i+1}. ${safe(e.name)}</strong><div class="muted">${safe(e.prescription)} · descanso ${e.rest_seconds}s</div></div>`).join(''):'<p class="muted">Adicione o primeiro exercício para montar a ficha.</p>'}
 async function importCsv(){
-const file=$('csvFile').files[0];if(!file)return alert('Selecione um CSV.');const text=await file.text();const lines=text.split(/\r?\n/).filter(x=>x.trim());const rows=lines.map(line=>line.split(';').map(x=>x.trim()));const head=rows[0].map(x=>x.toLowerCase());const hasHeader=head.some(x=>x.includes('aluno'));const data=hasHeader?rows.slice(1):rows;const status=$('importStatus');let created=0,errors=[];
-for(let i=0;i<data.length;i++){const r=data[i];if(r.length<5){errors.push('Linha '+(i+1)+': são necessárias pelo menos 5 colunas.');continue}const [athlete,name,exercise,rest,pres,loads='']=r;if(!athlete||!name||!exercise||!pres){errors.push('Linha '+(i+1)+': campos obrigatórios ausentes.');continue}
-let plan=plans.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.athlete_name.toLowerCase()===athlete.toLowerCase());
-if(!plan){const q=await db.from('workout_plans').insert({owner_id:currentUser.id,athlete_name:athlete,name}).select().single();if(q.error){errors.push('Linha '+(i+1)+': '+q.error.message);continue}plan=q.data;plans.push(plan)}
-const sets=parsePrescription(pres,loads);const q=await db.from('workout_exercises').insert({plan_id:plan.id,position:(await db.from('workout_exercises').select('id',{count:'exact',head:true}).eq('plan_id',plan.id))((await db.from('workout_exercises').select('id',{count:'exact',head:true}).eq('plan_id',plan.id)).count||0)+1,name,rest_seconds:Number(rest)||60,prescription:pres,prescribed_sets:sets});
-if(q.error)errors.push('Linha '+(i+1)+': '+q.error.message);else created++;
+const file=$('csvFile').files[0];if(!file)return alert('Selecione um CSV.');
+const content=await file.text();
+const lines=content.split(/\r?\n/).filter(x=>x.trim());
+if(!lines.length)return alert('O arquivo CSV está vazio.');
+const rows=lines.map(line=>line.split(';').map(x=>x.trim()));
+const head=rows[0].map(x=>x.toLowerCase());
+const hasHeader=head.some(x=>x.includes('aluno'));
+const data=hasHeader?rows.slice(1):rows;
+const status=$('importStatus');let created=0,errors=[];
+const positions=new Map();
+for(let i=0;i<data.length;i++){
+ const r=data[i];
+ if(r.length<5){errors.push('Linha '+(i+(hasHeader?2:1))+': são necessárias pelo menos 5 colunas.');continue}
+ const [athlete,name,exercise,rest,pres,loads='']=r;
+ if(!athlete||!name||!exercise||!pres){errors.push('Linha '+(i+(hasHeader?2:1))+': campos obrigatórios ausentes.');continue}
+ let plan=plans.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.athlete_name.toLowerCase()===athlete.toLowerCase());
+ if(!plan){
+  const q=await db.from('workout_plans').insert({owner_id:currentUser.id,athlete_name:athlete,name}).select().single();
+  if(q.error){errors.push('Linha '+(i+(hasHeader?2:1))+': '+q.error.message);continue}
+  plan=q.data;plans.push(plan);
+ }
+ let position=positions.get(plan.id);
+ if(position===undefined){
+  const q=await db.from('workout_exercises').select('position').eq('plan_id',plan.id).order('position',{ascending:false}).limit(1);
+  if(q.error){errors.push('Linha '+(i+(hasHeader?2:1))+': '+q.error.message);continue}
+  position=q.data?.[0]?.position||0;
+ }
+ position++;
+ const sets=parsePrescription(pres,loads);
+ const q=await db.from('workout_exercises').insert({plan_id:plan.id,position,name,rest_seconds:Number(rest)||60,prescription:pres,prescribed_sets:sets});
+ if(q.error)errors.push('Linha '+(i+(hasHeader?2:1))+': '+q.error.message);
+ else{created++;positions.set(plan.id,position);}
 }
-status.textContent=created+' exercício(s) importado(s). '+(errors.length?errors.join(' '):'Sem erros.');await loadPlans();
+status.textContent=created+' exercício(s) importado(s). '+(errors.length?errors.join(' '):'Sem erros.');
+await loadPlans();
 }
 async function startWorkout(){
 if(!exerciseList.length)return;const {data,error}=await db.from('workout_sessions').insert({plan_id:activePlan.id,user_id:currentUser.id}).select().single();if(error)return alert(error.message);sessionId=data.id;step=0;seriesIndex=0;showRunner()
