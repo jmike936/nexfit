@@ -59,7 +59,7 @@
   }
   row.push(v);if(row.some(x=>x.trim()))out.push(row);return out;
  }
- const normHeader=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
+ const normHeader=s=>String(s||'').replace(/^\\uFEFF/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
  function parseRestSeconds(raw){
   const value=String(raw??'').trim().toLowerCase();if(!value)return 0;
   const clock=value.match(/^(\d+):([0-5]?\d)$/);if(clock)return Number(clock[1])*60+Number(clock[2]);
@@ -271,7 +271,8 @@
   const name=prompt('Nome do exercício:');if(!name?.trim())return;
   const raw=prompt('Séries e repetições (ex.: 12,10,8):','12,10,8')||'12,10,8';
   const rest=parseRestSeconds(prompt('Descanso em segundos ou minutos (ex.: 60 ou 1 min):','90')||'90');
-  const sets=raw.split(',').map(x=>({reps:Number(x.trim()),load_kg:null})).filter(x=>Number.isFinite(x.reps)&&x.reps>0);
+  let reps;try{reps=parseRepScheme(raw)}catch(err){return alert(err.message)}
+  const sets=reps.map(value=>({reps:value,load_kg:null}));
   if(!sets.length)return alert('Informe repetições válidas.');
   const {data,error}=await dbRef().from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
   if(error)return alert(error.message);
