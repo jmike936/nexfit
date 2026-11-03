@@ -59,7 +59,7 @@
   }
   row.push(v);if(row.some(x=>x.trim()))out.push(row);return out;
  }
- const normHeader=s=>String(s||'').replace(/^\\uFEFF/,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
+ const normHeader=s=>String(s||'').replace(String.fromCharCode(65279),'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
  function parseRestSeconds(raw){
   const value=String(raw??'').trim().toLowerCase();if(!value)return 0;
   const clock=value.match(/^(\d+):([0-5]?\d)$/);if(clock)return Number(clock[1])*60+Number(clock[2]);
