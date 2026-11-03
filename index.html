@@ -34,10 +34,10 @@ function fmtDate(s){return new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{d
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function showError(msg){$('authError').textContent=msg||''}
 function showFeedback(title,message){$('feedbackTitle').textContent=title;$('feedbackMessage').textContent=message;$('feedbackModal').classList.add('show')}
-function closeFeedback(){$('feedbackModal').classList.remove('show')}
+function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 async function init(){
  const callbackQuery=new URLSearchParams(location.search),callbackHash=new URLSearchParams(location.hash.replace(/^#/,' '));
- const returnedFromEmail=callbackQuery.has('code')||callbackHash.has('access_token')||callbackHash.get('type')==='signup';
+ const returnedFromEmail=callbackQuery.has('code')||callbackQuery.get('type')==='signup'||callbackHash.has('access_token')||callbackHash.get('type')==='signup';
  if(!configured){showError('O ambiente ainda precisa ser conectado ao Supabase para habilitar o login.');$('authSubmit').disabled=true;return}
  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
  const {data:{session}}=await db.auth.getSession();
