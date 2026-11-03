@@ -28,7 +28,7 @@ returns void
 language plpgsql
 security definer
 set search_path = public
-as $
+as $activate$
 declare v_owner uuid;
 begin
   if auth.uid() is null then
@@ -48,7 +48,7 @@ begin
     set is_active = true, start_date = current_date, updated_at = now()
     where id = p_plan_id and owner_id = auth.uid();
 end;
-$;
+$activate$;
 
 revoke all on function public.activate_workout_plan(uuid) from public;
 grant execute on function public.activate_workout_plan(uuid) to authenticated;
