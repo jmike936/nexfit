@@ -324,11 +324,11 @@
   const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
   const q=await db.from('training_programs').select('*').eq('athlete_id',u.id).eq('status','active').order('updated_at',{ascending:false});
   if(q.error)return alert(q.error.message);
-  const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\\[MODALIDADE:\\s*([^\\]]+)\\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
+  const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
   if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou importar seu programa.');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));
   const showPrograms=()=>{
-   shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(p.title)+'</strong><p class="muted">'+esc((p.description||'').replace(/\\[MODALIDADE:[^\\]]+\\]\\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
+   shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(p.title)+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
    section.querySelectorAll('[data-select-program]').forEach(button=>button.onclick=()=>chooseProgram(button.dataset.selectProgram));
   };
   const chooseProgram=async id=>{
