@@ -13,6 +13,46 @@ create table if not exists public.workout_plans (
   updated_at timestamptz not null default now()
 );
 
+-- Controle de vigência: o histórico das fichas é preservado.
+alter table public.workout_plans
+  add column if not exists is_active boolean not null default false;
+alter table public.workout_plans
+  add column if not exists start_date date;
+
+create unique index if not exists workout_plans_one_active_per_owner
+  on public.workout_plans(owner_id) where is_active = true;
+
+-- Ativa uma ficha e desativa a anterior do mesmo proprietário em uma única transação.
+create or replace function public.activate_workout_plan(p_plan_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $
+declare v_owner uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'É necessário estar autenticado.';
+  end if;
+  select owner_id into v_owner
+  from public.workout_plans
+  where id = p_plan_id
+  for update;
+  if v_owner is null or v_owner <> auth.uid() then
+    raise exception 'Somente o proprietário pode ativar esta ficha.';
+  end if;
+  update public.workout_plans
+    set is_active = false
+    where owner_id = auth.uid() and is_active = true;
+  update public.workout_plans
+    set is_active = true, start_date = current_date, updated_at = now()
+    where id = p_plan_id and owner_id = auth.uid();
+end;
+$;
+
+revoke all on function public.activate_workout_plan(uuid) from public;
+grant execute on function public.activate_workout_plan(uuid) to authenticated;
+
 create table if not exists public.exercise_library (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid references auth.users(id) on delete cascade,
