@@ -13,7 +13,7 @@
  @media(max-width:600px){#strengthPage .rowf{grid-template-columns:1fr}}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
- const nav=document.querySelector('.nav');if(!nav||!window.db&&!window.currentUser)return;
+ const nav=document.querySelector('.nav');if(!nav)return;
  const tab=document.createElement('button');tab.dataset.page='strengthPage';tab.textContent='Musculação';nav.append(tab);
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
