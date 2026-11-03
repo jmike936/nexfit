@@ -53,49 +53,114 @@
  const normHeader=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
  async function readStrengthFile(file){
   importedExercises=[];$('strengthImport').disabled=true;
+  const preview=$('strengthPreview');
+  if(!file){preview.textContent='Selecione um arquivo Excel ou CSV.';return}
+  preview.textContent='Lendo arquivo e identificando os exercícios…';
   try{
-   if(!file) return;
    let matrix;
    if(file.name.toLowerCase().endsWith('.csv'))matrix=csvRows(await file.text());
    else{
-    if(!window.XLSX)await new Promise((ok,no)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';script.onload=ok;script.onerror=()=>no(Error('Não foi possível carregar o leitor Excel.'));document.head.append(script)});
-    const book=window.XLSX.read(await file.arrayBuffer(),{type:'array'});matrix=window.XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});
+    if(!window.XLSX){
+     preview.textContent='Carregando leitor de Excel…';
+     await new Promise((ok,no)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';script.onload=ok;script.onerror=()=>no(Error('Não foi possível carregar o leitor Excel. Verifique sua conexão e tente novamente.'));document.head.append(script)});
+    }
+    const book=window.XLSX.read(await file.arrayBuffer(),{type:'array'});
+    matrix=window.XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});
    }
-   const h=matrix[0].map(normHeader),find=names=>h.findIndex(x=>names.includes(x));
-   const ix={sub:find(['treino','subtreino','divisao']),exercise:find(['exercicio','nome_exercicio']),set:find(['serie','set']),reps:find(['repeticoes','reps','repeticao']),load:find(['carga','carga_kg','peso']),rest:find(['descanso','intervalo','int_recup'])};
-   if(ix.exercise<0||ix.reps<0||ix.load<0)throw Error('Cabeçalhos obrigatórios: Exercício, Repetições e Carga. Inclua Série para identificar cada linha.');
-   const get=(r,k)=>ix[k]<0?'':String(r[ix[k]]??'').trim(),groups=new Map();
-   for(const r of matrix.slice(1)){
-    const name=get(r,'exercise');if(!name)continue;
+   if(!matrix?.length)throw Error('A planilha está vazia ou não contém dados na primeira aba.');
+   const h=(matrix[0]||[]).map(normHeader);
+   const find=names=>h.findIndex(x=>names.includes(x));
+   const headerMap={sub:find(['treino','subtreino','divisao']),exercise:find(['exercicio','nome_exercicio']),set:find(['serie','set']),reps:find(['repeticoes','reps','repeticao','prescricao']),load:find(['carga','carga_kg','peso']),rest:find(['descanso','intervalo','int_recup'])};
+   const hasHeaders=headerMap.exercise>=0;
+   let ix,rows;
+   if(hasHeaders){
+    ix=headerMap;rows=matrix.slice(1);
+    if(ix.reps<0)throw Error('Não encontrei a coluna Repetições. Confira os cabeçalhos da planilha.');
+   }else{
+    // Formato simples sem cabeçalho: Treino | Exercício | Descanso (segundos) | Séries/repetições
+    if((matrix[0]||[]).length<4)throw Error('Não reconheci os cabeçalhos. Use Treino, Exercício, Descanso e Repetições, ou o modelo de quatro colunas sem cabeçalho.');
+    ix={sub:0,exercise:1,rest:2,reps:3,set:-1,load:-1};rows=matrix;
+   }
+   const get=(r,k)=>ix[k]<0?'':String(r?.[ix[k]]??'').trim();
+   const groups=new Map();let validRows=0;
+   for(let ri=0;ri<rows.length;ri++){
+    const r=rows[ri],name=get(r,'exercise');if(!name)continue;
     const sub=get(r,'sub')||'Treino A',key=sub+'||'+name;
-    if(!groups.has(key))groups.set(key,{sub,name,sets:[],rest_seconds:Math.max(0,Number(get(r,'rest').replace(',','.'))||0)});
-    const reps=Number(get(r,'reps').replace(',','.')),load=Number(get(r,'load').replace(/[a-zA-Z ]/g,'').replace(',','.'));
-    if(!Number.isFinite(reps)||reps<=0)throw Error('Repetições inválidas em '+name);
-    const setNo=Number(get(r,'set'))||groups.get(key).sets.length+1;
-    groups.get(key).sets.push({set_number:setNo,reps,load_kg:Number.isFinite(load)?load:null});
+    const restRaw=get(r,'rest').replace(',','.');
+    const restSeconds=Math.max(0,Number(restRaw.replace(/[^\d.-]/g,''))||0);
+    const prescription=get(r,'reps').trim().toUpperCase();
+    if(!prescription)throw Error('Repetições não informadas para "'+name+'" (linha '+(ri+(hasHeaders?2:1))+').');
+    let repsList=[];
+    const multi=prescription.match(/^(\d+)\s*X\s*(MR|AMRAP|\d+(?:[.,]\d+)?)$/i);
+    if(multi){
+     const count=Number(multi[1]),rep=multi[2]==='MR'||multi[2]==='AMRAP'?'MR':Number(multi[2].replace(',','.'));
+     if(count<1||count>30)throw Error('Número de séries inválido para "'+name+'".');
+     repsList=Array(count).fill(rep);
+    }else{
+     const vals=prescription.match(/\d+(?:[.,]\d+)?|MR|AMRAP/gi)||[];
+     repsList=vals.map(v=>v==='MR'||v==='AMRAP'?'MR':Number(v.replace(',','.'))).filter(v=>v==='MR'||(Number.isFinite(v)&&v>0));
+    }
+    if(!repsList.length)throw Error('Formato de repetições não reconhecido para "'+name+'": '+prescription);
+    const loadRaw=get(r,'load').replace(/[a-zA-Z ]/g,'').replace(',','.');
+    const load=loadRaw===''?null:Number(loadRaw);
+    if(loadRaw!==''&&!Number.isFinite(load))throw Error('Carga inválida para "'+name+'".');
+    if(!groups.has(key))groups.set(key,{sub,name,sets:[],rest_seconds:restSeconds});
+    const group=groups.get(key);
+    if(ix.set>=0){
+     const setNo=Number(get(r,'set'))||group.sets.length+1;
+     group.sets.push({set_number:setNo,reps:repsList[0],load_kg:load});
+    }else{
+     repsList.forEach(rep=>group.sets.push({set_number:group.sets.length+1,reps:rep,load_kg:load}));
+    }
+    validRows++;
    }
    importedExercises=[...groups.values()];
-   if(!importedExercises.length)throw Error('Nenhum exercício foi encontrado.');
-   $('strengthPreview').innerHTML='<strong>'+importedExercises.length+' exercícios · '+[...new Set(importedExercises.map(x=>x.sub))].length+' treinos</strong>'+importedExercises.map(x=>'<div class="item"><strong>'+esc(x.sub)+' · '+esc(x.name)+'</strong><div class="muted">'+x.sets.sort((a,b)=>a.set_number-b.set_number).map(s=>s.reps+' reps · '+(s.load_kg??'—')+' kg').join(' / ')+'</div></div>').join('');
+   if(!importedExercises.length)throw Error('Nenhum exercício válido foi encontrado. Confira a coluna Exercício.');
+   const totalSets=importedExercises.reduce((n,e)=>n+e.sets.length,0);
+   preview.innerHTML='<strong>Arquivo lido com sucesso</strong><p>'+importedExercises.length+' exercícios · '+[...new Set(importedExercises.map(x=>x.sub))].length+' treinos · '+totalSets+' séries reconhecidas.</p>'+importedExercises.map(x=>'<div class="item"><strong>'+esc(x.sub)+' · '+esc(x.name)+'</strong><div class="muted">'+x.sets.map(z=>z.reps+' reps'+(z.load_kg!=null?' · '+z.load_kg+' kg':'')).join(' / ')+' · descanso '+x.rest_seconds+'s</div></div>').join('');
    $('strengthImport').disabled=false;
-  }catch(err){$('strengthPreview').textContent=err.message}
+  }catch(err){
+   importedExercises=[];preview.textContent='Não foi possível ler a planilha: '+(err?.message||String(err))+' Selecione outro arquivo ou ajuste as colunas e tente novamente.';
+   $('strengthImport').disabled=true;
+  }
  }
  async function importStrengthFile(){
-  if(!importedExercises.length)return;
-  const title=prompt('Nome do programa importado:', $('strengthFile').files[0].name.replace(/\\.[^.]+$/,''));if(!title?.trim())return;
-  const db=dbRef(),u=userRef();
-  const {data:p,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title:title.trim(),description:'[MODALIDADE: '+$('importCategory').value+'] Importado de Excel/CSV',status:'active'}).select().single();
-  if(error)return alert(error.message);
-  const {data:v,error:ve}=await db.from('training_program_versions').insert({program_id:p.id,version_number:1,created_by:u.id,change_note:'Importação de planilha',status:'active'}).select().single();
-  if(ve)return alert(ve.message);
-  const up=await db.from('training_programs').update({current_version_id:v.id}).eq('id',p.id);if(up.error)return alert(up.error.message);
-  const subs=[...new Set(importedExercises.map(x=>x.sub))];
-  for(let i=0;i<subs.length;i++){
-   const {data:s,error:se}=await db.from('training_subworkouts').insert({version_id:v.id,title:subs[i],position:i+1}).select().single();if(se)return alert(se.message);
-   const rows=importedExercises.filter(x=>x.sub===subs[i]).map((x,j)=>({subworkout_id:s.id,name:x.name,position:j+1,sets:x.sets.sort((a,b)=>a.set_number-b.set_number).map(z=>({reps:z.reps,load_kg:z.load_kg})),rest_seconds:x.rest_seconds}));
-   const ins=await db.from('training_exercises').insert(rows);if(ins.error)return alert(ins.error.message);
+  if(!importedExercises.length){$('strengthPreview').textContent='Primeiro selecione e valide uma planilha com exercícios.';return}
+  const title=prompt('Nome do programa importado:', $('strengthFile').files[0].name.replace(/\.[^.]+$/,''));
+  if(!title?.trim()){$('strengthPreview').textContent='Importação cancelada. Nenhum programa foi criado.';return}
+  const btn=$('strengthImport'),preview=$('strengthPreview'),db=dbRef(),u=userRef();
+  btn.disabled=true;btn.textContent='Importando…';
+  const report=msg=>{preview.textContent=msg};
+  let programId=null;
+  try{
+   report('Etapa 1 de 4: criando o programa…');
+   const {data:p,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title:title.trim(),description:'[MODALIDADE: '+$('importCategory').value+'] Importado de Excel/CSV',status:'active'}).select().single();
+   if(error)throw Error('Não foi possível criar o programa: '+error.message);
+   programId=p.id;
+   report('Etapa 2 de 4: criando a versão inicial…');
+   const {data:v,error:ve}=await db.from('training_program_versions').insert({program_id:p.id,version_number:1,created_by:u.id,change_note:'Importação de planilha',status:'active'}).select().single();
+   if(ve)throw Error('O programa foi criado, mas a versão não pôde ser gravada: '+ve.message);
+   report('Etapa 3 de 4: organizando os treinos e exercícios…');
+   const up=await db.from('training_programs').update({current_version_id:v.id}).eq('id',p.id);
+   if(up.error)throw Error('A versão foi criada, mas não foi possível vinculá-la ao programa: '+up.error.message);
+   const subs=[...new Set(importedExercises.map(x=>x.sub))];
+   for(let i=0;i<subs.length;i++){
+    report('Etapa 3 de 4: gravando '+subs[i]+' ('+(i+1)+' de '+subs.length+')…');
+    const {data:s,error:se}=await db.from('training_subworkouts').insert({version_id:v.id,title:subs[i],position:i+1}).select().single();
+    if(se)throw Error('Falha ao criar '+subs[i]+': '+se.message);
+    const rows=importedExercises.filter(x=>x.sub===subs[i]).map((x,j)=>({subworkout_id:s.id,name:x.name,position:j+1,sets:x.sets.map(z=>({reps:z.reps,load_kg:z.load_kg})),rest_seconds:x.rest_seconds}));
+    const ins=await db.from('training_exercises').insert(rows);
+    if(ins.error)throw Error('Falha ao gravar exercícios de '+subs[i]+': '+ins.error.message);
+   }
+   report('Etapa 4 de 4: finalizando e atualizando a lista…');
+   alert('Importação concluída! Programa "'+title.trim()+'" criado com '+importedExercises.length+' exercícios em '+subs.length+' treinos.');
+   home();
+  }catch(err){
+   report('Importação interrompida. '+(programId?'O programa já foi criado; confira a lista antes de tentar novamente. ':'Nenhum programa foi criado. ')+(err?.message||String(err)));
+   alert('Não foi possível concluir a importação.\n\n'+(err?.message||String(err)));
+  }finally{
+   btn.disabled=!importedExercises.length;btn.textContent='Importar para meus programas';
   }
-  alert('Programa importado. As repetições e cargas individuais de cada série foram preservadas.');home();
  }
  async function createProgram(){
   const db=dbRef(),u=userRef(),title=$('programTitle').value.trim();
