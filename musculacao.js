@@ -25,7 +25,7 @@
  function shell(title,body){section.innerHTML=`<div class="sectionhead"><div><div class="eyebrow">TREINAMENTO DE FORÇA</div><h2>${title}</h2></div><button class="btn alt" id="refresh">Atualizar</button></div>${body}`;const b=$('refresh');if(b)b.onclick=home}
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Musculação','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
-  shell('Programas de treinamento',`<div class="panel"><div class="rowf"><div>${field('programTitle','Nome do programa','Ex.: Hipertrofia — bloco 1')}</div><div>${field('athleteEmail','E-mail do atleta (somente profissional)','aluno@email.com','email')}</div></div><label for="programDesc">Descrição</label><textarea id="programDesc" rows="2" placeholder="Objetivo, observações e contexto"></textarea><button class="btn" id="createProgram">Criar programa</button><p class="muted">Atleta: deixe o e-mail vazio para criar um programa para você. Profissional: o atleta precisa ter autorizado a gestão de programas.</p></div><div id="programList" class="panel">Carregando…</div><div class="panel"><h3>Acessos profissionais</h3><div class="rowf"><div>${field('professionalEmail','Solicitar acesso como profissional','personal@email.com','email')}</div><div><label for="accessType">Permissão solicitada</label><select id="accessType"><option value="view">Visualizar histórico</option><option value="manage">Gerenciar meus programas</option></select></div></div><button class="btn alt" id="requestAccess">Solicitar acesso ao atleta</button><div id="accessList"></div></div><div class="panel"><h3>Notificações</h3><div id="notifications" class="muted">Carregando…</div></div>`);
+  shell('Programas de treinamento',`<div class="panel"><h3>Meus programas</h3><div>${field('programTitle','Nome do programa','Ex.: Hipertrofia — bloco 1')}</div><label for="programDesc">Descrição</label><textarea id="programDesc" rows="2" placeholder="Objetivo, observações e contexto"></textarea><button class="btn" id="createProgram">＋ Criar meu programa</button><p class="muted">Você pode criar e organizar programas para sua própria conta. Isso não concede permissão para prescrever treinos a outras pessoas.</p></div><div id="professionalCreate" class="panel" style="display:none"><h3>Prescrever para atleta</h3><p class="muted">Disponível somente quando você possui autorização ativa de gestão concedida pelo atleta.</p>${field('athleteEmail','E-mail do atleta','aluno@email.com','email')}<button class="btn" id="createForAthlete">Criar programa para atleta</button></div><div id="programList" class="panel">Carregando…</div><div class="panel"><h3>Acessos profissionais</h3><div class="rowf"><div>${field('professionalEmail','Solicitar acesso como profissional','personal@email.com','email')}</div><div><label for="accessType">Permissão solicitada</label><select id="accessType"><option value="view">Visualizar histórico</option><option value="manage">Gerenciar meus programas</option></select></div></div><button class="btn alt" id="requestAccess">Solicitar acesso ao atleta</button><div id="accessList"></div></div><div class="panel"><h3>Notificações</h3><div id="notifications" class="muted">Carregando…</div></div>`);
   $('createProgram').onclick=createProgram;$('requestAccess').onclick=requestAccess;
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
   if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
@@ -34,23 +34,30 @@
   const nq=await db.from('app_notifications').select('*').order('created_at',{ascending:false}).limit(8);
   $('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>`<div class="item"><strong>${esc(n.title)}</strong><p class="muted">${esc(n.body)}</p></div>`).join('')||'Nenhuma notificação.';
   const aq=await db.from('athlete_professional_access').select('*');
+  const canPrescribe=(aq.data||[]).some(a=>a.professional_id===u.id&&a.status==='active'&&a.can_manage_programs);
+  if(canPrescribe){$('professionalCreate').style.display='block';$('createForAthlete').onclick=createProgramForAthlete;}
   if(!aq.error)$('accessList').innerHTML=(aq.data||[]).map(a=>`<div class="item"><strong>${a.professional_id===u.id?'Acesso solicitado':'Profissional'}</strong> · ${esc(a.status)} <span class="muted">Histórico: ${a.can_view_history?'sim':'não'} · Programas: ${a.can_manage_programs?'sim':'não'}</span>${a.athlete_id===u.id&&a.status==='pending'?'<button class="btn" data-approve="'+a.id+'">Aprovar</button><button class="btn alt" data-reject="'+a.id+'">Recusar</button>':''}</div>`).join('');
   section.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.approve,true));
   section.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.reject,false));
  }
  async function createProgram(){
-  const db=dbRef(),u=userRef(),title=$('programTitle').value.trim(),email=$('athleteEmail').value.trim().toLowerCase();
+  const db=dbRef(),u=userRef(),title=$('programTitle').value.trim();
   if(!title)return alert('Informe o nome do programa.');
-  if(email){
-   const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:$('programDesc').value.trim()||null});
-   if(error)return alert(error.message);
-  }else{
-   const {data,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:$('programDesc').value.trim()||null,status:'active'}).select().single();
-   if(error)return alert(error.message);
-   const v=await db.from('training_program_versions').insert({program_id:data.id,version_number:1,created_by:u.id,change_note:'Versão inicial'}).select().single();
-   if(v.error)return alert(v.error.message);
-   await db.from('training_programs').update({current_version_id:v.data.id}).eq('id',data.id);
-  }
+  const {data,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:$('programDesc').value.trim()||null,status:'active'}).select().single();
+  if(error)return alert(error.message);
+  const v=await db.from('training_program_versions').insert({program_id:data.id,version_number:1,created_by:u.id,change_note:'Versão inicial',status:'active'}).select().single();
+  if(v.error)return alert(v.error.message);
+  const {error:updateError}=await db.from('training_programs').update({current_version_id:v.data.id}).eq('id',data.id);
+  if(updateError)return alert(updateError.message);
+  home();
+ }
+ async function createProgramForAthlete(){
+  const email=$('athleteEmail').value.trim().toLowerCase(),title=$('programTitle').value.trim();
+  if(!email)return alert('Informe o e-mail do atleta.');
+  if(!title)return alert('Informe o nome do programa.');
+  const {error}=await dbRef().rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:$('programDesc').value.trim()||null});
+  if(error)return alert(error.message);
+  alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
   home();
  }
  async function requestAccess(){
