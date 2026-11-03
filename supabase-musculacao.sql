@@ -32,6 +32,7 @@ create table if not exists public.workout_exercises (
   rest_seconds integer not null default 60 check (rest_seconds >= 0 and rest_seconds <= 3600),
   prescription text not null,
   notes text,
+  media_url text,
   created_at timestamptz not null default now()
 );
 
