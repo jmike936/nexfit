@@ -77,9 +77,14 @@
     ix=headerMap;rows=matrix.slice(1);
     if(ix.reps<0)throw Error('Não encontrei a coluna Repetições. Confira os cabeçalhos da planilha.');
    }else{
-    // Formato simples sem cabeçalho: Treino | Exercício | Descanso (segundos) | Séries/repetições
-    if((matrix[0]||[]).length<4)throw Error('Não reconheci os cabeçalhos. Use Treino, Exercício, Descanso e Repetições, ou o modelo de quatro colunas sem cabeçalho.');
-    ix={sub:0,exercise:1,rest:2,reps:3,set:-1,load:-1};rows=matrix;
+    // Formato sem cabeçalho: e-mail opcional | subtreino | exercício | descanso | repetições.
+    // Também aceita o formato compacto: subtreino | exercício | descanso | repetições.
+    const firstRow=matrix[0]||[];
+    if(firstRow.length>=5&&String(firstRow[0]||'').includes('@')){
+     ix={sub:1,exercise:2,rest:3,reps:4,set:-1,load:-1};rows=matrix;
+    }else if(firstRow.length>=4){
+     ix={sub:0,exercise:1,rest:2,reps:3,set:-1,load:-1};rows=matrix;
+    }else throw Error('Não reconheci os cabeçalhos. Use SUBTREINO, EXERCÍCIO, DESCANSO e REPETIÇÕES, com uma linha por exercício.');
    }
    const get=(r,k)=>ix[k]<0?'':String(r?.[ix[k]]??'').trim();
    const groups=new Map();let validRows=0;
@@ -263,52 +268,82 @@
   await dbRef().from('app_notifications').insert({user_id:current.athlete_id,type:'deletion_request',title:'Pedido de arquivamento',body:'Um profissional solicitou arquivar um programa. Aprove ou rejeite o pedido.',entity_id:current.id});
   alert('Pedido enviado ao atleta para aprovação.');
  }
+ let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[];
+ function renderSessionStep(){
+  const host=$('sessionExercises');if(!host)return;
+  if(sessionIndex>=sessionPlan.length){finishSession();return}
+  const item=sessionPlan[sessionIndex],e=item.exercise,set=item.set,setNo=item.setIndex+1,total=(e.sets||[]).length;
+  const repsValue=set.reps==='MR'?'':Number(set.reps)||'';
+  host.innerHTML='<div class="panel" style="text-align:center;padding:22px"><div class="eyebrow">EXERCÍCIO '+(item.exerciseIndex+1)+' DE '+sessionExerciseRows.length+'</div><h2 style="margin:8px 0">'+esc(e.name)+'</h2><p class="muted">Série '+setNo+' de '+total+' · Meta: '+(set.reps==='MR'?'máximo de repetições':esc(set.reps)+' repetições')+'</p><div class="rowf" style="text-align:left"><div><label for="actualReps">Repetições realizadas</label><input id="actualReps" type="number" min="1" placeholder="'+(set.reps==='MR'?'Informe o total':'Meta: '+esc(set.reps))+'" value="'+repsValue+'"></div><div><label for="actualLoad">Carga (kg) · opcional</label><input id="actualLoad" type="number" min="0" step="0.25" placeholder="Digite a carga" value="'+(set.load_kg??'')+'"></div></div><button class="btn" id="completeSet" style="width:100%;margin-top:16px">Concluir série</button></div><div id="restPanel" class="panel" style="display:none;text-align:center"><div class="eyebrow">DESCANSO</div><div id="restClock" style="font-size:52px;font-weight:900;color:#b7f34a">00:00</div><p class="muted">Respire. A próxima série aparece ao terminar.</p><button class="btn alt" id="skipRest">Pular descanso</button></div>';
+  $('completeSet').onclick=completeCurrentSet;
+ }
+ async function completeCurrentSet(){
+  const item=sessionPlan[sessionIndex],reps=$('actualReps').value.trim(),load=$('actualLoad').value.trim();
+  if(!reps||Number(reps)<1)return alert('Informe quantas repetições você realizou.');
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?null:Number(load)};
+  const {error}=await dbRef().from('training_set_logs').insert(row);
+  if(error)return alert('Não foi possível salvar esta série: '+error.message);
+  const rest=Math.max(0,Number(item.exercise.rest_seconds)||0);
+  const panel=$('restPanel'),clock=$('restClock'),complete=$('completeSet');
+  if(complete)complete.disabled=true;
+  if(!rest){sessionIndex++;renderSessionStep();return}
+  panel.style.display='block';let remaining=rest;
+  const draw=()=>{if(!clock)return;const m=Math.floor(remaining/60),s=remaining%60;clock.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')};
+  draw();if(timer)clearInterval(timer);
+  const advance=()=>{if(timer)clearInterval(timer);timer=null;sessionIndex++;renderSessionStep()};
+  $('skipRest').onclick=advance;
+  timer=setInterval(()=>{remaining--;draw();if(remaining<=0)advance()},1000);
+ }
  async function startSession(subId){
-  const db=dbRef();
-  const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
-  if(error)return alert(error.message);session=data;
-  const sub=subworkouts.find(s=>s.id===subId);
+  const db=dbRef(),sub=subworkouts.find(s=>s.id===subId);
   const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
   if(ex.error)return alert(ex.error.message);
-  shell('Sessão em andamento',`<div class="panel"><h3>${esc(current.title)} · ${esc(sub?.title||'Treino')}</h3><p class="muted">Registre as repetições e cargas realizadas em cada série. A sessão ficará vinculada à versão do programa.</p><div id="sessionExercises"></div><button class="btn" id="finishSession">Finalizar treino</button><button class="btn alt" id="cancelSession">Voltar ao programa</button></div>`);
-  $('sessionExercises').innerHTML=(ex.data||[]).map(e=>`<div class="item"><strong>${esc(e.name)}</strong><div class="muted">Planejado: ${(e.sets||[]).length} séries · descanso ${e.rest_seconds||0}s</div>${(e.sets||[]).map((set,i)=>`<div class="rowf"><div><label>Série ${i+1} · repetições</label><input type="number" min="0" id="reps-${e.id}-${i+1}" value="${Number(set.reps)||''}" placeholder="Reps realizadas"></div><div><label>Carga (kg)</label><input type="number" min="0" step="0.25" id="load-${e.id}-${i+1}" value="${set.load_kg??''}" placeholder="Carga"></div></div>`).join('')}</div>`).join('')||'<p class="muted">Nenhum exercício cadastrado neste subtreino.</p>';
-  $('finishSession').onclick=()=>finishSession(ex.data||[]);
-  $('cancelSession').onclick=()=>openProgram(current.id);
+  if(!ex.data?.length)return alert('Este subtreino ainda não possui exercícios.');
+  const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
+  if(error)return alert(error.message);session=data;sessionExerciseRows=ex.data;sessionPlan=[];
+  ex.data.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
+  sessionIndex=0;
+  shell('Treino em andamento','<div class="panel"><h3>'+esc(current.title)+' · '+esc(sub?.title||'Treino')+'</h3><p class="muted">Faça uma série por vez. Registre as repetições; a carga é opcional. Ao concluir, o descanso será cronometrado automaticamente.</p><div id="sessionExercises"></div><button class="btn alt" id="cancelSession">Voltar ao programa</button></div>');
+  $('cancelSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;openProgram(current.id)};
+  renderSessionStep();
  }
- async function finishSession(exercises){
-  const db=dbRef();const rows=[];
-  for(const e of exercises)for(let i=0;i<(e.sets||[]).length;i++){
-   const n=i+1,reps=$('reps-'+e.id+'-'+n)?.value,load=$('load-'+e.id+'-'+n)?.value;
-   if(reps!==''||load!=='')rows.push({session_id:session.id,exercise_id:e.id,set_number:n,reps_completed:reps===''?null:Number(reps),load_kg:load===''?null:Number(load)});
-  }
-  if(rows.length){const {error}=await db.from('training_set_logs').insert(rows);if(error)return alert('Não foi possível salvar as séries: '+error.message)}
-  const {error}=await db.from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
-  if(error)return alert(error.message);
+ async function finishSession(){
+  if(!session)return;
+  if(timer)clearInterval(timer);timer=null;
+  const {error}=await dbRef().from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
+  if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
   const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
-  const sub=subworkouts.find(s=>s.id===session.subworkout_id);
-  const {error:activityError}=await db.from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:new Date().toISOString().slice(0,10),duration_minutes:minutes,distance_km:null,notes:current.title+' · '+(sub?.title||'Treino')});
+  const sub=subworkouts.find(s=>s.id===session.subworkout_id),date=new Date().toISOString().slice(0,10);
+  const notes=current.title+' · '+(sub?.title||'Treino');
+  const {data:activity,error:activityError}=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select().single();
   if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
-  else alert('Treino finalizado e registrado no seu histórico!');
-  session=null;home();
+  else{if(typeof activities!=='undefined'&&typeof render==='function'){activities.unshift({id:activity.id,sport:activity.sport,date:activity.activity_date,duration:activity.duration_minutes,distance:0,notes:activity.notes||''});render()}alert('Treino concluído! Todas as séries foram salvas e o treino foi registrado no histórico.')}
+  session=null;sessionPlan=[];sessionExerciseRows=[];home();
  }
  window.beginStrengthActivity=async function(){
   const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
   const q=await db.from('training_programs').select('*').eq('athlete_id',u.id).eq('status','active').order('updated_at',{ascending:false});
   if(q.error)return alert(q.error.message);
-  if(!q.data?.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou receber um programa.');
-  const choices=q.data.map((p,i)=>(i+1)+'. '+p.title).join('\\n');
-  const chosen=Number(prompt('Qual programa deseja iniciar?\\n'+choices,'1'));
-  const program=q.data[chosen-1];if(!program)return;
-  const vq=await db.from('training_program_versions').select('*').eq('id',program.current_version_id).maybeSingle();
-  if(vq.error||!vq.data)return alert('Não foi possível localizar a versão vigente deste programa.');
-  const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
-  if(sq.error)return alert(sq.error.message);
-  if(!sq.data?.length)return alert('Este programa ainda não possui subtreinos. Adicione A, B, C… na aba Musculação.');
-  const subChoice=Number(prompt('Qual treino deseja iniciar?\\n'+sq.data.map((s,i)=>(i+1)+'. '+s.title).join('\\n'),'1'));
-  const sub=sq.data[subChoice-1];if(!sub)return;
-  current=program;version=vq.data;subworkouts=sq.data;
+  const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
+  if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou importar seu programa.');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));
-  await startSession(sub.id);
+  const showPrograms=()=>{
+   shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(p.title)+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
+   section.querySelectorAll('[data-select-program]').forEach(button=>button.onclick=()=>chooseProgram(button.dataset.selectProgram));
+  };
+  const chooseProgram=async id=>{
+   const program=available.find(p=>String(p.id)===String(id));if(!program)return;
+   const vq=await db.from('training_program_versions').select('*').eq('id',program.current_version_id).maybeSingle();
+   if(vq.error||!vq.data)return alert('Não foi possível localizar a versão vigente deste programa.');
+   const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
+   if(sq.error)return alert(sq.error.message);
+   if(!sq.data?.length)return alert('Este programa ainda não possui subtreinos. Adicione A, B, C… na aba Musculação.');
+   current=program;version=vq.data;subworkouts=sq.data;
+   shell('Qual subtreino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(s.title)+'</strong><p class="muted">'+esc(s.description||'Subtreino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
+   section.querySelectorAll('[data-start-selected]').forEach(button=>button.onclick=()=>startSession(button.dataset.startSelected));
+   $('backPrograms').onclick=showPrograms;
+  };
+  showPrograms();
  };
  home();
 })();
