@@ -58,4 +58,4 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 async function editName(){if(!currentUser)return;let n=prompt('Como você gostaria de ser chamado?',userName);if(n&&n.trim()){const {error}=await db.auth.updateUser({data:{full_name:n.trim()}});if(error){alert(error.message);return}userName=n.trim();render()}}
 window.openModal=openModal;window.closeModal=closeModal;window.closeFeedback=closeFeedback;window.go=go;window.editName=editName;window.signOut=signOut;window.setAuthMode=setAuthMode;
 init();
-</script></body></html>
+</script><script src="./musculacao.js"></script>\n</body></html>
