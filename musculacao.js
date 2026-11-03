@@ -45,7 +45,10 @@ section.innerHTML=`<button class="btn alt" id="backPlans">← Minhas fichas</but
 $('backPlans').onclick=loadPlans;$('addExercise').onclick=addExercise;$('startWorkout').onclick=startWorkout;renderExercises();
 }
 function parsePrescription(raw,loads){
-const nums=(raw.match(/\d+/g)||[]).map(Number);const mr=/mr|máximo/i.test(raw);const loadVals=(loads||'').split(/[,|]/).map(x=>x.trim()).filter(Boolean).map(Number);
+const mr=/mr|máximo/i.test(raw);const loadVals=(loads||'').split(/[,|]/).map(x=>x.trim()).filter(Boolean).map(Number);
+const pairs=[...raw.matchAll(/(\\d+)\\s*@\\s*(\\d+(?:[.,]\\d+)?)/g)];
+if(pairs.length)return pairs.map(m=>({type:'reps',reps:Number(m[1]),load:Number(m[2].replace(',','.'))}));
+const nums=(raw.match(/\\d+/g)||[]).map(Number);
 if(mr){const n=nums[0]||3;return Array.from({length:n},()=>({type:'MR',reps:null,load:null}))}
 return nums.map((reps,i)=>({type:'reps',reps,load:Number.isFinite(loadVals[i])?loadVals[i]:null}));
 }
