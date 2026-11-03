@@ -26,7 +26,8 @@ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const formField=(id,label,type='text',placeholder='')=>`<label for="${id}">${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}">`;
 function renderHome(){
 section.innerHTML=`<div class="sectionhead"><div><div class="eyebrow">TREINAMENTO DE FORÇA</div><h2>Minhas fichas de musculação</h2></div><button class="primary" id="newPlan">＋ Criar ficha</button></div>
-<div class="panel"><h3>Importar ficha</h3><p class="muted">CSV separado por ponto e vírgula: Aluno;Treino;Exercício;Descanso;Tipo de série;Carga (opcional). Para cargas diferentes por série, use por exemplo 12@20|10@24|8@28|6@30.</p><input type="file" id="csvFile" accept=".csv,.txt"><button class="btn" id="importCsv">Validar e importar CSV</button><div id="importStatus" class="muted"></div></div><div id="planList" class="panel">Carregando fichas...</div>`;
+<div id="planList" class="panel">Carregando fichas...</div>
+<div class="panel"><h3>Importar ficha</h3><p class="muted">CSV separado por ponto e vírgula: Aluno;Treino;Exercício;Descanso;Tipo de série;Carga (opcional). Para cargas diferentes por série, use por exemplo 12@20|10@24|8@28|6@30.</p><input type="file" id="csvFile" accept=".csv,.txt"><button class="btn" id="importCsv">Validar e importar CSV</button><div id="importStatus" class="muted" aria-live="polite"></div></div>`;
 $('newPlan').onclick=showCreatePlan;$('importCsv').onclick=importCsv;
 }
 function showCreatePlan(){
@@ -35,9 +36,16 @@ section.prepend(p);$('cancelPlan').onclick=()=>p.remove();$('savePlan').onclick=
 }
 async function loadPlans(){
 if(!db||!currentUser)return;renderHome();const {data,error}=await db.from('workout_plans').select('*').order('created_at',{ascending:false});if(error){$('planList').textContent='Execute primeiro o arquivo supabase-musculacao.sql no SQL Editor do Supabase. Detalhe: '+error.message;return}
-plans=data||[];$('planList').innerHTML=plans.length?plans.map(p=>`<div class="exercise"><strong>${safe(p.name)}</strong><div class="muted">${safe(p.athlete_name)}</div><button class="btn" data-open="${p.id}">Abrir ficha</button></div>`).join(''):'<p class="muted">Nenhuma ficha cadastrada. Crie uma ou importe um CSV.</p>';
+plans=data||[];$('planList').innerHTML=plans.length?plans.map(p=>`<div class="exercise" style="${p.is_active?'border:1px solid #b7f34a;border-radius:12px;padding:14px':''}"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong>${safe(p.name)}</strong><strong style="color:${p.is_active?'#b7f34a':'#91a0af'}">${p.is_active?'● TREINO VIGENTE':'TREINO INATIVO'}</strong></div><div class="muted">${safe(p.athlete_name)} · Início: ${p.start_date?new Date(p.start_date+'T00:00:00').toLocaleDateString('pt-BR'):'Não definido'}</div><button class="btn" data-open="${p.id}">Abrir ficha</button>${p.is_active?'':`<button class="btn alt" data-activate="${p.id}">Ativar este treino</button>`}</div>`).join(''):'<p class="muted">Nenhuma ficha cadastrada. Crie uma ou importe um CSV.</p>';
 section.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openPlan(b.dataset.open));
+section.querySelectorAll('[data-activate]').forEach(b=>b.onclick=()=>activatePlan(b.dataset.activate));
 }
+async function activatePlan(id){
+ const {error}=await db.rpc('activate_workout_plan',{p_plan_id:id});
+ if(error)return alert('Não foi possível ativar o treino: '+error.message);
+ await loadPlans();
+}
+
 async function openPlan(id){
 const p=plans.find(x=>x.id===id);if(!p)return;activePlan=p;
 const {data,error}=await db.from('workout_exercises').select('*').eq('plan_id',id).order('position');if(error)return alert(error.message);exerciseList=data||[];
@@ -65,7 +73,7 @@ const rows=lines.map(line=>line.split(';').map(x=>x.trim()));
 const head=rows[0].map(x=>x.toLowerCase());
 const hasHeader=head.some(x=>x.includes('aluno'));
 const data=hasHeader?rows.slice(1):rows;
-const status=$('importStatus');let created=0,errors=[];
+const status=$('importStatus'),button=$('importCsv');let created=0,errors=[];button.disabled=true;button.textContent='Importando...';status.innerHTML='<div style="padding:12px;margin-top:10px;border:1px solid #b7f34a;border-radius:10px;color:#b7f34a">⏳ Importando sua ficha... Aguarde a conclusão.</div>';try{
 const positions=new Map();
 for(let i=0;i<data.length;i++){
  const r=data[i];
@@ -90,8 +98,7 @@ for(let i=0;i<data.length;i++){
  if(q.error)errors.push('Linha '+(i+(hasHeader?2:1))+': '+q.error.message);
  else{created++;positions.set(plan.id,position);}
 }
-status.textContent=created+' exercício(s) importado(s). '+(errors.length?errors.join(' '):'Sem erros.');
-await loadPlans();
+status.innerHTML='<div style="padding:12px;margin-top:10px;border:1px solid '+(errors.length?'#ff7a7a':'#b7f34a')+';border-radius:10px;color:'+(errors.length?'#ff9999':'#b7f34a')+'">'+(errors.length?'Importação concluída com avisos. ':'✓ Importação concluída! ')+created+' exercício(s) importado(s). '+(errors.length?safe(errors.join(' ')):'A ficha já aparece na lista acima.')+'</div>';await loadPlans();}catch(err){status.innerHTML='<div style="padding:12px;margin-top:10px;border:1px solid #ff7a7a;border-radius:10px;color:#ff9999">Falha na importação: '+safe(err.message)+'</div>';}finally{button.disabled=false;button.textContent='Validar e importar CSV';}
 }
 async function startWorkout(){
 if(!exerciseList.length)return;const {data,error}=await db.from('workout_sessions').insert({plan_id:activePlan.id,user_id:currentUser.id}).select().single();if(error)return alert(error.message);sessionId=data.id;step=0;seriesIndex=0;showRunner()
