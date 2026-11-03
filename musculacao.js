@@ -41,19 +41,22 @@
  async function createProgram(){
   const db=dbRef(),u=userRef(),title=$('programTitle').value.trim(),email=$('athleteEmail').value.trim().toLowerCase();
   if(!title)return alert('Informe o nome do programa.');
-  let athlete=u.id;
-  if(email){const {data,error}=await db.rpc('nexfit_find_user_by_email',{p_email:email});if(error||!data)return alert('Não foi possível localizar o atleta por e-mail. O recurso de busca segura precisa estar habilitado no banco.');athlete=data}
-  const {data,error}=await db.from('training_programs').insert({athlete_id:athlete,created_by:u.id,title,description:$('programDesc').value.trim()||null}).select().single();
-  if(error)return alert(error.message);
-  const v=await db.from('training_program_versions').insert({program_id:data.id,version_number:1,created_by:u.id,change_note:'Versão inicial'}).select().single();
-  if(v.error)return alert(v.error.message);
-  await db.from('training_programs').update({current_version_id:v.data.id,status:athlete===u.id?'active':'pending'}).eq('id',data.id);
-  if(athlete!==u.id)await db.from('app_notifications').insert({user_id:athlete,type:'program_received',title:'Novo programa recebido',body:'Um profissional enviou um programa para sua análise.',entity_id:data.id});
+  if(email){
+   const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:$('programDesc').value.trim()||null});
+   if(error)return alert(error.message);
+  }else{
+   const {data,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:$('programDesc').value.trim()||null,status:'active'}).select().single();
+   if(error)return alert(error.message);
+   const v=await db.from('training_program_versions').insert({program_id:data.id,version_number:1,created_by:u.id,change_note:'Versão inicial'}).select().single();
+   if(v.error)return alert(v.error.message);
+   await db.from('training_programs').update({current_version_id:v.data.id}).eq('id',data.id);
+  }
   home();
  }
  async function requestAccess(){
-  const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do profissional.');
-  alert('Para solicitar acesso por e-mail, o profissional precisa entrar no NEXFIT e enviar a solicitação usando seu próprio login. Assim evitamos conceder acesso à pessoa errada.');
+  const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do atleta.');
+  const {error}=await dbRef().rpc('nexfit_request_access_by_email',{p_email:email});
+  if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');home();
  }
  async function decideAccess(id,approve){
   const db=dbRef(),u=userRef();const {error}=await db.from('athlete_professional_access').update({status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',u.id);
