@@ -14,7 +14,7 @@
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
  const nav=document.querySelector('.nav');if(!nav)return;
- const tab=document.createElement('button');tab.dataset.page='strengthPage';tab.textContent='Treinos';nav.append(tab);
+ const tab=document.createElement('button');tab.dataset.page='strengthPage';tab.textContent='Importar/Criar treinos';nav.append(tab);
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null;
