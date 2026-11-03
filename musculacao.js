@@ -58,7 +58,7 @@ const file=$('csvFile').files[0];if(!file)return alert('Selecione um CSV.');cons
 for(let i=0;i<data.length;i++){const r=data[i];if(r.length<5){errors.push('Linha '+(i+1)+': são necessárias pelo menos 5 colunas.');continue}const [athlete,name,exercise,rest,pres,loads='']=r;if(!athlete||!name||!exercise||!pres){errors.push('Linha '+(i+1)+': campos obrigatórios ausentes.');continue}
 let plan=plans.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.athlete_name.toLowerCase()===athlete.toLowerCase());
 if(!plan){const q=await db.from('workout_plans').insert({owner_id:currentUser.id,athlete_name:athlete,name}).select().single();if(q.error){errors.push('Linha '+(i+1)+': '+q.error.message);continue}plan=q.data;plans.push(plan)}
-const sets=parsePrescription(pres,loads);const q=await db.from('workout_exercises').insert({plan_id:plan.id,position:(await db.from('workout_exercises').select('id',{count:'exact',head:true}).eq('plan_id',plan.id)).count||0+1,name,rest_seconds:Number(rest)||60,prescription:pres,prescribed_sets:sets});
+const sets=parsePrescription(pres,loads);const q=await db.from('workout_exercises').insert({plan_id:plan.id,position:(await db.from('workout_exercises').select('id',{count:'exact',head:true}).eq('plan_id',plan.id))((await db.from('workout_exercises').select('id',{count:'exact',head:true}).eq('plan_id',plan.id)).count||0)+1,name,rest_seconds:Number(rest)||60,prescription:pres,prescribed_sets:sets});
 if(q.error)errors.push('Linha '+(i+1)+': '+q.error.message);else created++;
 }
 status.textContent=created+' exercício(s) importado(s). '+(errors.length?errors.join(' '):'Sem erros.');await loadPlans();
