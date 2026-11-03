@@ -1,0 +1,30 @@
+# NEXFIT — publicação web
+
+Aplicação web estática com autenticação por e-mail e senha e armazenamento de atividades no Supabase.
+
+## Arquivos
+- `index.html`: aplicação web.
+- `supabase-schema.sql`: estrutura da tabela de atividades e políticas de segurança RLS.
+
+## Supabase
+O projeto já está configurado no `index.html` com a URL-base e a chave publicável fornecidas pelo responsável. A chave `sb_publishable` pode ficar no navegador; nunca use a chave `service_role` ou qualquer chave secreta no frontend.
+
+No Supabase, confirme:
+1. O SQL de `supabase-schema.sql` foi executado no SQL Editor.
+2. Em Authentication → Providers, o provedor Email está habilitado.
+3. Em Authentication → URL Configuration, depois da publicação, defina a Site URL como o domínio final e adicione esse mesmo domínio em Redirect URLs.
+4. Para testes locais, adicione também `http://localhost:3000/**` às Redirect URLs.
+
+O cadastro pode exigir confirmação de e-mail conforme a configuração de Authentication → Email. O link de recuperação também depende das configurações de e-mail do projeto.
+
+## Publicar na Vercel via GitHub
+1. Extraia o ZIP e envie `index.html`, `supabase-schema.sql` e este README para a raiz do repositório GitHub `NEXFIT` (não envie a pasta compactada como único arquivo).
+2. Na Vercel, escolha Add New → Project e importe o repositório `NEXFIT`.
+3. Configure Framework Preset como `Other`, Build Command vazio e Output Directory como `.`.
+4. Clique em Deploy.
+5. Copie o domínio `.vercel.app` gerado e cadastre-o no Supabase em Authentication → URL Configuration, como Site URL e Redirect URL.
+
+## Observações
+- Aplicação gratuita, com registros manuais e conta individual.
+- As políticas RLS limitam leitura e gravação ao usuário autenticado dono de cada registro.
+- O projeto não deve ser considerado publicado até a Vercel concluir o deploy e o domínio ser testado.
