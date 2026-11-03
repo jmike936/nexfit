@@ -177,7 +177,8 @@
   if(!sq.data?.length)return alert('Este programa ainda não possui subtreinos. Adicione A, B, C… na aba Musculação.');
   const subChoice=Number(prompt('Qual treino deseja iniciar?\\n'+sq.data.map((s,i)=>(i+1)+'. '+s.title).join('\\n'),'1'));
   const sub=sq.data[subChoice-1];if(!sub)return;
-  current=program;version=vq.data;subworkouts=sq.data;go();
+  current=program;version=vq.data;subworkouts=sq.data;
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));
   await startSession(sub.id);
  };
  home();
