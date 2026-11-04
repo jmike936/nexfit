@@ -28,3 +28,8 @@ O cadastro pode exigir confirmação de e-mail conforme a configuração de Auth
 - Aplicação gratuita, com registros manuais e conta individual.
 - As políticas RLS limitam leitura e gravação ao usuário autenticado dono de cada registro.
 - O projeto não deve ser considerado publicado até a Vercel concluir o deploy e o domínio ser testado.
+
+
+## Edição de treinos e histórico
+
+Depois de aplicar as mudanças do app, execute `supabase-workout-edit-policies.sql` no SQL Editor do Supabase. O script libera edição de séries próprias e gerenciamento de programas, subtreinos e exercícios para o atleta e para profissionais com permissão ativa. Exclusões de itens com histórico são bloqueadas pelo app para preservar os registros.
