@@ -96,6 +96,16 @@ body:not(.logged) .app{display:none}body.logged .authscreen{display:none}
 .install-share-icon{width:20px;height:20px;vertical-align:-5px;margin:0 2px;color:var(--lime);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .install-help-note{padding:12px;border-left:3px solid var(--lime);background:#111922;border-radius:0 10px 10px 0;color:var(--muted)}
 @media(max-width:520px){.install-help-modal{padding:18px}.install-app-button{width:100%}}
+
+.app-version-footer{width:min(100%,1120px);margin:0 auto;padding:24px 16px calc(92px + env(safe-area-inset-bottom));text-align:center;color:var(--muted);font-size:11px;letter-spacing:.04em}
+.app-version-footer span{color:var(--text);font-weight:700}
+.app-update-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.app-update-actions button{min-height:40px}
+.app-update-actions [hidden]{display:none!important}
+.app-update-notice{position:fixed;z-index:40;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 12px 38px #0009;color:var(--text);font-size:13px}
+.app-update-notice[hidden]{display:none}
+.app-update-notice button{flex:none;border:0;border-radius:9px;padding:9px 12px;background:var(--lime);color:#11180a;font-weight:800;cursor:pointer}
+@media(max-width:520px){.app-version-footer{padding-bottom:100px}.app-update-notice{font-size:12px}}
 </style></head>
 <body><section class="authscreen" id="authScreen"><div class="authcard"><div class="authbrand"><img class="brand-logo-image" src="./assets/nexfit-neon-logo.svg" alt="NEXFIT — Seu próximo nível"></div><h1 id="authTitle" class="auth-title">Faça Login para continuar</h1><form id="authForm"><div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" placeholder="voce@exemplo.com" required></div><div class="field"><label for="authPassword">Senha</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required></div><div class="field" id="accountTypeField" style="display:none"><label for="accountType">Categoria do perfil</label><select id="accountType"><option value="athlete">Atleta</option><option value="professional">Personal / Profissional</option></select></div><button class="primary" id="authSubmit" type="submit" style="width:100%;margin-top:8px">Entrar</button></form><button class="secondary" id="resendConfirmation" type="button" style="display:none;width:100%;margin-top:10px">Reenviar e-mail de confirmação</button><p class="auth-signup-prompt">Não tem uma conta? <button class="auth-signup-link" type="button" onclick="setAuthMode('signup')">Cadastre-se</button></p><p class="autherror" id="authError" role="status"></p><div class="auth-footer"><p class="authhint">Cadastro gratuito<br>Seus registros ficam salvos na sua conta e sincronizados na nuvem</p></div></div></section><main class="app">
 <header class="top"><div class="brand"><img class="brand-logo-image" src="./assets/nexfit-neon-logo.svg" alt="NEXFIT — Seu próximo nível"></div><div class="topright"><span class="pill">VERSÃO WEB · GRATUITA</span><div class="avatar" id="avatar">A</div><button class="signout" id="signoutBtn" onclick="signOut()">Sair</button></div></header>
@@ -128,12 +138,14 @@ body:not(.logged) .app{display:none}body.logged .authscreen{display:none}
 <div class="profile-details" id="profileDetails" hidden><h2>Meus Dados</h2><form id="profileForm"><div class="field"><label for="profileNameInput">Nome</label><input id="profileNameInput" type="text" maxlength="80" placeholder="Como quer ser chamado?"></div><div class="two"><div class="field"><label for="profileBirthDate">Data de nascimento</label><input id="profileBirthDate" type="date"></div><div class="field"><label for="profileHeight">Altura (cm)</label><input id="profileHeight" type="number" min="50" max="260" step="1" placeholder="Ex.: 175"></div></div><div class="field"><label for="profileWeight">Peso atual (kg)</label><input id="profileWeight" type="number" min="20" max="500" step="0.1" placeholder="Ex.: 75,5"></div><button class="primary" type="submit">Salvar dados</button></form></div>
 <button type="button" class="profile-menu-item" data-profile-action="settings" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7z"/></svg></span><span>Configurações</span><span class="profile-chevron">›</span></button>
 <div class="profile-details" id="profileSettings" hidden><h2>Configurações</h2><p class="muted">Conta conectada: <strong id="profileEmail"></strong></p><p class="profile-setting-row"><span>Plano</span><strong>Gratuito</strong></p><p class="profile-setting-row"><span>Categoria</span><strong id="profileSettingsCategory">Atleta</strong></p></div>
-<button type="button" class="profile-menu-item" data-profile-action="about" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2-2.5 4m0 3h.01"/></svg></span><span>Sobre o app</span><span class="profile-chevron">›</span></button><div class="profile-details" id="profileAbout" hidden><h2>Sobre o app</h2><p class="muted">NEXFIT · Seu próximo nível.</p><section class="install-app-card" aria-labelledby="installAppHeading"><h3 id="installAppHeading">Aplicativo</h3><p class="muted install-app-description">Instale nosso aplicativo no seu dispositivo para acessar o sistema mais rapidamente, diretamente pela tela inicial.</p><button class="primary install-app-button" id="installAppButton" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><span>Como instalar</span></button><p class="install-app-status" id="installAppStatus" role="status" aria-live="polite">Confira as opções de instalação deste navegador.</p></section><p class="profile-setting-row"><span>Desenvolvido por</span><strong>Jefferson Mike Chaves Ribeiro</strong></p><p class="profile-setting-row"><span>Contato</span><a class="contact-icon-link" href="https://wa.me/5588988114765" target="_blank" rel="noopener" aria-label="Entrar em contato pelo WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.4 8.4 0 0 1-12.4 7.4L3 20l1-4.9a8.4 8.4 0 1 1 16.5-3.4Z"/><path d="M9 8.3c.2-.4.4-.4.7-.4h.4c.2 0 .4.1.5.4l.7 1.7c.1.2.1.4-.1.6l-.5.6c-.2.2-.2.3-.1.5.4.8 1 1.4 1.8 1.8.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.8c.2.1.3.3.3.5 0 .3-.2 1.1-.7 1.5-.4.4-1.1.7-1.8.6-1-.1-2.2-.7-3.2-1.5-1.3-1.1-2.2-2.6-2.4-3.4-.3-.8-.1-1.7.3-2.2Z"/></svg></a></p></div>
+<button type="button" class="profile-menu-item" data-profile-action="about" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2-2.5 4m0 3h.01"/></svg></span><span>Sobre o app</span><span class="profile-chevron">›</span></button><div class="profile-details" id="profileAbout" hidden><h2>Sobre o app</h2><p class="muted">NEXFIT · Seu próximo nível.</p><section class="install-app-card" aria-labelledby="installAppHeading"><h3 id="installAppHeading">Aplicativo</h3><p class="muted install-app-description">Instale nosso aplicativo no seu dispositivo para acessar o sistema mais rapidamente, diretamente pela tela inicial.</p><button class="primary install-app-button" id="installAppButton" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><span>Como instalar</span></button><p class="install-app-status" id="installAppStatus" role="status" aria-live="polite">Confira as opções de instalação deste navegador.</p></section><p class="profile-setting-row"><span>Versão do app</span><strong id="aboutAppVersion">1.0.0 · build 20261104.1</strong></p><p class="install-app-status" id="appUpdateStatus" role="status" aria-live="polite">Atualizações verificadas automaticamente.</p><div class="app-update-actions"><button class="secondary" id="checkAppUpdate" type="button">Verificar atualizações</button><button class="primary" id="applyAppUpdate" type="button" hidden>Atualizar app</button></div><p class="profile-setting-row"><span>Desenvolvido por</span><strong>Jefferson Mike Chaves Ribeiro</strong></p><p class="profile-setting-row"><span>Contato</span><a class="contact-icon-link" href="https://wa.me/5588988114765" target="_blank" rel="noopener" aria-label="Entrar em contato pelo WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.4 8.4 0 0 1-12.4 7.4L3 20l1-4.9a8.4 8.4 0 1 1 16.5-3.4Z"/><path d="M9 8.3c.2-.4.4-.4.7-.4h.4c.2 0 .4.1.5.4l.7 1.7c.1.2.1.4-.1.6l-.5.6c-.2.2-.2.3-.1.5.4.8 1 1.4 1.8 1.8.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.8c.2.1.3.3.3.5 0 .3-.2 1.1-.7 1.5-.4.4-1.1.7-1.8.6-1-.1-2.2-.7-3.2-1.5-1.3-1.1-2.2-2.6-2.4-3.4-.3-.8-.1-1.7.3-2.2Z"/></svg></a></p></div>
 <button type="button" class="profile-menu-item profile-logout" onclick="signOut()"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5m5 5H3m9-9h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-8"/></svg></span><span>Sair</span><span class="profile-chevron">›</span></button>
 </nav>
 
 </div></section>
+<footer class="app-version-footer" aria-label="Versão do aplicativo">NEXFIT · Versão <span id="footerAppVersion">1.0.0</span> · Build <span id="footerAppBuild">20261104.1</span></footer>
 </main>
+<aside class="app-update-notice" id="appUpdateNotice" role="status" aria-live="polite" hidden><span>Uma nova versão do NEXFIT está disponível.</span><button type="button" id="updateAppNow">Atualizar app</button></aside>
 <div class="feedbackback" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle"><div class="feedbackbox"><h2 id="feedbackTitle">Aviso</h2><p id="feedbackMessage"></p><button class="primary" type="button" onclick="closeFeedback()">OK</button></div></div>
 <div class="modalback install-help-backdrop" id="installHelpModal" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle" hidden><div class="modal install-help-modal"><div class="modalhead"><h2 id="installHelpTitle">Como instalar o NEXFIT</h2><button class="close" type="button" aria-label="Fechar" onclick="closeInstallHelp()">×</button></div><div id="installHelpContent"></div><div class="formactions"><button class="primary" type="button" onclick="closeInstallHelp()">Entendi</button></div></div></div>
 <div class="modalback" id="modal"><div class="modal"><div class="modalhead"><h2>Registrar atividade</h2><button class="close" onclick="closeModal()">×</button></div><form id="activityForm"><div class="field"><label for="sport">Modalidade</label><select id="sport" required><option value="Musculação">Musculação</option><option value="Corrida">Corrida</option><option value="Caminhada">Caminhada</option><option value="Ciclismo">Ciclismo</option><option value="Pedal">Pedal</option><option value="Natação">Natação</option><option value="Funcional">Funcional</option><option value="Cross training">Cross training</option><option value="Yoga">Yoga</option><option value="Pilates">Pilates</option><option value="Outra">Outra</option></select></div><div id="generalActivityFields"><div class="two"><div class="field"><label for="date">Data</label><input id="date" type="date" required></div><div class="field"><label for="duration">Duração (minutos)</label><input id="duration" type="number" min="1" max="1440" placeholder="Ex.: 45" required></div></div><div class="field"><label for="distance">Distância em km (opcional)</label><input id="distance" type="number" min="0" step="0.01" placeholder="Ex.: 5,2"></div><div class="field"><label for="notes">Observações (opcional)</label><textarea id="notes" rows="3" placeholder="Como foi sua atividade?"></textarea></div></div><div id="workoutStartHint" class="muted" style="display:none;padding:14px;background:#111922;border:1px solid var(--line);border-radius:12px">Ao continuar, você escolherá o subtreino e iniciará a primeira série.</div><div class="formactions"><button type="button" class="secondary" onclick="closeModal()">Cancelar</button><button type="submit" class="primary" id="activitySubmitButton">Salvar atividade</button></div></form></div></div><div class="toast" id="toast">Atividade salva!</div>
@@ -166,6 +178,45 @@ function showError(msg){$('authError').textContent=msg||''}
 function showFeedback(title,message){$('feedbackTitle').textContent=title;$('feedbackMessage').textContent=message;$('feedbackModal').classList.add('show')}
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
+const APP_VERSION='1.0.0',APP_BUILD='20261104.1';
+function paintAppVersion(){
+ $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
+ $('footerAppVersion').textContent=APP_VERSION;$('footerAppBuild').textContent=APP_BUILD;
+}
+function applyAppUpdate(){window.location.reload()}
+async function checkAppUpdate(){
+ const status=$('appUpdateStatus'),checkButton=$('checkAppUpdate'),applyButton=$('applyAppUpdate'),notice=$('appUpdateNotice');
+ if(checkButton)checkButton.disabled=true;
+ if(status)status.textContent='Verificando atualizações…';
+ try{
+  const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const latest=await response.json();
+  if(!latest.version||!latest.build)throw Error('Identificador de versão inválido');
+  const available=String(latest.version)!==APP_VERSION||String(latest.build)!==APP_BUILD;
+  if(available){
+   if(status)status.textContent='Nova versão '+latest.version+' (build '+latest.build+') disponível. Atualize para aplicar os ajustes.';
+   if(applyButton)applyButton.hidden=false;if(notice)notice.hidden=false;
+  }else{
+   if(status)status.textContent='Este app está atualizado.';
+   if(applyButton)applyButton.hidden=true;if(notice)notice.hidden=true;
+  }
+  return available;
+ }catch(error){
+  if(status)status.textContent='Não foi possível verificar atualizações. Confira sua conexão e tente novamente.';
+  return false;
+ }finally{if(checkButton)checkButton.disabled=false}
+}
+function initializeAppVersion(){
+ paintAppVersion();
+ $('checkAppUpdate')?.addEventListener('click',checkAppUpdate);
+ $('applyAppUpdate')?.addEventListener('click',applyAppUpdate);
+ $('updateAppNow')?.addEventListener('click',applyAppUpdate);
+ checkAppUpdate();
+ window.addEventListener('online',checkAppUpdate);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkAppUpdate()});
+ setInterval(()=>{if(!document.hidden)checkAppUpdate()},30*60*1000);
+}
 function pwaInstallMode(installed,promptAvailable){return installed?'installed':promptAvailable?'install':'manual'}
 function isStandaloneApp(){return Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches)||navigator.standalone===true}
 function pwaBrowserContext(){
@@ -276,6 +327,7 @@ $('profilePhotoInput').addEventListener('change',async e=>{const file=e.target.f
 $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!currentUser)return;const name=normalizeHumanText($('profileNameInput').value),birth=$('profileBirthDate').value,height=$('profileHeight').value,weight=$('profileWeight').value;const {data,error}=await db.auth.updateUser({data:{full_name:name||userName,birth_date:birth||null,height_cm:height?Number(height):null,weight_kg:weight?Number(weight):null}});if(error){alert('Não foi possível salvar o perfil: '+error.message);return}currentUser=data.user;userName=currentUser.user_metadata?.full_name||userName;render();toast()});
 
 initializePwaInstall();
+initializeAppVersion();
 init();
-</script><script src="./musculacao.js"></script><script src="./workout-history.js"></script>
+</script><script src="./musculacao.js?v=20261104.1"></script><script src="./workout-history.js?v=20261104.1"></script>
 </body></html>
