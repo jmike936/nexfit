@@ -279,13 +279,26 @@
   const r=await dbRef().from('training_exercises').insert({subworkout_id:subId,name:name.trim(),position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
   if(r.error)return alert(r.error.message);openProgram(current.id);
  }
+ function showProgramEditor(title,fields,onSave){
+  let overlay=$('programEditorModal');
+  if(!overlay){overlay=document.createElement('div');overlay.id='programEditorModal';overlay.className='modalback';document.body.append(overlay);overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('show')})}
+  overlay.innerHTML='<div class="modal"><div class="modalhead"><h2>'+esc(title)+'</h2><button type="button" class="close" id="editorClose">×</button></div><form id="programEditorForm">'+fields+'<div class="formactions"><button type="button" class="secondary" id="editorCancel">Cancelar</button><button type="submit" class="primary" id="editorSave">Salvar alterações</button></div></form></div>';
+  overlay.classList.add('show');
+  $('editorClose').onclick=$('editorCancel').onclick=()=>overlay.classList.remove('show');
+  $('programEditorForm').onsubmit=async e=>{e.preventDefault();const button=$('editorSave');button.disabled=true;try{const ok=await onSave();if(ok!==false)overlay.classList.remove('show')}finally{button.disabled=false}};
+ }
+ const editorField=(id,label,value,type='text',placeholder='')=>'<div class="field"><label for="'+id+'">'+esc(label)+'</label><input id="'+id+'" type="'+type+'" value="'+esc(value)+'" placeholder="'+esc(placeholder)+'" required></div>';
+ const editorArea=(id,label,value)=>'<div class="field"><label for="'+id+'">'+esc(label)+'</label><textarea id="'+id+'" rows="3">'+esc(value)+'</textarea></div>';
  async function editProgram(id){
   const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
-  const title=prompt('Nome do programa:',p.title);if(title===null)return;if(!title.trim())return alert('O nome do programa não pode ficar vazio.');
   const prefix=(p.description||'').match(/^\[MODALIDADE:\s*[^\]]+\]\s*/i)?.[0]||'';
-  const description=prompt('Descrição do programa:',(p.description||'').replace(/^\[MODALIDADE:\s*[^\]]+\]\s*/i,''));if(description===null)return;
-  const {error}=await dbRef().from('training_programs').update({title:title.trim(),description:prefix+description.trim()}).eq('id',p.id);
-  if(error)return alert('Não foi possível editar o programa: '+error.message);await home();
+  const description=(p.description||'').replace(/^\[MODALIDADE:\s*[^\]]+\]\s*/i,'');
+  showProgramEditor('Editar programa',editorField('editorProgramTitle','Nome do programa',p.title)+editorArea('editorProgramDescription','Descrição',description),async()=>{
+   const title=$('editorProgramTitle').value.trim();if(!title)return alert('Informe um nome para o programa.');
+   const {error}=await dbRef().from('training_programs').update({title,description:prefix+$('editorProgramDescription').value.trim()}).eq('id',p.id);
+   if(error){alert('Não foi possível salvar o programa: '+error.message);return false}
+   await home();return true;
+  });
  }
  async function archiveProgram(id){
   const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
@@ -295,10 +308,12 @@
  }
  async function editSubworkout(id){
   const item=subworkouts.find(x=>String(x.id)===String(id));if(!item)return;
-  const title=prompt('Nome do subtreino:',item.title);if(title===null)return;if(!title.trim())return alert('O nome do subtreino não pode ficar vazio.');
-  const description=prompt('Descrição do subtreino:',item.description||'');if(description===null)return;
-  const {error}=await dbRef().from('training_subworkouts').update({title:title.trim(),description:description.trim()||null}).eq('id',item.id);
-  if(error)return alert('Não foi possível editar o subtreino: '+error.message);await openProgram(current.id);
+  showProgramEditor('Editar subtreino',editorField('editorSubTitle','Nome do subtreino',item.title)+editorArea('editorSubDescription','Descrição',item.description||''),async()=>{
+   const title=$('editorSubTitle').value.trim();if(!title)return alert('Informe um nome para o subtreino.');
+   const {error}=await dbRef().from('training_subworkouts').update({title,description:$('editorSubDescription').value.trim()||null}).eq('id',item.id);
+   if(error){alert('Não foi possível salvar o subtreino: '+error.message);return false}
+   await openProgram(current.id);return true;
+  });
  }
  async function deleteSubworkout(id){
   const item=subworkouts.find(x=>String(x.id)===String(id));if(!item)return;
@@ -321,24 +336,34 @@
  }
  async function editExercise(id){
   const db=dbRef(),q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
-  if(q.error||!q.data)return alert('Não foi possível abrir o exercício para edição.');
-  const e=q.data,name=prompt('Nome do exercício:',e.name);if(name===null)return;if(!name.trim())return alert('O nome do exercício não pode ficar vazio.');
-  const repText=prompt('Séries e repetições (ex.: 3 x 10, 3 x MR ou 12, 10, 8):',(e.sets||[]).map(x=>x.reps).join(', '));if(repText===null)return;
-  let reps;try{reps=parseRepScheme(repText)}catch(err){return alert(err.message)}
-  const loadText=prompt('Carga por série em kg, separada por ponto e vírgula. Deixe vazio para manter as cargas atuais:',(e.sets||[]).map(x=>x.load_kg??'').join(';'));if(loadText===null)return;
-  let loads=(e.sets||[]).map(x=>x.load_kg??null);
-  if(loadText.trim()){
-   const parts=loadText.split(';').map(x=>x.trim());
-   if(parts.length===1&&reps.length>1)parts.push(...Array(reps.length-1).fill(parts[0]));
-   if(parts.length!==reps.length)return alert('Informe uma carga ou um valor por série.');
-   loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));
-   if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0)))return alert('Há uma carga inválida.');
-  }else loads=reps.map((_,i)=>loads[i]??null);
-  const restText=prompt('Descanso (segundos, mm:ss ou minutos):',String(e.rest_seconds??0));if(restText===null)return;
-  const rest=parseRestSeconds(restText);if(!rest&&restText.trim()!=='0')return alert('Informe um descanso válido.');
-  const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
-  const {error}=await db.from('training_exercises').update({name:name.trim(),sets,rest_seconds:rest}).eq('id',id);
-  if(error)return alert('Não foi possível editar o exercício: '+error.message);await openProgram(current.id);
+  if(q.error||!q.data)return alert('Não foi possível abrir o exercício para edição: '+(q.error?.message||'registro não encontrado'));
+  const e=q.data,initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
+  const fields=editorField('editorExerciseName','Nome do exercício',e.name)
+   +editorField('editorExerciseReps','Séries e repetições',initialReps,'text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
+   +editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')
+   +'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p>'
+   +editorField('editorExerciseRest','Descanso',String(e.rest_seconds??0),'text','Segundos, mm:ss ou minutos');
+  showProgramEditor('Editar exercício',fields,async()=>{
+   const name=$('editorExerciseName').value.trim();if(!name)return alert('Informe o nome do exercício.');
+   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
+   const loadText=$('editorExerciseLoads').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
+   let loads;
+   if(loadText===initialLoads)loads=reps.map((_,i)=>oldLoads[i]??(i>0?oldLoads[i-1]??null:null));
+   else if(!loadText.trim())loads=reps.map(()=>null);
+   else{
+    let parts=loadText.split(';').map(x=>x.trim());
+    if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);
+    if(parts.length!==reps.length){alert('Informe uma carga ou um valor por série.');return false}
+    loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));
+    if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){alert('Há uma carga inválida.');return false}
+   }
+   const restText=$('editorExerciseRest').value.trim(),rest=parseRestSeconds(restText);
+   if(!rest&&restText!=='0'){alert('Informe um descanso válido.');return false}
+   const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
+   const {error}=await db.from('training_exercises').update({name,sets,rest_seconds:rest}).eq('id',id);
+   if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
+   await openProgram(current.id);return true;
+  });
  }
  async function deleteExercise(id){
   const db=dbRef(),q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
