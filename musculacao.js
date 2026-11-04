@@ -55,6 +55,11 @@
  #strengthPage .model-workout-preview span{font-size:12px;color:#a0a99c;background:#111922;border:1px solid #303a30;border-radius:99px;padding:4px 9px}
  #strengthPage .model-copy-button{width:100%;margin:5px 0 0}
  #strengthPage .training-management-row>div:last-child{display:flex;gap:6px;flex-wrap:wrap}
+ #strengthPage .exercise-status-actions{display:inline-flex;align-items:center;gap:7px;margin-left:8px;vertical-align:middle}
+ #strengthPage .exercise-status-icon{display:inline-grid;place-items:center;width:40px;height:40px;padding:9px;margin:0;border:1px solid #354454;border-radius:10px;background:transparent;color:#b7f34a;cursor:pointer}
+ #strengthPage .exercise-status-icon.skipped{color:#ff7a7a}
+ #strengthPage .exercise-status-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+ #strengthPage .exercise-status-icon:focus-visible{outline:2px solid #b7f34a;outline-offset:2px}
  @media(max-width:600px){#strengthPage .training-card-main>img,#strengthPage .training-card-placeholder{width:68px;height:68px;flex-basis:68px}#strengthPage .training-toolbar{display:block}}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
@@ -643,7 +648,7 @@
    const p=exerciseProgress(index),label=p.status==='done'?'Feito':p.status==='skipped'?'Não executado':p.status==='partial'?'Parcial':'Pendente';
    const color=p.status==='done'?'#b7f34a':p.status==='skipped'?'#ff7a7a':'#91a0af';
    const summary=(e.sets||[]).map(x=>x.reps==='MR'?'MR':x.reps+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ');
-   return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(e.name)+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><button class="btn alt" data-mark-done="'+index+'">Marcar como feito</button><button class="btn alt" data-mark-skipped="'+index+'">Marcar não executado</button>':'')+'</div>';
+   return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(e.name)+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button type="button" class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><span class="exercise-status-actions"><button type="button" class="exercise-status-icon" data-mark-done="'+index+'" aria-label="Marcar como feito" title="Marcar como feito"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></button><button type="button" class="exercise-status-icon skipped" data-mark-skipped="'+index+'" aria-label="Marcar como não executado" title="Marcar como não executado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8m0-8-8 8"/></svg></button></span>':'')+'</div>';
   }).join('');
   shell('Escolha o próximo exercício','<div class="panel"><h3>'+esc(current.title)+' · '+esc(sub?.title||'Treino')+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
   section.querySelectorAll('[data-begin-ex]').forEach(b=>b.onclick=()=>beginExercise(Number(b.dataset.beginEx)));
@@ -659,7 +664,7 @@
   for(let i=0;i<(exercise.sets||[]).length;i++)skippedSetKeys.delete(exercise.id+':'+(i+1));
   const first=sessionPlan.findIndex(x=>x.exerciseIndex===index&&!hasSetLog(x.exercise.id,x.setIndex+1));
   if(first<0)return renderExercisePicker();
-  sessionIndex=first;renderSessionStep();
+  sessionIndex=first;shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
  }
  async function markExerciseDone(index){
   const exercise=sessionExerciseRows[index];if(!exercise)return;
