@@ -327,17 +327,12 @@
   }
  }
  async function createProgram(){
-  const db=dbRef(),u=userRef(),title=$('programTitle').value.trim();
+  const title=$('programTitle').value.trim();
   if(!title)return alert('Informe o nome do programa.');
-  const category=$('programCategory').value;
-  try{await assertUniqueActiveCategory(category)}catch(err){return alert(err.message)}
-  const {data,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:'[MODALIDADE: '+category+'] '+($('programDesc').value.trim()||''),status:'active'}).select().single();
-  if(error)return alert(error.message);
-  const v=await db.from('training_program_versions').insert({program_id:data.id,version_number:1,created_by:u.id,change_note:'Versão inicial',status:'active'}).select().single();
-  if(v.error)return alert(v.error.message);
-  const {error:updateError}=await db.from('training_programs').update({current_version_id:v.data.id}).eq('id',data.id);
-  if(updateError)return alert(updateError.message);
-  home();
+  const category=$('programCategory').value,description=$('programDesc').value.trim()||null;
+  const {data,error}=await dbRef().rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
+  if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
+  await home();
  }
  async function createProgramForAthlete(){
   const email=$('athleteEmail').value.trim().toLowerCase(),title=$('programTitle').value.trim();
