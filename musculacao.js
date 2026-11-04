@@ -108,6 +108,20 @@
  const nav=document.querySelector('.nav');if(!nav)return;
  const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab)return;
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
+ function normalizeHumanText(value){
+ const text=String(value??'').replace(/\s+/gu,' ').trim();
+ if(!text||text===text.toLocaleLowerCase('pt-BR')||text!==text.toLocaleUpperCase('pt-BR'))return text;
+ const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC','API','CPF','CNPJ','URL','CSV','XLSX','PDF']);
+ const particles=new Set(['a','as','o','os','um','uma','uns','umas','de','da','das','do','dos','e','em','no','na','nos','nas','por','com','para','sem','sob','sobre','entre','contra','após','até','perante']);
+ let first=true;
+ return text.toLocaleLowerCase('pt-BR').replace(/[\p{L}\p{M}]+/gu,word=>{
+  const upper=word.toLocaleUpperCase('pt-BR');
+  if(acronyms.has(upper)){first=false;return upper}
+  const position=first;first=false;
+  if(!position&&(word.length>1&&particles.has(word)||word==='e'))return word;
+  return word.replace(/(^|[-'’])([\p{L}])/gu,(_,separator,letter)=>separator+letter.toLocaleUpperCase('pt-BR'));
+ });
+}
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine';
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
@@ -138,7 +152,7 @@
     const workouts=q.data||[],exerciseCount=workouts.reduce((n,w)=>n+(w.training_exercises||[]).length,0);
     const category=programCategory(p.description);
     const description=(p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,'').trim();
-    cards.push('<article class="training-card model-program-card"><div class="training-card-main"><div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div><span class="training-card-copy"><strong>'+esc(p.title)+'</strong><span>'+esc(category)+(description?' · '+esc(description):'')+'</span><small>'+workouts.length+' '+(workouts.length===1?'treino':'treinos')+' · '+exerciseCount+' '+(exerciseCount===1?'exercício':'exercícios')+'</small></span></div><div class="model-workout-preview">'+workouts.slice(0,4).map((w,i)=>'<span>'+esc(w.title||'Treino '+(i+1))+'</span>').join('')+'</div><button class="btn model-copy-button" data-copy-public="'+esc(p.id)+'">Adicionar ao meu perfil</button></article>');
+    cards.push('<article class="training-card model-program-card"><div class="training-card-main"><div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(p.title))+'</strong><span>'+esc(category)+(description?' · '+esc(description):'')+'</span><small>'+workouts.length+' '+(workouts.length===1?'treino':'treinos')+' · '+exerciseCount+' '+(exerciseCount===1?'exercício':'exercícios')+'</small></span></div><div class="model-workout-preview">'+workouts.slice(0,4).map((w,i)=>'<span>'+esc(w.title||'Treino '+(i+1))+'</span>').join('')+'</div><button class="btn model-copy-button" data-copy-public="'+esc(p.id)+'">Adicionar ao meu perfil</button></article>');
    }
    host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum modelo público disponível</h3></div>';
    host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic));
@@ -155,7 +169,7 @@
     const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
     const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
     const category=programCategory(p.description);
-    cards.push('<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(workout.title||'Treino')+'</strong><span>'+esc((p.title||category)+(workout.description?' · '+workout.description:''))+'</span><small>'+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>');
+    cards.push('<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+'</strong><span>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+'</span><small>'+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>');
    }
   }
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
@@ -222,7 +236,7 @@
  function populateProgramSelectors(){
   const select=$('workoutProgram');if(!select)return;
   const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
-  select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+p.title)+'</option>').join('');
+  select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+normalizeHumanText(p.title))+'</option>').join('');
  }
  async function toggleProgramVisibility(id){
   const p=plans.find(x=>String(x.id)===String(id));if(!p||!canManageProgramLocally(p))return;
@@ -235,7 +249,7 @@
  function renderProgramManagement(){
   const host=$('programManagement');if(!host)return;
   const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
-  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(p.title)+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
   host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram));
   host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
   host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic));
@@ -247,7 +261,7 @@
   for(const p of plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id)){
    const q=await dbRef().from('training_subworkouts').select('id,title,description,position').eq('version_id',p.current_version_id).order('position');
    if(q.error)continue;
-   for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(w.title||'Treino')+'</strong><small>'+esc(p.title)+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Editar treino" aria-label="Editar treino">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Excluir treino" aria-label="Excluir treino">'+trashIcon+'</button></div></div>');
+   for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Editar treino" aria-label="Editar treino">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Excluir treino" aria-label="Excluir treino">'+trashIcon+'</button></div></div>');
   }
   host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
   host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{await openProgram(b.dataset.editTraining);await editSubworkout(b.dataset.trainingId)});
@@ -256,14 +270,14 @@
 
  async function createWorkout(){
   const program=plans.find(p=>String(p.id)===String($('workoutProgram').value)&&p.status==='active');
-  const title=$('workoutTitle').value.trim();
+  const title=normalizeHumanText($('workoutTitle').value);
   if(!program)return alert('Selecione um programa vigente.');
   if(!title)return alert('Informe o nome do treino.');
   const {data:versionRow,error:versionError}=await dbRef().from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
   if(versionError||!versionRow)return alert('Não foi possível carregar a versão vigente do programa.');
   const {data:existing,error:existingError}=await dbRef().from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
   if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
-  const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:versionRow.id,title,description:$('workoutDescription').value.trim()||null,position:(existing?.[0]?.position||0)+1}).select().single();
+  const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
   if(error)return alert('Não foi possível criar o treino: '+error.message);
   $('workoutTitle').value='';$('workoutDescription').value='';
   await openProgram(program.id);
@@ -326,7 +340,7 @@
      ix={sub:0,exercise:1,rest:2,reps:3,set:-1,load:-1};rows=matrix;
     }else throw Error('Não reconheci os cabeçalhos. Use SUBTREINO, EXERCÍCIO, DESCANSO e REPETIÇÕES, com uma linha por exercício.');
    }
-   const get=(r,k)=>ix[k]<0?'':String(r?.[ix[k]]??'').trim();
+   const get=(r,k)=>{const value=String(r?.[ix[k]]??'');return k==='sub'||k==='exercise'?normalizeHumanText(value):value.trim()};
    const groups=new Map();let validRows=0;
    for(let ri=0;ri<rows.length;ri++){
     const r=rows[ri],name=get(r,'exercise');if(!name)continue;
@@ -361,7 +375,7 @@
    importedExercises=[...groups.values()];
    if(!importedExercises.length)throw Error('Nenhum exercício válido foi encontrado. Confira a coluna Exercício.');
    const totalSets=importedExercises.reduce((n,e)=>n+e.sets.length,0);
-   preview.innerHTML='<strong>Arquivo lido com sucesso</strong><p>'+importedExercises.length+' exercícios · '+[...new Set(importedExercises.map(x=>x.sub))].length+' treinos · '+totalSets+' séries reconhecidas.</p>'+importedExercises.map(x=>'<div class="item"><strong>'+esc(x.sub)+' · '+esc(x.name)+'</strong><div class="muted">'+x.sets.map(z=>z.reps+' reps'+(z.load_kg!=null?' · '+z.load_kg+' kg':'')).join(' / ')+' · descanso '+x.rest_seconds+'s</div></div>').join('');
+   preview.innerHTML='<strong>Arquivo lido com sucesso</strong><p>'+importedExercises.length+' exercícios · '+[...new Set(importedExercises.map(x=>x.sub))].length+' treinos · '+totalSets+' séries reconhecidas.</p>'+importedExercises.map(x=>'<div class="item"><strong>'+esc(normalizeHumanText(x.sub))+' · '+esc(normalizeHumanText(x.name))+'</strong><div class="muted">'+x.sets.map(z=>z.reps+' reps'+(z.load_kg!=null?' · '+z.load_kg+' kg':'')).join(' / ')+' · descanso '+x.rest_seconds+'s</div></div>').join('');
    $('strengthImport').disabled=false;
   }catch(err){
    importedExercises=[];preview.textContent='Não foi possível ler a planilha: '+(err?.message||String(err))+' Selecione outro arquivo ou ajuste as colunas e tente novamente.';
@@ -370,7 +384,7 @@
  }
  async function importStrengthFile(){
   if(!importedExercises.length){$('strengthPreview').textContent='Primeiro selecione e valide uma planilha com exercícios.';return}
-  const title=prompt('Nome do programa importado:', $('strengthFile').files[0].name.replace(/\.[^.]+$/,''));
+  const title=normalizeHumanText(prompt('Nome do programa importado:', $('strengthFile').files[0].name.replace(/\.[^.]+$/,'')));
   if(!title?.trim()){$('strengthPreview').textContent='Importação cancelada. Nenhum programa foi criado.';return}
   const btn=$('strengthImport'),preview=$('strengthPreview'),db=dbRef(),u=userRef();
   btn.disabled=true;btn.textContent='Importando…';
@@ -379,7 +393,7 @@
   try{
    report('Etapa 1 de 4: criando o programa…');
    await assertUniqueActiveCategory($('importCategory').value);
-   const {data:p,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title:title.trim(),description:'[MODALIDADE: '+$('importCategory').value+'] Importado de Excel/CSV',status:'active'}).select().single();
+   const {data:p,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:'[MODALIDADE: '+$('importCategory').value+'] Importado de Excel/CSV',status:'active'}).select().single();
    if(error)throw Error('Não foi possível criar o programa: '+error.message);
    programId=p.id;
    report('Etapa 2 de 4: criando a versão inicial…');
@@ -408,18 +422,18 @@
   }
  }
  async function createProgram(){
-  const title=$('programTitle').value.trim();
+  const title=normalizeHumanText($('programTitle').value);
   if(!title)return alert('Informe o nome do programa.');
-  const category=$('programCategory').value,description=$('programDesc').value.trim()||null;
+  const category=$('programCategory').value,description=normalizeHumanText($('programDesc').value)||null;
   const {data,error}=await dbRef().rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
   await home();
  }
  async function createProgramForAthlete(){
-  const email=$('athleteEmail').value.trim().toLowerCase(),title=$('programTitle').value.trim();
+  const email=$('athleteEmail').value.trim().toLowerCase(),title=normalizeHumanText($('programTitle').value);
   if(!email)return alert('Informe o e-mail do atleta.');
   if(!title)return alert('Informe o nome do programa.');
-  const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+$('programDesc').value.trim();
+  const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+normalizeHumanText($('programDesc').value);
   const {error}=await dbRef().rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação do programa para outro atleta. Execute o arquivo supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.');return alert(message)}
   alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
@@ -477,12 +491,12 @@
   await db.from('app_notifications').insert({user_id:current.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:current.id});version=data;openProgram(current.id);
  }
  async function addSubworkout(){
-  const title=prompt('Nome do treino (ex.: A — Peito e tríceps):');if(!title?.trim())return;
-  const {error}=await dbRef().from('training_subworkouts').insert({version_id:version.id,title:title.trim(),position:subworkouts.length+1});if(error)return alert(error.message);openProgram(current.id);
+  const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
+  const {error}=await dbRef().from('training_subworkouts').insert({version_id:version.id,title,position:subworkouts.length+1});if(error)return alert(error.message);openProgram(current.id);
  }
  async function renderSubworkouts(){
   const db=dbRef();let html='';
-  for(const s of subworkouts){const q=await db.from('training_exercises').select('*').eq('subworkout_id',s.id).order('position');const done=await db.from('training_sessions').select('subworkout_id').eq('program_id',current.id).eq('athlete_id',userRef().id).eq('status','completed');let total=0;if(!done.error&&done.data?.length){const ids=[...new Set(done.data.map(x=>x.subworkout_id).filter(Boolean))];if(ids.length){const names=await db.from('training_subworkouts').select('id,title').in('id',ids);const titleIds=(names.data||[]).filter(x=>x.title===s.title).map(x=>x.id);total=done.data.filter(x=>titleIds.includes(x.subworkout_id)).length}}html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(s.title)}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(e.name)}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`}
+  for(const s of subworkouts){const q=await db.from('training_exercises').select('*').eq('subworkout_id',s.id).order('position');const done=await db.from('training_sessions').select('subworkout_id').eq('program_id',current.id).eq('athlete_id',userRef().id).eq('status','completed');let total=0;if(!done.error&&done.data?.length){const ids=[...new Set(done.data.map(x=>x.subworkout_id).filter(Boolean))];if(ids.length){const names=await db.from('training_subworkouts').select('id,title').in('id',ids);const titleIds=(names.data||[]).filter(x=>x.title===s.title).map(x=>x.id);total=done.data.filter(x=>titleIds.includes(x.subworkout_id)).length}}html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`}
   $('subList').innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
   section.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>addExercise(b.dataset.addEx));
   section.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>editSubworkout(b.dataset.editSub));
@@ -492,7 +506,7 @@
   section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start));
  }
  async function addExercise(subId){
-  const name=prompt('Nome do exercício:');if(!name?.trim())return;
+  const name=normalizeHumanText(prompt('Nome do exercício:'));if(!name)return;
   const raw=prompt('Séries e repetições (ex.: 12,10,8):','12,10,8')||'12,10,8';
   const rest=parseRestSeconds(prompt('Descanso em segundos ou minutos (ex.: 60 ou 1 min):','90')||'90');
   let reps;try{reps=parseRepScheme(raw)}catch(err){return alert(err.message)}
@@ -500,7 +514,7 @@
   if(!sets.length)return alert('Informe repetições válidas.');
   const {data,error}=await dbRef().from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
   if(error)return alert(error.message);
-  const r=await dbRef().from('training_exercises').insert({subworkout_id:subId,name:name.trim(),position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
+  const r=await dbRef().from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(name),position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
   if(r.error)return alert(r.error.message);openProgram(current.id);
  }
  function showProgramEditor(title,fields,onSave){
@@ -511,15 +525,15 @@
   $('editorClose').onclick=$('editorCancel').onclick=()=>overlay.classList.remove('show');
   $('programEditorForm').onsubmit=async e=>{e.preventDefault();const button=$('editorSave');button.disabled=true;try{const ok=await onSave();if(ok!==false)overlay.classList.remove('show')}finally{button.disabled=false}};
  }
- const editorField=(id,label,value,type='text',placeholder='')=>'<div class="field"><label for="'+id+'">'+esc(label)+'</label><input id="'+id+'" type="'+type+'" value="'+esc(value)+'" placeholder="'+esc(placeholder)+'" required></div>';
+ const editorField=(id,label,value,type='text',placeholder='')=>{const cleanValue=/(Title|Name)$/.test(id)?normalizeHumanText(value):value;return '<div class="field"><label for="'+id+'">'+esc(label)+'</label><input id="'+id+'" type="'+type+'" value="'+esc(cleanValue)+'" placeholder="'+esc(placeholder)+'" required></div>'};
  const editorArea=(id,label,value)=>'<div class="field"><label for="'+id+'">'+esc(label)+'</label><textarea id="'+id+'" rows="3">'+esc(value)+'</textarea></div>';
  async function editProgram(id){
   const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
   const prefix=(p.description||'').match(/^\[MODALIDADE:\s*[^\]]+\]\s*/i)?.[0]||'';
   const description=(p.description||'').replace(/^\[MODALIDADE:\s*[^\]]+\]\s*/i,'');
   showProgramEditor('Editar programa',editorField('editorProgramTitle','Nome do programa',p.title)+editorArea('editorProgramDescription','Descrição',description),async()=>{
-   const title=$('editorProgramTitle').value.trim();if(!title)return alert('Informe um nome para o programa.');
-   const {error}=await dbRef().from('training_programs').update({title,description:prefix+$('editorProgramDescription').value.trim()}).eq('id',p.id);
+   const title=normalizeHumanText($('editorProgramTitle').value);if(!title)return alert('Informe um nome para o programa.');
+   const {error}=await dbRef().from('training_programs').update({title,description:prefix+normalizeHumanText($('editorProgramDescription').value)}).eq('id',p.id);
    if(error){alert('Não foi possível salvar o programa: '+error.message);return false}
    await home();return true;
   });
@@ -541,8 +555,8 @@
  async function editSubworkout(id){
   const item=subworkouts.find(x=>String(x.id)===String(id));if(!item)return;
   showProgramEditor('Editar treino',editorField('editorSubTitle','Nome do treino',item.title)+editorArea('editorSubDescription','Descrição',item.description||''),async()=>{
-   const title=$('editorSubTitle').value.trim();if(!title)return alert('Informe um nome para o treino.');
-   const {error}=await dbRef().from('training_subworkouts').update({title,description:$('editorSubDescription').value.trim()||null}).eq('id',item.id);
+   const title=normalizeHumanText($('editorSubTitle').value);if(!title)return alert('Informe um nome para o treino.');
+   const {error}=await dbRef().from('training_subworkouts').update({title,description:normalizeHumanText($('editorSubDescription').value)||null}).eq('id',item.id);
    if(error){alert('Não foi possível salvar o treino: '+error.message);return false}
    await openProgram(current.id);return true;
   });
@@ -576,7 +590,7 @@
    +'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p>'
    +editorField('editorExerciseRest','Descanso',String(e.rest_seconds??0),'text','Segundos, mm:ss ou minutos');
   showProgramEditor('Editar exercício',fields,async()=>{
-   const name=$('editorExerciseName').value.trim();if(!name)return alert('Informe o nome do exercício.');
+   const name=normalizeHumanText($('editorExerciseName').value);if(!name)return alert('Informe o nome do exercício.');
    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
    const loadText=$('editorExerciseLoads').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
    let loads;
@@ -623,8 +637,8 @@
   const planned=set.reps==='MR'?'MR':Number(set.reps)||0,loadKey=e.id+':'+item.setIndex;
   if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=set.load_kg??(item.setIndex>0?(sessionLoads[e.id+':'+(item.setIndex-1)]??''):'');
   const loadValue=sessionLoads[loadKey],loggedSets=sessionSetLogs.length,allSets=sessionPlan.length;
-  const media=e.media_url?'<img class="execution-media" src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(e.name)+'">':'';
-  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(current.title)+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(e.name)+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small>kg</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">Registrar carga</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  const media=e.media_url?'<img class="execution-media" src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(normalizeHumanText(e.name))+'">':'';
+  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small>kg</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">Registrar carga</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   $('completeSet').onclick=completeCurrentSet;$('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
@@ -700,9 +714,9 @@
    const p=exerciseProgress(index),label=p.status==='done'?'Feito':p.status==='skipped'?'Não executado':p.status==='partial'?'Parcial':'Pendente';
    const color=p.status==='done'?'#b7f34a':p.status==='skipped'?'#ff7a7a':'#91a0af';
    const summary=(e.sets||[]).map(x=>x.reps==='MR'?'MR':x.reps+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ');
-   return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(e.name)+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button type="button" class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><span class="exercise-status-actions"><button type="button" class="exercise-status-icon" data-mark-done="'+index+'" aria-label="Marcar como feito" title="Marcar como feito"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></button><button type="button" class="exercise-status-icon skipped" data-mark-skipped="'+index+'" aria-label="Marcar como não executado" title="Marcar como não executado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8m0-8-8 8"/></svg></button></span>':'')+'</div>';
+   return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button type="button" class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><span class="exercise-status-actions"><button type="button" class="exercise-status-icon" data-mark-done="'+index+'" aria-label="Marcar como feito" title="Marcar como feito"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></button><button type="button" class="exercise-status-icon skipped" data-mark-skipped="'+index+'" aria-label="Marcar como não executado" title="Marcar como não executado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8m0-8-8 8"/></svg></button></span>':'')+'</div>';
   }).join('');
-  shell('Escolha o próximo exercício','<div class="panel"><h3>'+esc(current.title)+' · '+esc(sub?.title||'Treino')+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
+  shell('Escolha o próximo exercício','<div class="panel"><h3>'+esc(normalizeHumanText(current.title))+' · '+esc(normalizeHumanText(sub?.title||'Treino'))+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
   section.querySelectorAll('[data-begin-ex]').forEach(b=>b.onclick=()=>beginExercise(Number(b.dataset.beginEx)));
   section.querySelectorAll('[data-mark-done]').forEach(b=>b.onclick=()=>markExerciseDone(Number(b.dataset.markDone)));
   section.querySelectorAll('[data-mark-skipped]').forEach(b=>b.onclick=()=>markExerciseNotDone(Number(b.dataset.markSkipped)));
@@ -812,7 +826,7 @@
   if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou importar seu programa.');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));
   const showPrograms=()=>{
-   shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(p.title)+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
+   shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(normalizeHumanText(p.title))+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
    section.querySelectorAll('[data-select-program]').forEach(button=>button.onclick=()=>chooseProgram(button.dataset.selectProgram));
   };
   const chooseProgram=async id=>{
@@ -823,7 +837,7 @@
    if(sq.error)return alert(sq.error.message);
    if(!sq.data?.length)return alert('Este programa ainda não possui treinos. Adicione A, B, C… na aba Musculação.');
    current=program;version=vq.data;subworkouts=sq.data;
-   shell('Qual treino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(s.title)+'</strong><p class="muted">'+esc(s.description||'Treino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
+   shell('Qual treino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(normalizeHumanText(s.title))+'</strong><p class="muted">'+esc(s.description||'Treino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
    section.querySelectorAll('[data-start-selected]').forEach(button=>button.onclick=()=>startSession(button.dataset.startSelected));
    $('backPrograms').onclick=showPrograms;
   };
