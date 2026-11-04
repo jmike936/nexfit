@@ -365,17 +365,17 @@
   const item=sessionPlan[sessionIndex],e=item.exercise,set=item.set,setNo=item.setIndex+1,total=(e.sets||[]).length;
   const planned=set.reps==='MR'?'MR':Number(set.reps)||0;
   const loadKey=e.id+':'+item.setIndex;
-  if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=set.load_kg??'';
+  if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=set.load_kg??(item.setIndex>0?(sessionLoads[e.id+':'+(item.setIndex-1)]??''):'');
   const loadValue=sessionLoads[loadKey];
   const setDots=(e.sets||[]).map((x,i)=>'<span style="display:inline-block;padding:8px 11px;margin:4px;border:1px solid '+(i===item.setIndex?'#b7f34a':'#354454')+';border-radius:9px;background:'+(i===item.setIndex?'#28371a':'#111922')+';color:'+(i===item.setIndex?'#b7f34a':'#f4f7fa')+';font-weight:800">'+(x.reps==='MR'?'MR':esc(x.reps))+'</span>').join('');
   const media=e.media_url?'<img src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(e.name)+'" style="width:100%;max-height:320px;object-fit:contain;background:#111922;border:1px solid #354454;border-radius:12px;margin:12px 0">':'';
-  host.innerHTML='<div class="panel" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="muted">'+esc(current.title)+' · exercício '+(item.exerciseIndex+1)+' de '+sessionExerciseRows.length+'</div><button class="btn alt" id="exitSession">Sair</button></div><div style="height:8px;background:#354454;border-radius:9px;margin:12px 0 18px"><span style="display:block;width:'+Math.round(((sessionIndex+1)/sessionPlan.length)*100)+'%;height:100%;background:#b7f34a;border-radius:9px"></span></div>'+media+'<h2 style="margin:8px 0;font-size:28px">'+esc(e.name)+'</h2>'+(e.notes?'<p class="muted">'+esc(e.notes)+'</p>':'')+'<p class="muted">'+total+' séries · '+(e.sets||[]).map(x=>x.reps==='MR'?'MR':esc(x.reps)).join(' / ')+' · descanso '+(Number(e.rest_seconds)||0)+' s</p><div style="margin:12px 0">'+setDots+'</div><label for="sessionLoad">Carga da série '+setNo+' ('+(planned==='MR'?'MR':planned+' reps')+'), em kg</label><div style="display:grid;grid-template-columns:74px 1fr 74px;gap:8px;align-items:center"><button class="btn alt" id="loadDown" type="button">−2,5</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="Informe a carga" value="'+(loadValue??'')+'" style="background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:12px;width:100%"><button class="btn alt" id="loadUp" type="button">+2,5</button></div>'+(planned==='MR'?'<label for="sessionReps">Repetições realizadas</label><input id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<button class="btn" id="completeSet" style="width:100%;margin-top:14px">Concluir série '+setNo+(planned==='MR'?' (MR)':' ('+planned+' reps)')+'</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="skipSet">Pular série (não executada)</button><button class="btn alt" id="skipExercise">Pular exercício</button></div></div><div id="restPanel" class="panel" style="display:none;text-align:center"><div class="eyebrow">DESCANSO</div><div id="restClock" style="font-size:52px;font-weight:900;color:#b7f34a">00:00</div><p class="muted" id="nextStepText"></p><p class="muted">O tempo usa o relógio real. Você pode trocar de aba; o aviso aparece ao terminar.</p><button class="btn alt" id="skipRest">Pular descanso</button></div>';
+  host.innerHTML='<div class="panel" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="muted">'+esc(current.title)+' · exercício '+(item.exerciseIndex+1)+' de '+sessionExerciseRows.length+'</div><button class="btn alt" id="exitSession">Sair</button></div><div style="height:8px;background:#354454;border-radius:9px;margin:12px 0 18px"><span style="display:block;width:'+Math.round(((sessionIndex+1)/sessionPlan.length)*100)+'%;height:100%;background:#b7f34a;border-radius:9px"></span></div>'+media+'<h2 style="margin:8px 0;font-size:28px">'+esc(e.name)+'</h2>'+(e.notes?'<p class="muted">'+esc(e.notes)+'</p>':'')+'<p class="muted">'+total+' séries · '+(e.sets||[]).map(x=>x.reps==='MR'?'MR':esc(x.reps)).join(' / ')+' · descanso '+(Number(e.rest_seconds)||0)+' s</p><div style="margin:12px 0">'+setDots+'</div><label for="sessionLoad">Carga da série '+setNo+' ('+(planned==='MR'?'MR':planned+' reps')+'), em kg</label><div style="display:grid;grid-template-columns:74px 1fr 74px;gap:8px;align-items:center"><button class="btn alt" id="loadDown" type="button">−2,5</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="Informe a carga" value="'+(loadValue??'')+'" style="background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:12px;width:100%"><button class="btn alt" id="loadUp" type="button">+2,5</button></div>'+(planned==='MR'?'<label for="sessionReps">Repetições realizadas</label><input id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<button class="btn" id="completeSet" style="width:100%;margin-top:14px">Concluir série '+setNo+(planned==='MR'?' (MR)':' ('+planned+' reps)')+'</button><div id="setSkipActions" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="skipSet">Pular série (não executada)</button><button class="btn alt" id="skipExercise">Pular exercício</button></div></div><div id="restPanel" class="panel" style="display:none;text-align:center"><div class="eyebrow">DESCANSO</div><div id="restClock" style="font-size:52px;font-weight:900;color:#b7f34a">00:00</div><p class="muted" id="nextStepText"></p><p class="muted">O tempo usa o relógio real. Você pode trocar de aba; o aviso aparece ao terminar.</p><button class="btn alt" id="skipRest">Pular descanso</button></div>';
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);
   $('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   $('completeSet').onclick=completeCurrentSet;
   $('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
-  $('exitSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;openProgram(current.id)};
+  $('exitSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;openProgram(current.id)};
  }
  function adjustLoad(loadKey,delta){
   const input=$('sessionLoad');if(!input)return;
@@ -423,11 +423,12 @@
   const {error}=await dbRef().from('training_set_logs').insert(row);
   if(error)return alert('Não foi possível salvar esta série: '+error.message);
   const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),clock=$('restClock'),complete=$('completeSet');
-  if(complete)complete.disabled=true;
+  if(complete)complete.disabled=true;const skipActions=$('setSkipActions');if(skipActions)skipActions.style.display='none';
   if(!rest){sessionIndex++;renderSessionStep();return}
   panel.style.display='block';const deadline=Date.now()+rest*1000;
   const next=sessionPlan[sessionIndex+1];
-  const nextText=next?'Próxima: '+next.exercise.name+' · série '+(next.setIndex+1)+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(next.set.load_kg==null?'a informar':next.set.load_kg+' kg'):'Último descanso do treino.';
+  const nextLoad=next?.set.load_kg??(next&&next.exercise.id===item.exercise.id?(sessionLoads[next.exercise.id+':'+item.setIndex]??null):null);
+  const nextText=next?'Próxima: '+next.exercise.name+' · série '+(next.setIndex+1)+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):'Último descanso do treino.';
   $('nextStepText').textContent=nextText;
   const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;sessionIndex++;renderSessionStep()};
   activeRest={deadline,advance,nextText,notified:false};
@@ -450,7 +451,7 @@
  }
  async function finishSession(){
   if(!session)return;
-  if(timer)clearInterval(timer);timer=null;
+  if(timer)clearInterval(timer);timer=null;activeRest=null;
   const {error}=await dbRef().from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
   if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
   const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
