@@ -33,3 +33,8 @@ O cadastro pode exigir confirmação de e-mail conforme a configuração de Auth
 ## Edição de treinos e histórico
 
 Depois de aplicar as mudanças do app, execute `supabase-workout-edit-policies.sql` no SQL Editor do Supabase. O script libera edição de séries próprias e gerenciamento de programas, subtreinos e exercícios para o atleta e para profissionais com permissão ativa. Exclusões de itens com histórico são bloqueadas pelo app para preservar os registros.
+
+
+## Foto e dados do perfil
+
+Depois de publicar a atualização do perfil, execute `supabase-profile-photo.sql` no SQL Editor do Supabase para criar o bucket privado das fotos e suas políticas de acesso. O próprio perfil permite adicionar uma imagem JPEG, PNG ou WebP de até 5 MB. Nome, data de nascimento, altura e peso são opcionais e editáveis; a idade é calculada a partir da data informada.
