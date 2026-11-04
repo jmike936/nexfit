@@ -178,6 +178,7 @@ function showError(msg){$('authError').textContent=msg||''}
 function showFeedback(title,message){$('feedbackTitle').textContent=title;$('feedbackMessage').textContent=message;$('feedbackModal').classList.add('show')}
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
+// Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
 const APP_VERSION='1.0.0',APP_BUILD='20261104.1';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
