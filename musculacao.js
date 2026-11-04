@@ -591,7 +591,7 @@
   $('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   $('completeSet').onclick=completeCurrentSet;
   $('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
-  $('exitSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;openProgram(current.id)};
+  $('exitSession').onclick=exitSessionToHome;
  }
  function adjustLoad(loadKey,delta){
   const input=$('sessionLoad');if(!input)return;
@@ -655,7 +655,14 @@
   section.querySelectorAll('[data-mark-done]').forEach(b=>b.onclick=()=>markExerciseDone(Number(b.dataset.markDone)));
   section.querySelectorAll('[data-mark-skipped]').forEach(b=>b.onclick=()=>markExerciseNotDone(Number(b.dataset.markSkipped)));
   $('finishWorkout').onclick=()=>{const unfinished=sessionExerciseRows.map((_,i)=>exerciseProgress(i)).filter(x=>x.status!=='done').length;if(unfinished&&!confirm(unfinished+' exercício(s) ainda não estão marcados como feitos. Eles aparecerão como não executados/parciais no histórico. Finalizar mesmo assim?'))return;finishSession()};
-  $('cancelSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;openProgram(current.id)};
+  $('cancelSession').onclick=exitSessionToHome;
+ }
+ function exitSessionToHome(){
+  if(timer)clearInterval(timer);
+  timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();
+  const homeButton=document.querySelector('.nav button[data-page="home"]');
+  if(homeButton){homeButton.click();return}
+  document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id==='home'));
  }
  function beginExercise(index){
   if(index<0||index>=sessionExerciseRows.length)return;
