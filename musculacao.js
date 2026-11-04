@@ -17,12 +17,34 @@
  const tab=document.createElement('button');tab.dataset.page='strengthPage';tab.textContent='Importar/Criar treinos';nav.append(tab);
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function go(){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));home()}
  tab.onclick=go;
  const field=(id,label,placeholder='',type='text')=>`<label for="${id}">${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}">`;
  function shell(title,body){section.innerHTML=`<div class="sectionhead"><div><div class="eyebrow">TREINAMENTO DE FORÇA</div><h2>${title}</h2></div><button class="btn alt" id="refresh">Atualizar</button></div>${body}`;const b=$('refresh');if(b)b.onclick=home}
+ function renderProgramList(){
+  const archived=plans.filter(p=>p.status==='archived'),visible=plans.filter(p=>p.status!=='archived'||showArchivedPlans);
+  const category=p=>{const m=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return m?m[1].trim():'Musculação'};
+  const groups=new Map();for(const p of visible){const key=category(p);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)}
+  let html='<div class="sectionhead"><h3>Programas vigentes por categoria</h3>'+(archived.length?'<button class="btn alt" id="toggleArchived">'+(showArchivedPlans?'Ocultar':'Mostrar')+' arquivados ('+archived.length+')</button>':'')+'</div>';
+  if(!visible.length)html+='<p class="muted">Não há programas vigentes. Crie ou importe um programa'+(archived.length?' ou mostre os arquivados.':'.')+'</p>';
+  for(const [name,items] of [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'))){
+   html+='<section class="panel"><h3>'+esc(name)+'</h3>';
+   for(const p of items){
+    const archivedItem=p.status==='archived';
+    const label=archivedItem?'ARQUIVADO':p.status==='pending'?'PENDENTE':p.status==='deletion_pending'?'EXCLUSÃO PENDENTE':'VIGENTE';
+    html+='<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+esc(p.title)+'</strong><span class="tag">'+label+'</span></div><p class="muted">'+esc((p.description||'Sem descrição').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+' · '+(p.athlete_id===userRef().id?'Meu programa':'Programa compartilhado')+'</p><button class="btn" data-open="'+p.id+'">Abrir programa</button><button class="btn alt" data-edit-program="'+p.id+'">Editar</button>'+(archivedItem?'<button class="btn alt" data-restore-program="'+p.id+'">Restaurar</button>':'<button class="btn alt" data-archive-program="'+p.id+'">Excluir</button>')+'</div>';
+   }
+   html+='</section>';
+  }
+  $('programList').innerHTML=html;
+  const toggle=$('toggleArchived');if(toggle)toggle.onclick=()=>{showArchivedPlans=!showArchivedPlans;renderProgramList()};
+  section.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProgram(b.dataset.open));
+  section.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
+  section.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram));
+  section.querySelectorAll('[data-restore-program]').forEach(b=>b.onclick=()=>restoreProgram(b.dataset.restoreProgram));
+ }
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Musculação','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
   shell('Importação / Criação de treinos',`<div class="panel"><h3>Meus programas</h3><label for="programCategory">Categoria do treino</label><select id="programCategory"><option>Musculação</option><option>Natação</option><option>Corrida</option><option>Pedal</option><option>Ciclismo</option><option>Caminhada</option><option>Funcional</option><option>Cross training</option><option>Outra</option></select><div>${field('programTitle','Nome do programa','Ex.: Hipertrofia — bloco 1')}</div><label for="programDesc">Descrição</label><textarea id="programDesc" rows="2" placeholder="Objetivo, observações e contexto"></textarea><button class="btn" id="createProgram">＋ Criar meu programa</button><p class="muted">Você pode criar e organizar programas para sua própria conta. A categoria escolhida identifica a modalidade do programa.</p></div><div class="panel"><h3>Importar treino de Excel ou CSV</h3><label for="importCategory">Categoria do treino importado</label><select id="importCategory"><option>Musculação</option><option>Natação</option><option>Corrida</option><option>Pedal</option><option>Ciclismo</option><option>Caminhada</option><option>Funcional</option><option>Cross training</option><option>Outra</option></select><p class="muted">Use uma linha por série. Colunas: Treino, Exercício, Série, Repetições, Carga e Descanso. Treino e Série são opcionais.</p><input id="strengthFile" type="file" accept=".xlsx,.csv"><div id="strengthPreview" class="muted">Selecione um arquivo para visualizar os exercícios e séries.</div><button class="btn" id="strengthImport" disabled>Importar para meus programas</button></div><div id="professionalCreate" class="panel" style="display:none"><h3>Prescrever para atleta</h3><p class="muted">Disponível somente quando você possui autorização ativa de gestão concedida pelo atleta.</p>${field('athleteEmail','E-mail do atleta','aluno@email.com','email')}<button class="btn" id="createForAthlete">Criar programa para atleta</button></div><div id="programList" class="panel">Carregando…</div><div class="panel" id="professionalAccessPanel"><h3>Acessos profissionais</h3><div id="professionalRequestControls"><div class="rowf"><div>${field('professionalEmail','Solicitar acesso como profissional','personal@email.com','email')}</div><div><label for="accessType">Permissão solicitada</label><select id="accessType"><option value="view">Visualizar histórico</option><option value="manage">Gerenciar meus programas</option></select></div></div><button class="btn alt" id="requestAccess">Solicitar acesso ao atleta</button></div><div id="accessList"></div></div><div class="panel"><h3>Notificações</h3><div id="notifications" class="muted">Carregando…</div></div>`);
@@ -33,10 +55,7 @@
   $('strengthImport').onclick=importStrengthFile;
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
   if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
-  plans=q.data||[];$('programList').innerHTML=plans.length?plans.map(p=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>${esc(p.title)}</strong><span class="tag">${p.status==='active'?'VIGENTE':p.status==='pending'?'PENDENTE':'ARQUIVADO'}</span></div><p class="muted">${esc(p.description||'Sem descrição')} · ${p.athlete_id===u.id?'Meu programa':'Programa compartilhado'}</p><button class="btn" data-open="${p.id}">Abrir programa</button><button class="btn alt" data-edit-program="${p.id}">Editar</button><button class="btn alt" data-archive-program="${p.id}">Excluir</button></div>`).join(''):'<p class="muted">Nenhum programa encontrado. Crie seu primeiro programa ou solicite acesso a um profissional.</p>';
-  section.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProgram(b.dataset.open));
-  section.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
-  section.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram));
+  plans=q.data||[];showArchivedPlans=false;renderProgramList();
   const nq=await db.from('app_notifications').select('*').order('created_at',{ascending:false}).limit(8);
   $('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>`<div class="item"><strong>${esc(n.title)}</strong><p class="muted">${esc(n.body)}</p></div>`).join('')||'Nenhuma notificação.';
   const aq=await db.from('athlete_professional_access').select('*');
@@ -306,6 +325,13 @@
   const {error}=await dbRef().from('training_programs').update({status:'archived'}).eq('id',p.id);
   if(error)return alert('Não foi possível excluir o programa: '+error.message);current=null;await home();
  }
+ async function restoreProgram(id){
+  const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
+  const {error}=await dbRef().from('training_programs').update({status:'active'}).eq('id',p.id);
+  if(error)return alert('Não foi possível restaurar o programa: '+error.message);
+  showArchivedPlans=false;await home();
+ }
+
  async function editSubworkout(id){
   const item=subworkouts.find(x=>String(x.id)===String(id));if(!item)return;
   showProgramEditor('Editar subtreino',editorField('editorSubTitle','Nome do subtreino',item.title)+editorArea('editorSubDescription','Descrição',item.description||''),async()=>{
