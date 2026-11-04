@@ -17,7 +17,7 @@
  const tab=document.createElement('button');tab.dataset.page='strengthPage';tab.textContent='Importar/Criar treinos';nav.append(tab);
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function go(){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));home()}
  tab.onclick=go;
@@ -369,17 +369,49 @@
   const loadValue=sessionLoads[loadKey];
   const setDots=(e.sets||[]).map((x,i)=>'<span style="display:inline-block;padding:8px 11px;margin:4px;border:1px solid '+(i===item.setIndex?'#b7f34a':'#354454')+';border-radius:9px;background:'+(i===item.setIndex?'#28371a':'#111922')+';color:'+(i===item.setIndex?'#b7f34a':'#f4f7fa')+';font-weight:800">'+(x.reps==='MR'?'MR':esc(x.reps))+'</span>').join('');
   const media=e.media_url?'<img src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(e.name)+'" style="width:100%;max-height:320px;object-fit:contain;background:#111922;border:1px solid #354454;border-radius:12px;margin:12px 0">':'';
-  host.innerHTML='<div class="panel" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="muted">'+esc(current.title)+' · exercício '+(item.exerciseIndex+1)+' de '+sessionExerciseRows.length+'</div><button class="btn alt" id="exitSession">Sair</button></div><div style="height:8px;background:#354454;border-radius:9px;margin:12px 0 18px"><span style="display:block;width:'+Math.round(((sessionIndex+1)/sessionPlan.length)*100)+'%;height:100%;background:#b7f34a;border-radius:9px"></span></div>'+media+'<h2 style="margin:8px 0;font-size:28px">'+esc(e.name)+'</h2>'+(e.notes?'<p class="muted">'+esc(e.notes)+'</p>':'')+'<p class="muted">'+total+' séries · '+(e.sets||[]).map(x=>x.reps==='MR'?'MR':esc(x.reps)).join(' / ')+' · descanso '+(Number(e.rest_seconds)||0)+' s</p><div style="margin:12px 0">'+setDots+'</div><label for="sessionLoad">Carga da série '+setNo+' ('+(planned==='MR'?'MR':planned+' reps')+'), em kg</label><div style="display:grid;grid-template-columns:74px 1fr 74px;gap:8px;align-items:center"><button class="btn alt" id="loadDown" type="button">−2,5</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="Informe a carga" value="'+(loadValue??'')+'" style="background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:12px;width:100%"><button class="btn alt" id="loadUp" type="button">+2,5</button></div>'+(planned==='MR'?'<label for="sessionReps">Repetições realizadas</label><input id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<button class="btn" id="completeSet" style="width:100%;margin-top:14px">Concluir série '+setNo+(planned==='MR'?' (MR)':' ('+planned+' reps)')+'</button></div><div id="restPanel" class="panel" style="display:none;text-align:center"><div class="eyebrow">DESCANSO</div><div id="restClock" style="font-size:52px;font-weight:900;color:#b7f34a">00:00</div><p class="muted">O próximo passo aparece ao terminar o descanso.</p><button class="btn alt" id="skipRest">Pular timer</button></div>';
+  host.innerHTML='<div class="panel" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="muted">'+esc(current.title)+' · exercício '+(item.exerciseIndex+1)+' de '+sessionExerciseRows.length+'</div><button class="btn alt" id="exitSession">Sair</button></div><div style="height:8px;background:#354454;border-radius:9px;margin:12px 0 18px"><span style="display:block;width:'+Math.round(((sessionIndex+1)/sessionPlan.length)*100)+'%;height:100%;background:#b7f34a;border-radius:9px"></span></div>'+media+'<h2 style="margin:8px 0;font-size:28px">'+esc(e.name)+'</h2>'+(e.notes?'<p class="muted">'+esc(e.notes)+'</p>':'')+'<p class="muted">'+total+' séries · '+(e.sets||[]).map(x=>x.reps==='MR'?'MR':esc(x.reps)).join(' / ')+' · descanso '+(Number(e.rest_seconds)||0)+' s</p><div style="margin:12px 0">'+setDots+'</div><label for="sessionLoad">Carga da série '+setNo+' ('+(planned==='MR'?'MR':planned+' reps')+'), em kg</label><div style="display:grid;grid-template-columns:74px 1fr 74px;gap:8px;align-items:center"><button class="btn alt" id="loadDown" type="button">−2,5</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="Informe a carga" value="'+(loadValue??'')+'" style="background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:12px;width:100%"><button class="btn alt" id="loadUp" type="button">+2,5</button></div>'+(planned==='MR'?'<label for="sessionReps">Repetições realizadas</label><input id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<button class="btn" id="completeSet" style="width:100%;margin-top:14px">Concluir série '+setNo+(planned==='MR'?' (MR)':' ('+planned+' reps)')+'</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="skipSet">Pular série (não executada)</button><button class="btn alt" id="skipExercise">Pular exercício</button></div></div><div id="restPanel" class="panel" style="display:none;text-align:center"><div class="eyebrow">DESCANSO</div><div id="restClock" style="font-size:52px;font-weight:900;color:#b7f34a">00:00</div><p class="muted" id="nextStepText"></p><p class="muted">O tempo usa o relógio real. Você pode trocar de aba; o aviso aparece ao terminar.</p><button class="btn alt" id="skipRest">Pular descanso</button></div>';
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);
   $('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   $('completeSet').onclick=completeCurrentSet;
+  $('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
   $('exitSession').onclick=()=>{if(timer)clearInterval(timer);timer=null;openProgram(current.id)};
  }
  function adjustLoad(loadKey,delta){
   const input=$('sessionLoad');if(!input)return;
   const value=Number(input.value||0),next=Math.max(0,value+delta);
   input.value=Number(next.toFixed(2));sessionLoads[loadKey]=input.value;
+ }
+ async function enableWorkoutNotifications(){
+  if(!('Notification' in window)){notificationsAllowed=false;return}
+  try{if(Notification.permission==='granted')notificationsAllowed=true;else if(Notification.permission==='default')notificationsAllowed=(await Notification.requestPermission())==='granted';else notificationsAllowed=false}catch(_){notificationsAllowed=false}
+ }
+ function tickRestTimer(){
+  if(!activeRest)return;
+  const remaining=Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));
+  const clock=$('restClock');if(clock){const m=Math.floor(remaining/60),s=remaining%60;clock.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+  if(remaining>0)return;
+  const rest=activeRest;
+  if(!rest.notified){
+   rest.notified=true;
+   if(notificationsAllowed){try{new Notification('Descanso finalizado',{body:rest.nextText,tag:'nexfit-rest-'+(session?.id||'active')})}catch(_){}}
+   if(navigator.vibrate)navigator.vibrate([180,80,180]);
+   const text=$('nextStepText');if(text)text.textContent='Descanso concluído. '+rest.nextText;
+  }
+  rest.advance();
+ }
+ document.addEventListener('visibilitychange',()=>{if(activeRest)tickRestTimer()});
+ function skipCurrentSet(){
+  if(!session)return;
+  if(!confirm('Pular esta série? Ela será registrada no histórico como não executada.'))return;
+  sessionIndex++;renderSessionStep();
+ }
+ function skipCurrentExercise(){
+  if(!session)return;
+  const item=sessionPlan[sessionIndex];if(!item)return;
+  if(!confirm('Pular o restante de "'+item.exercise.name+'"? As séries restantes ficarão como não executadas.'))return;
+  let next=sessionIndex+1;while(next<sessionPlan.length&&sessionPlan[next].exerciseIndex===item.exerciseIndex)next++;
+  sessionIndex=next;renderSessionStep();
  }
  async function completeCurrentSet(){
   const item=sessionPlan[sessionIndex],repsInput=$('sessionReps');
@@ -393,18 +425,21 @@
   const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),clock=$('restClock'),complete=$('completeSet');
   if(complete)complete.disabled=true;
   if(!rest){sessionIndex++;renderSessionStep();return}
-  panel.style.display='block';const deadline=Date.now()+rest*1000;let remaining=rest;
-  const draw=()=>{remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(!clock)return;const m=Math.floor(remaining/60),s=remaining%60;clock.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')};
-  draw();if(timer)clearInterval(timer);
-  const advance=()=>{if(timer)clearInterval(timer);timer=null;sessionIndex++;renderSessionStep()};
+  panel.style.display='block';const deadline=Date.now()+rest*1000;
+  const next=sessionPlan[sessionIndex+1];
+  const nextText=next?'Próxima: '+next.exercise.name+' · série '+(next.setIndex+1)+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(next.set.load_kg==null?'a informar':next.set.load_kg+' kg'):'Último descanso do treino.';
+  $('nextStepText').textContent=nextText;
+  const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;sessionIndex++;renderSessionStep()};
+  activeRest={deadline,advance,nextText,notified:false};
   $('skipRest').onclick=advance;
-  timer=setInterval(()=>{draw();if(remaining<=0)advance()},250);
+  timer=setInterval(tickRestTimer,250);tickRestTimer();
  }
  async function startSession(subId){
   const db=dbRef(),sub=subworkouts.find(s=>s.id===subId);
   const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
   if(ex.error)return alert(ex.error.message);
   if(!ex.data?.length)return alert('Este subtreino ainda não possui exercícios.');
+  await enableWorkoutNotifications();
   const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
   if(error)return alert(error.message);session=data;sessionExerciseRows=ex.data;sessionPlan=[];
   ex.data.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
@@ -420,7 +455,7 @@
   if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
   const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
   const sub=subworkouts.find(s=>s.id===session.subworkout_id),date=new Date().toISOString().slice(0,10);
-  const notes=current.title+' · '+(sub?.title||'Treino');
+  const notes=current.title+' · '+(sub?.title||'Treino')+' [NEXFIT_SESSION:'+session.id+']';
   const {data:activity,error:activityError}=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select().single();
   if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
   else{if(typeof activities!=='undefined'&&typeof render==='function'){activities.unshift({id:activity.id,sport:activity.sport,date:activity.activity_date,duration:activity.duration_minutes,distance:0,notes:activity.notes||''});render()}alert('Treino concluído! Todas as séries foram salvas e o treino foi registrado no histórico.')}
