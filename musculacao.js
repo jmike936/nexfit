@@ -49,6 +49,11 @@
  #strengthPage .training-management-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #303a30;padding:12px 0}
  #strengthPage .training-management-row>div:first-child{display:grid;gap:3px}
  #strengthPage .training-management-row small{color:#a0a99c}
+ #strengthPage .model-program-card{padding:12px}
+ #strengthPage .model-program-card .training-card-main{cursor:default}
+ #strengthPage .model-workout-preview{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 8px 90px}
+ #strengthPage .model-workout-preview span{font-size:12px;color:#a0a99c;background:#111922;border:1px solid #303a30;border-radius:99px;padding:4px 9px}
+ #strengthPage .model-copy-button{width:100%;margin:5px 0 0}
  #strengthPage .training-management-row>div:last-child{display:flex;gap:6px;flex-wrap:wrap}
  @media(max-width:600px){#strengthPage .training-card-main>img,#strengthPage .training-card-placeholder{width:68px;height:68px;flex-basis:68px}#strengthPage .training-toolbar{display:block}}
  `;
@@ -59,6 +64,7 @@
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine';
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
+ function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
  const trashIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
  function go(){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));home()}
@@ -76,11 +82,23 @@
  async function renderProgramList(){
   const host=$('programList');if(!host)return;
   if(activeTrainingTab==='models'){
-   host.innerHTML='<div class="training-empty"><div class="training-empty-icon">✦</div><h3>Modelos de treino</h3><p class="muted">Os modelos prontos estarão disponíveis aqui.</p><button class="btn" id="modelImportAction">Importar treino</button></div>';
-   $('modelImportAction').onclick=()=>openImporter();return;
+   const models=plans.filter(p=>!canManageProgramLocally(p)&&p.status==='active'&&p.is_public===true&&p.current_version_id);
+   if(!models.length){host.innerHTML='<div class="training-empty"><div class="training-empty-icon">✦</div><h3>Explore programas públicos</h3><p class="muted">Ainda não há programas públicos disponíveis. Quando alguém compartilhar um programa, ele aparecerá aqui.</p></div>';return}
+   const cards=[];
+   for(const p of models){
+    const q=await dbRef().from('training_subworkouts').select('id,title,training_exercises(id)').eq('version_id',p.current_version_id).order('position');
+    if(q.error)continue;
+    const workouts=q.data||[],exerciseCount=workouts.reduce((n,w)=>n+(w.training_exercises||[]).length,0);
+    const category=programCategory(p.description);
+    const description=(p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,'').trim();
+    cards.push('<article class="training-card model-program-card"><div class="training-card-main"><div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div><span class="training-card-copy"><strong>'+esc(p.title)+'</strong><span>'+esc(category)+(description?' · '+esc(description):'')+'</span><small>'+workouts.length+' '+(workouts.length===1?'treino':'treinos')+' · '+exerciseCount+' '+(exerciseCount===1?'exercício':'exercícios')+'</small></span></div><div class="model-workout-preview">'+workouts.slice(0,4).map((w,i)=>'<span>'+esc(w.title||'Treino '+(i+1))+'</span>').join('')+'</div><button class="btn model-copy-button" data-copy-public="'+esc(p.id)+'">Adicionar ao meu perfil</button></article>');
+   }
+   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum modelo público disponível</h3></div>';
+   host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic));
+   return;
   }
-  const programs=plans.filter(p=>p.status==='active'&&p.current_version_id);
-  if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Ative ou importe um programa para ver os treinos aqui.</p></div>';return}
+  const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
+  if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
   const cards=[];
   for(const p of programs){
    const q=await dbRef().from('training_subworkouts').select('id,title,description,position,training_exercises(id,name,media_url)').eq('version_id',p.current_version_id).order('position');
@@ -89,15 +107,22 @@
     const exercises=workout.training_exercises||[];
     const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
     const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
-    const category=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i)?.[1]?.trim()||'Musculação';
+    const category=programCategory(p.description);
     cards.push('<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(workout.title||'Treino')+'</strong><span>'+esc((p.title||category)+(workout.description?' · '+workout.description:''))+'</span><small>'+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>');
    }
   }
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
   host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout));
  }
+ async function copyPublicProgram(id){
+  if(!confirm('Adicionar uma cópia independente deste programa ao seu perfil? A cópia poderá ser editada sem alterar o programa público original.'))return;
+  const {error}=await dbRef().rpc('nexfit_copy_public_program',{p_program:id});
+  if(error){const message=error.message||String(error);if(/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message))return alert('A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.');return alert(message)}
+  activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
+ }
+
  async function startListedWorkout(programId,versionId,workoutId){
-  const program=plans.find(p=>String(p.id)===String(programId)&&p.status==='active');
+  const program=plans.find(p=>String(p.id)===String(programId)&&canManageProgramLocally(p)&&p.status==='active');
   if(!program)return alert('Este programa não está ativo.');
   const vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
   if(vq.error||!vq.data)return alert('Não foi possível carregar a versão deste programa.');
@@ -149,21 +174,30 @@
  }
  function populateProgramSelectors(){
   const select=$('workoutProgram');if(!select)return;
-  const active=plans.filter(p=>p.status==='active'&&p.current_version_id);
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
   select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+p.title)+'</option>').join('');
+ }
+ async function toggleProgramVisibility(id){
+  const p=plans.find(x=>String(x.id)===String(id));if(!p||!canManageProgramLocally(p))return;
+  const makePublic=!p.is_public;
+  if(makePublic&&!confirm('Este programa ficará visível no menu Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original. Tornar público?'))return;
+  const {error}=await dbRef().from('training_programs').update({is_public:makePublic}).eq('id',p.id);
+  if(error){const message=error.message||String(error);if(/is_public|row.level security|42501/i.test(message))return alert('Não foi possível alterar a visibilidade. Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.');return alert(message)}
+  await home();
  }
  function renderProgramManagement(){
   const host=$('programManagement');if(!host)return;
-  const active=plans.filter(p=>p.status==='active');
-  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(p.title)+'</strong><small>'+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
+  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(p.title)+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
   host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram));
   host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
+  host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic));
   host.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram));
  }
  async function renderTrainingManagement(){
   const host=$('trainingManagement');if(!host)return;
   const rows=[];
-  for(const p of plans.filter(x=>x.status==='active'&&x.current_version_id)){
+  for(const p of plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id)){
    const q=await dbRef().from('training_subworkouts').select('id,title,description,position').eq('version_id',p.current_version_id).order('position');
    if(q.error)continue;
    for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(w.title||'Treino')+'</strong><small>'+esc(p.title)+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Editar treino" aria-label="Editar treino">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Excluir treino" aria-label="Excluir treino">'+trashIcon+'</button></div></div>');
