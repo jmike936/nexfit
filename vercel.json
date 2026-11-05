@@ -26,6 +26,24 @@
           "value": "no-cache, no-store, must-revalidate, max-age=0"
         }
       ]
+    },
+    {
+      "source": "/musculacao.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/workout-history.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        }
+      ]
     }
   ]
 }
