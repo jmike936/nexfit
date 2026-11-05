@@ -202,7 +202,24 @@ body.logged .app{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
 <button type="button" class="profile-menu-item" data-profile-action="details" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span>Meus Dados</span><span class="profile-chevron">›</span></button>
 <div class="profile-details" id="profileDetails" hidden><h2>Meus Dados</h2><form id="profileForm"><div class="field"><label for="profileNameInput">Nome</label><input id="profileNameInput" type="text" maxlength="80" placeholder="Como quer ser chamado?"></div><div class="two"><div class="field"><label for="profileBirthDate">Data de nascimento</label><input id="profileBirthDate" type="date"></div><div class="field"><label for="profileHeight">Altura (cm)</label><input id="profileHeight" type="number" min="50" max="260" step="1" placeholder="Ex.: 175"></div></div><div class="field"><label for="profileWeight">Peso atual (kg)</label><input id="profileWeight" type="number" min="20" max="500" step="0.1" placeholder="Ex.: 75,5"></div><button class="primary" type="submit">Salvar dados</button></form></div>
 <button type="button" class="profile-menu-item" data-profile-action="goals" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m14 10 6-6m-3 0h3v3"/></svg></span><span>Minhas metas</span><span class="profile-chevron">›</span></button>
-<div class="profile-details profile-goals-panel" id="profileGoals" hidden><h2>Minhas metas</h2><div class="goal-hero"><div class="goal-hero-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m14 10 6-6m-3 0h3v3"/></svg></div><strong id="goalHeroTitle">Você está no caminho certo!</strong><p id="goalHeroText">Defina objetivos e acompanhe seu progresso.</p></div><div class="goal-list-heading"><h3>Suas metas ativas</h3><button class="primary" type="button" id="newGoalButton">＋ Nova meta</button></div><div id="profileGoalsList"></div><div class="profile-goal-form" id="goalFormWrap" hidden><h3>Nova meta</h3><form id="goalForm"><label for="goalType">Tipo de meta</label><select id="goalType"><option value="weight">Perder ou ganhar peso</option><option value="strength">Aumentar força em um exercício</option><option value="running">Correr uma distância em determinado tempo</option></select><div class="goal-fields" id="goalWeightFields"><label for="goalWeightDirection">Objetivo</label><select id="goalWeightDirection"><option value="lose">Perder peso</option><option value="gain">Ganhar peso</option></select><div class="two"><div class="field"><label for="goalWeightStart">Peso atual (kg)</label><input type="number" min="20" max="500" step="0.1" id="goalWeightStart" placeholder="Ex.: 80" required></div><div class="field"><label for="goalWeightTarget">Peso desejado (kg)</label><input type="number" min="20" max="500" step="0.1" id="goalWeightTarget" placeholder="Ex.: 70" required></div></div></div><div class="goal-fields" id="goalStrengthFields" hidden><label for="goalExerciseName">Exercício</label><input type="text" id="goalExerciseName" maxlength="80" placeholder="Ex.: Supino reto"><div class="two"><div class="field"><label for="goalStrengthStart">Carga atual (kg)</label><input type="number" min="0" step="0.25" id="goalStrengthStart" placeholder="Ex.: 50"></div><div class="field"><label for="goalStrengthTarget">Meta de carga (kg)</label><input type="number" min="0.25" step="0.25" id="goalStrengthTarget" placeholder="Ex.: 60"></div></div></div><div class="goal-fields" id="goalRunningFields" hidden><div class="two"><div class="field"><label for="goalRunDistance">Distância (km)</label><input type="number" min="0.1" step="0.1" id="goalRunDistance" placeholder="Ex.: 5"></div><div class="field"><label for="goalRunTargetMinutes">Tempo desejado (min)</label><input type="number" min="1" step="0.1" id="goalRunTargetMinutes" placeholder="Ex.: 25"></div></div><label for="goalRunStartMinutes">Tempo atual para essa distância (min)</label><input type="number" min="1" step="0.1" id="goalRunStartMinutes" placeholder="Ex.: 32"></div><div class="formactions"><button class="secondary" type="button" id="cancelGoalForm">Cancelar</button><button class="primary" type="submit">Salvar meta</button></div></form></div><h3 class="completed-goals-heading">Metas alcançadas</h3><div id="completedGoalsList"></div></div>
+<div class="profile-details profile-goals-panel" id="profileGoals" hidden><h2>Minhas metas</h2><div class="goal-hero"><div class="goal-hero-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m14 10 6-6m-3 0h3v3"/></svg></div><strong id="goalHeroTitle">Você está no caminho certo!</strong><p id="goalHeroText">Defina objetivos e acompanhe seu progresso.</p></div><div class="goal-list-heading"><h3>Suas metas ativas</h3><button class="primary" type="button" id="newGoalButton">＋ Nova meta</button></div><div id="profileGoalsList"></div><div class="profile-goal-form" id="goalFormWrap" hidden><h3>Nova meta</h3><form id="goalForm">
+<label for="goalModality">Modalidade</label>
+<select id="goalModality" required>
+<option value="Musculação">Musculação</option><option value="Corrida">Corrida</option><option value="Caminhada">Caminhada</option><option value="Ciclismo">Ciclismo</option><option value="Pedal">Pedal</option><option value="Natação">Natação</option><option value="Funcional">Funcional</option><option value="Cross training">Cross training</option><option value="Yoga">Yoga</option><option value="Pilates">Pilates</option><option value="Outra">Outra</option>
+</select>
+<label for="goalType">Tipo de meta</label>
+<select id="goalType" required>
+<optgroup label="Peso e composição corporal"><option>Perder peso</option><option>Ganhar peso</option><option>Ganhar massa muscular</option><option>Reduzir percentual de gordura</option><option>Manter peso atual</option></optgroup>
+<optgroup label="Desempenho"><option>Aumentar velocidade</option><option>Reduzir tempo</option><option>Melhorar desempenho</option><option>Superar marca pessoal</option><option>Completar uma prova ou desafio</option></optgroup>
+<optgroup label="Resistência"><option>Aumentar resistência</option><option>Aumentar distância</option></optgroup>
+<optgroup label="Força"><option>Aumentar força</option></optgroup>
+<optgroup label="Condicionamento"><option>Melhorar condicionamento físico</option><option>Aumentar capacidade cardiorrespiratória</option></optgroup>
+<optgroup label="Consistência"><option>Melhorar frequência de treinos</option><option>Criar consistência nos treinos</option></optgroup>
+<optgroup label="Saúde"><option>Melhorar flexibilidade</option><option>Melhorar mobilidade</option><option>Melhorar saúde e qualidade de vida</option></optgroup>
+</select>
+<p class="muted" style="font-size:11px;margin:10px 0 0">Os tipos de objetivos são compartilhados entre todas as modalidades.</p>
+<div class="formactions"><button class="secondary" type="button" id="cancelGoalForm">Cancelar</button><button class="primary" type="submit">Salvar meta</button></div>
+</form></div><h3 class="completed-goals-heading">Metas alcançadas</h3><div id="completedGoalsList"></div></div>
 <button type="button" class="profile-menu-item" data-profile-action="history" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM8 9h8M8 13h8M8 17h5M7 2v3m10-3v3"/></svg></span><span>Histórico</span><span class="profile-chevron">›</span></button>
 <div class="profile-details profile-history-panel" id="profileHistory" hidden><div class="profile-history-heading"><h2>Histórico</h2><button class="secondary" type="button" onclick="openModal()">＋ Nova atividade</button></div><p class="muted profile-history-hint">Toque em uma categoria para expandir os registros, do mais recente ao mais antigo.</p><div id="profileHistoryList"></div></div>
 <button type="button" class="profile-menu-item" data-profile-action="settings" aria-expanded="false"><span class="profile-menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.7z"/></svg></span><span>Configurações</span><span class="profile-chevron">›</span></button>
@@ -397,6 +414,7 @@ function activityHTML(a,history=false,showSportIcon=true){
 function showActivityDetails(id){const a=activities.find(item=>String(item.id)===String(id));if(!a)return;let modal=document.getElementById('activityDetailsModal');if(!modal){modal=document.createElement('div');modal.id='activityDetailsModal';modal.className='modalback';modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="activityDetailsTitle"><div class="modalhead"><h2 id="activityDetailsTitle">Detalhes da atividade</h2><button type="button" class="close" aria-label="Fechar">×</button></div><div id="activityDetailsBody"></div></div>';document.body.append(modal);modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.close'))modal.classList.remove('show')})}const distance=Number(a.distance||0),distanceLabel=distance>0?(distance<1?Math.round(distance*1000).toLocaleString('pt-BR')+' m':distance.toLocaleString('pt-BR',{maximumFractionDigits:2})+' km'):'Não informada';$('activityDetailsBody').innerHTML='<div class="sporticon" style="margin-bottom:12px">'+(icons[a.sport]||'✦')+'</div><p class="muted">'+esc(fmtDate(a.date))+'</p><div class="profileline"><strong>Categoria</strong><span>'+esc(a.sport)+'</span></div><div class="profileline"><strong>Distância</strong><span>'+distanceLabel+'</span></div><div class="profileline"><strong>Duração</strong><span>'+formatDuration(durationSeconds(a))+'</span></div><div class="field"><label>Descrição do treino</label><div class="card" style="padding:12px;white-space:pre-wrap">'+(cleanActivityNotes(a.notes)?esc(cleanActivityNotes(a.notes)):'Nenhuma descrição informada.')+'</div></div>';modal.classList.add('show')}
 function getFitnessGoals(){const goals=currentUser?.user_metadata?.fitness_goals;return Array.isArray(goals)?goals:[]}
 function fitnessGoalProgress(goal){
+ if(goal.type==='objective')return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt)};
  const meta=currentUser?.user_metadata||{};let current,start,target,unit='',label='';
  if(goal.type==='weight'){
   start=Number(goal.startKg);target=Number(goal.targetKg);current=Number(meta.weight_kg??goal.currentKg??start);unit='kg';
@@ -419,6 +437,7 @@ function fitnessGoalIcon(type){
 }
 function renderFitnessGoalCard(goal,complete=false){
  const p=fitnessGoalProgress(goal),id=esc(goal.id),status=complete?'<span class="profile-goal-complete">Meta alcançada</span>':'';
+ if(goal.type==='objective')return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>'+esc(goal.modality||'Modalidade não informada')+'</small></span></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div><div class="profile-goal-actions">'+(!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon(goal.type)+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>Meta: '+esc(p.targetText)+'</small></span></div><div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Atual: '+esc(p.currentText)+'</div>'+(!complete?'<div class="profile-goal-actions"><button class="secondary" type="button" data-goal-update="'+id+'">Atualizar progresso</button><button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div>':'')+'</article>';
 }
 function renderProfileGoals(){
@@ -431,6 +450,7 @@ function renderProfileGoals(){
  $('goalHeroTitle').textContent=count?'Você está no caminho certo!':'Um objetivo de cada vez.';
  $('goalHeroText').textContent=count?'Acompanhe seu progresso e continue focado nas suas metas.':'Defina metas de peso, força ou corrida para acompanhar sua evolução.';
  host.querySelectorAll('[data-goal-update]').forEach(button=>button.onclick=()=>updateFitnessGoal(button.dataset.goalUpdate));
+ host.querySelectorAll('[data-goal-complete]').forEach(button=>button.onclick=()=>completeFitnessGoal(button.dataset.goalComplete));
  host.querySelectorAll('[data-goal-delete]').forEach(button=>button.onclick=()=>deleteFitnessGoal(button.dataset.goalDelete));
 }
 async function persistFitnessGoals(goals,extra={}){
@@ -440,25 +460,12 @@ async function persistFitnessGoals(goals,extra={}){
 }
 async function createFitnessGoal(event){
  event.preventDefault();if(!currentUser)return;
- const type=$('goalType').value,number=id=>Number(String($(id).value||'').replace(',','.'));
  const id=window.crypto?.randomUUID?.()||('goal-'+Date.now()+'-'+Math.random().toString(36).slice(2));
- const createdAt=new Date().toISOString().slice(0,10);let goal;
- if(type==='weight'){
-  const startKg=number('goalWeightStart'),targetKg=number('goalWeightTarget'),direction=$('goalWeightDirection').value;
-  if(!startKg||!targetKg||startKg===targetKg||(direction==='lose'?targetKg>=startKg:targetKg<=startKg))return alert('Informe um peso atual e uma meta coerente com perder ou ganhar peso.');
-  goal={id,type,direction,startKg,targetKg,currentKg:startKg,createdAt};
- }else if(type==='strength'){
-  const exercise=normalizeHumanText($('goalExerciseName').value),startKg=number('goalStrengthStart'),targetKg=number('goalStrengthTarget');
-  if(!exercise||!Number.isFinite(startKg)||!Number.isFinite(targetKg)||targetKg<=startKg)return alert('Informe o exercício e uma carga meta maior que a carga atual.');
-  goal={id,type,exercise,startKg,targetKg,currentKg:startKg,createdAt};
- }else{
-  const distanceKm=number('goalRunDistance'),targetMinutes=number('goalRunTargetMinutes'),startMinutes=number('goalRunStartMinutes');
-  if(!(distanceKm>0)||!(targetMinutes>0)||!(startMinutes>targetMinutes))return alert('Informe a distância, o tempo atual e uma meta de tempo menor que o atual.');
-  goal={id,type,distanceKm,targetMinutes,startMinutes,currentMinutes:startMinutes,createdAt};
- }
+ const createdAt=new Date().toISOString().slice(0,10);
+ const goal={id,type:'objective',modality:$('goalModality').value,objective:$('goalType').value,createdAt};
  const goals=[...getFitnessGoals(),goal];
  if(!(await persistFitnessGoals(goals)))return;
- $('goalForm').reset();$('goalFormWrap').hidden=true;syncFitnessGoalFields();
+ $('goalForm').reset();$('goalFormWrap').hidden=true;
 }
 async function updateFitnessGoal(id){
  const goals=getFitnessGoals().map(goal=>({...goal}));
@@ -474,15 +481,16 @@ async function updateFitnessGoal(id){
  if(fitnessGoalProgress(goal).complete&&!goal.completedAt)goal.completedAt=new Date().toISOString().slice(0,10);
  if(!(await persistFitnessGoals(goals,extra)))return;
 }
+async function completeFitnessGoal(id){
+ const goals=getFitnessGoals().map(goal=>String(goal.id)===String(id)?{...goal,completedAt:new Date().toISOString().slice(0,10)}:goal);
+ await persistFitnessGoals(goals);
+}
 async function deleteFitnessGoal(id){
  const goals=getFitnessGoals().filter(goal=>String(goal.id)!==String(id));
  if(!confirm('Excluir esta meta?'))return;
  await persistFitnessGoals(goals);
 }
-function syncFitnessGoalFields(){
- const type=$('goalType')?.value||'weight';
- $('goalWeightFields').hidden=type!=='weight';$('goalStrengthFields').hidden=type!=='strength';$('goalRunningFields').hidden=type!=='running';
-}
+function syncFitnessGoalFields(){}
 function renderProfileHistory(){
  const host=$('profileHistoryList');if(!host)return;
  const groups=new Map();
