@@ -217,7 +217,7 @@ body.logged .app{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
 <optgroup label="Consistência"><option>Melhorar frequência de treinos</option><option>Criar consistência nos treinos</option></optgroup>
 <optgroup label="Saúde"><option>Melhorar flexibilidade</option><option>Melhorar mobilidade</option><option>Melhorar saúde e qualidade de vida</option></optgroup>
 </select>
-<div id="weeklyGoalFields" class="field" hidden><label for="goalTargetPerWeek">Meta desejada: quantos treinos por semana?</label><input id="goalTargetPerWeek" type="number" min="1" max="14" step="1" value="3" inputmode="numeric"><small class="muted">O NEXFIT contará automaticamente os treinos registrados na modalidade escolhida, de segunda a domingo.</small></div>
+<div class="field"><label for="goalMetric">O que deseja medir?</label><input id="goalMetric" type="text" maxlength="70" required placeholder="Ex.: peso a perder, treinos, distância"><div class="two"><div class="field"><label for="goalTargetValue">Meta desejada</label><input id="goalTargetValue" type="number" min="0.01" step="any" required placeholder="Ex.: 5"></div><div class="field"><label for="goalTargetUnit">Unidade</label><input id="goalTargetUnit" type="text" maxlength="20" required placeholder="Ex.: kg, km, vezes"></div></div><div class="field"><label for="goalTargetPeriod">Período (quando aplicável)</label><select id="goalTargetPeriod"><option value="none">Sem período definido</option><option value="week">Por semana</option><option value="month">Por mês</option><option value="day">Por dia</option></select></div><small class="muted" id="goalMetricHint">Defina um indicador, um valor e uma unidade. Personalize os campos para qualquer tipo de meta.</small></div>
 <p class="muted" style="font-size:11px;margin:10px 0 0">Os tipos de objetivos são compartilhados entre todas as modalidades.</p>
 <div class="formactions"><button class="secondary" type="button" id="cancelGoalForm">Cancelar</button><button class="primary" type="submit">Salvar meta</button></div>
 </form></div><h3 class="completed-goals-heading">Metas alcançadas</h3><div id="completedGoalsList"></div></div>
@@ -416,12 +416,11 @@ function showActivityDetails(id){const a=activities.find(item=>String(item.id)==
 function getFitnessGoals(){const goals=currentUser?.user_metadata?.fitness_goals;return Array.isArray(goals)?goals:[]}
 function fitnessGoalProgress(goal){
  if(goal.type==='objective'){
-  if(Number(goal.targetPerWeek)>0){
-   const now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(now.getDate()-day);
-   const end=new Date(start);end.setDate(start.getDate()+7);
-   const count=activities.filter(a=>a.sport===goal.modality&&(()=>{const d=new Date(a.date+'T12:00:00');return d>=start&&d<end})()).length;
-   const target=Number(goal.targetPerWeek),percent=Math.min(100,Math.round(count/target*100));
-   return {label:goal.objective||'Meta',targetText:target+' treinos por semana',currentText:count+' de '+target+' treinos nesta semana',percent,complete:false,count,target};
+  const target=Number(goal.targetValue??goal.targetPerWeek),unit=String(goal.targetUnit||'treinos').toLowerCase(),weekly=goal.targetPeriod==='week'||(!goal.targetPeriod&&Number(goal.targetPerWeek)>0);
+  if(weekly&&target>0&&['vezes','treinos','sessões'].includes(unit)){
+   const now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(now.getDate()-day);const end=new Date(start);end.setDate(start.getDate()+7);
+   const count=activities.filter(a=>a.sport===goal.modality&&(()=>{const d=new Date(a.date+'T12:00:00');return d>=start&&d<end})()).length,percent=Math.min(100,Math.round(count/target*100));
+   return {label:goal.objective||'Meta',targetText:target+' '+unit+' por semana',currentText:count+' de '+target+' '+unit+' nesta semana',percent,complete:false,count,target};
   }
   return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt)};
  }
@@ -449,7 +448,7 @@ function renderFitnessGoalCard(goal,complete=false){
  const p=fitnessGoalProgress(goal),id=esc(goal.id),status=complete?'<span class="profile-goal-complete">Meta alcançada</span>':'';
  if(goal.type==='objective'){
   const weekly=Number(goal.targetPerWeek)>0;
-  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>'+esc(goal.modality||'Modalidade não informada')+' · '+(weekly?esc(p.targetText):'Meta pessoal')+'</small></span></div>'+(weekly?'<div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+esc(p.currentText)+'</div>':'<div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div>')+'<div class="profile-goal-actions">'+(!weekly&&!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
+  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>'+esc(goal.modality||'Modalidade não informada')+' · '+esc(goal.metric||'Meta pessoal')+' · '+esc(goal.targetValue??goal.targetPerWeek??'')+' '+esc(goal.targetUnit||(goal.targetPerWeek?'treinos':''))+(goal.targetPeriod&&goal.targetPeriod!=='none'?' / '+(goal.targetPeriod==='week'?'semana':goal.targetPeriod==='month'?'mês':'dia'):'')+'</small></span></div>'+(weekly?'<div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+esc(p.currentText)+'</div>':'<div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div>')+'<div class="profile-goal-actions">'+(!weekly&&!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
  }
  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon(goal.type)+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>Meta: '+esc(p.targetText)+'</small></span></div><div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Atual: '+esc(p.currentText)+'</div>'+(!complete?'<div class="profile-goal-actions"><button class="secondary" type="button" data-goal-update="'+id+'">Atualizar progresso</button><button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div>':'')+'</article>';
 }
@@ -476,11 +475,10 @@ async function createFitnessGoal(event){
  const id=window.crypto?.randomUUID?.()||('goal-'+Date.now()+'-'+Math.random().toString(36).slice(2));
  const createdAt=new Date().toISOString().slice(0,10);
  const objective=$('goalType').value,goal={id,type:'objective',modality:$('goalModality').value,objective,createdAt};
- if(['Melhorar frequência de treinos','Criar consistência nos treinos'].includes(objective)){
-  const target=Number($('goalTargetPerWeek').value);
-  if(!Number.isInteger(target)||target<1||target>14){alert('Informe uma meta entre 1 e 14 treinos por semana.');return}
-  goal.targetPerWeek=target;
- }
+ const metric=$('goalMetric').value.trim(),targetValue=Number(String($('goalTargetValue').value).replace(',','.')),targetUnit=$('goalTargetUnit').value.trim(),targetPeriod=$('goalTargetPeriod').value;
+ if(!metric||!Number.isFinite(targetValue)||targetValue<=0||!targetUnit){alert('Preencha o indicador, a meta desejada e a unidade.');return}
+ Object.assign(goal,{metric,targetValue,targetUnit,targetPeriod});
+ if(targetPeriod==='week'&&['vezes','treinos','sessões'].includes(targetUnit.toLowerCase()))goal.targetPerWeek=targetValue;
  const goals=[...getFitnessGoals(),goal];
  if(!(await persistFitnessGoals(goals)))return;
  $('goalForm').reset();$('goalFormWrap').hidden=true;
@@ -508,11 +506,14 @@ async function deleteFitnessGoal(id){
  if(!confirm('Excluir esta meta?'))return;
  await persistFitnessGoals(goals);
 }
+const fitnessGoalMetricDefaults={
+ 'Perder peso':['Peso a perder','5','kg','none'],'Ganhar peso':['Peso a ganhar','5','kg','none'],'Ganhar massa muscular':['Massa muscular a ganhar','3','kg','none'],'Reduzir percentual de gordura':['Redução de gordura corporal','5','%','none'],'Melhorar condicionamento físico':['Tempo de atividade','150','minutos','week'],'Aumentar resistência':['Duração do esforço','30','minutos','none'],'Aumentar força':['Carga desejada','10','kg','none'],'Aumentar velocidade':['Velocidade desejada','12','km/h','none'],'Reduzir tempo':['Tempo desejado','30','minutos','none'],'Aumentar distância':['Distância desejada','5','km','none'],'Melhorar desempenho':['Resultado desejado','1','pontos','none'],'Melhorar frequência de treinos':['Treinos','3','vezes','week'],'Manter peso atual':['Peso desejado','70','kg','none'],'Melhorar flexibilidade':['Sessões de flexibilidade','3','vezes','week'],'Melhorar mobilidade':['Sessões de mobilidade','3','vezes','week'],'Aumentar capacidade cardiorrespiratória':['Tempo de atividade','150','minutos','week'],'Superar marca pessoal':['Marca desejada','1','unidade','none'],'Completar uma prova ou desafio':['Distância do desafio','5','km','none'],'Criar consistência nos treinos':['Treinos','3','vezes','week'],'Melhorar saúde e qualidade de vida':['Atividades','3','vezes','week']
+};
 function syncFitnessGoalFields(){
- const field=$('weeklyGoalFields'),input=$('goalTargetPerWeek');
- if(!field||!input)return;
- const enabled=['Melhorar frequência de treinos','Criar consistência nos treinos'].includes($('goalType')?.value);
- field.hidden=!enabled;input.required=enabled;
+ const objective=$('goalType')?.value,d=fitnessGoalMetricDefaults[objective]||['Resultado desejado','1','unidade','none'];
+ const metric=$('goalMetric'),value=$('goalTargetValue'),unit=$('goalTargetUnit'),period=$('goalTargetPeriod');if(!metric||!value||!unit||!period)return;
+ if(metric.dataset.objective!==objective){metric.value=d[0];value.value=d[1];unit.value=d[2];period.value=d[3];metric.dataset.objective=objective}
+ $('goalMetricHint').textContent='Sugestão para este objetivo. Personalize indicador, valor, unidade e período.';
 }
 function renderProfileHistory(){
  const host=$('profileHistoryList');if(!host)return;
@@ -618,7 +619,6 @@ $('profilePhotoEdit').addEventListener('click',()=>$('profilePhotoInput').click(
 document.querySelectorAll('[data-profile-action]').forEach(button=>button.addEventListener('click',()=>{const action=button.dataset.profileAction,panelMap={details:'profileDetails',goals:'profileGoals',history:'profileHistory',settings:'profileSettings',about:'profileAbout'},panel=$(panelMap[action]),others=Object.keys(panelMap).filter(key=>key!==action);const open=panel.hidden;panel.hidden=!open;others.forEach(key=>{const other=$(panelMap[key]);other.hidden=true;document.querySelector('[data-profile-action="'+key+'"]')?.setAttribute('aria-expanded','false')});button.setAttribute('aria-expanded',String(open))}));
 $('newGoalButton').addEventListener('click',()=>{const wrap=$('goalFormWrap');wrap.hidden=!wrap.hidden;if(!wrap.hidden){const weight=currentUser?.user_metadata?.weight_kg;if(weight){$('goalWeightStart').value=weight}$('goalForm').scrollIntoView({behavior:'smooth',block:'center'})}});
 $('cancelGoalForm').addEventListener('click',()=>{$('goalFormWrap').hidden=true});
-$('goalType').addEventListener('change',syncFitnessGoalFields);
 $('goalType').addEventListener('change',syncFitnessGoalFields);
 $('goalForm').addEventListener('submit',createFitnessGoal);
 syncFitnessGoalFields();
