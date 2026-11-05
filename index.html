@@ -378,7 +378,7 @@ async function init(){
  if(!configured){showError('O ambiente ainda precisa ser conectado ao Supabase para habilitar o login.');$('authSubmit').disabled=true;return}
  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
  const {data:{session}}=await db.auth.getSession();
- db.auth.onAuthStateChange((event,session)=>{if(session) loadUser(session.user,event==='SIGNED_IN'); else {currentUser=null;document.body.classList.remove('logged')}});
+ db.auth.onAuthStateChange((event,session)=>{if(!session){currentUser=null;activities=[];document.body.classList.remove('logged')} });
  if(session) await loadUser(session.user);
  if(session&&returnedFromEmail){showFeedback('E-mail confirmado!','Sua conta NEXFIT foi confirmada com sucesso. Você já pode acessar e registrar suas atividades.');history.replaceState(null,'',location.pathname+location.search.split('?')[0]);}
 }
