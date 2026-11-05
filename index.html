@@ -217,6 +217,7 @@ body.logged .app{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
 <optgroup label="Consistência"><option>Melhorar frequência de treinos</option><option>Criar consistência nos treinos</option></optgroup>
 <optgroup label="Saúde"><option>Melhorar flexibilidade</option><option>Melhorar mobilidade</option><option>Melhorar saúde e qualidade de vida</option></optgroup>
 </select>
+<div id="weeklyGoalFields" class="field" hidden><label for="goalTargetPerWeek">Meta desejada: quantos treinos por semana?</label><input id="goalTargetPerWeek" type="number" min="1" max="14" step="1" value="3" inputmode="numeric"><small class="muted">O NEXFIT contará automaticamente os treinos registrados na modalidade escolhida, de segunda a domingo.</small></div>
 <p class="muted" style="font-size:11px;margin:10px 0 0">Os tipos de objetivos são compartilhados entre todas as modalidades.</p>
 <div class="formactions"><button class="secondary" type="button" id="cancelGoalForm">Cancelar</button><button class="primary" type="submit">Salvar meta</button></div>
 </form></div><h3 class="completed-goals-heading">Metas alcançadas</h3><div id="completedGoalsList"></div></div>
@@ -414,7 +415,16 @@ function activityHTML(a,history=false,showSportIcon=true){
 function showActivityDetails(id){const a=activities.find(item=>String(item.id)===String(id));if(!a)return;let modal=document.getElementById('activityDetailsModal');if(!modal){modal=document.createElement('div');modal.id='activityDetailsModal';modal.className='modalback';modal.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="activityDetailsTitle"><div class="modalhead"><h2 id="activityDetailsTitle">Detalhes da atividade</h2><button type="button" class="close" aria-label="Fechar">×</button></div><div id="activityDetailsBody"></div></div>';document.body.append(modal);modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.close'))modal.classList.remove('show')})}const distance=Number(a.distance||0),distanceLabel=distance>0?(distance<1?Math.round(distance*1000).toLocaleString('pt-BR')+' m':distance.toLocaleString('pt-BR',{maximumFractionDigits:2})+' km'):'Não informada';$('activityDetailsBody').innerHTML='<div class="sporticon" style="margin-bottom:12px">'+(icons[a.sport]||'✦')+'</div><p class="muted">'+esc(fmtDate(a.date))+'</p><div class="profileline"><strong>Categoria</strong><span>'+esc(a.sport)+'</span></div><div class="profileline"><strong>Distância</strong><span>'+distanceLabel+'</span></div><div class="profileline"><strong>Duração</strong><span>'+formatDuration(durationSeconds(a))+'</span></div><div class="field"><label>Descrição do treino</label><div class="card" style="padding:12px;white-space:pre-wrap">'+(cleanActivityNotes(a.notes)?esc(cleanActivityNotes(a.notes)):'Nenhuma descrição informada.')+'</div></div>';modal.classList.add('show')}
 function getFitnessGoals(){const goals=currentUser?.user_metadata?.fitness_goals;return Array.isArray(goals)?goals:[]}
 function fitnessGoalProgress(goal){
- if(goal.type==='objective')return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt)};
+ if(goal.type==='objective'){
+  if(Number(goal.targetPerWeek)>0){
+   const now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(now.getDate()-day);
+   const end=new Date(start);end.setDate(start.getDate()+7);
+   const count=activities.filter(a=>a.sport===goal.modality&&(()=>{const d=new Date(a.date+'T12:00:00');return d>=start&&d<end})()).length;
+   const target=Number(goal.targetPerWeek),percent=Math.min(100,Math.round(count/target*100));
+   return {label:goal.objective||'Meta',targetText:target+' treinos por semana',currentText:count+' de '+target+' treinos nesta semana',percent,complete:false,count,target};
+  }
+  return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt)};
+ }
  const meta=currentUser?.user_metadata||{};let current,start,target,unit='',label='';
  if(goal.type==='weight'){
   start=Number(goal.startKg);target=Number(goal.targetKg);current=Number(meta.weight_kg??goal.currentKg??start);unit='kg';
@@ -437,7 +447,10 @@ function fitnessGoalIcon(type){
 }
 function renderFitnessGoalCard(goal,complete=false){
  const p=fitnessGoalProgress(goal),id=esc(goal.id),status=complete?'<span class="profile-goal-complete">Meta alcançada</span>':'';
- if(goal.type==='objective')return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>'+esc(goal.modality||'Modalidade não informada')+'</small></span></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div><div class="profile-goal-actions">'+(!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
+ if(goal.type==='objective'){
+  const weekly=Number(goal.targetPerWeek)>0;
+  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>'+esc(goal.modality||'Modalidade não informada')+' · '+(weekly?esc(p.targetText):'Meta pessoal')+'</small></span></div>'+(weekly?'<div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+esc(p.currentText)+'</div>':'<div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div>')+'<div class="profile-goal-actions">'+(!weekly&&!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
+ }
  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon(goal.type)+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>Meta: '+esc(p.targetText)+'</small></span></div><div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Atual: '+esc(p.currentText)+'</div>'+(!complete?'<div class="profile-goal-actions"><button class="secondary" type="button" data-goal-update="'+id+'">Atualizar progresso</button><button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div>':'')+'</article>';
 }
 function renderProfileGoals(){
@@ -462,7 +475,12 @@ async function createFitnessGoal(event){
  event.preventDefault();if(!currentUser)return;
  const id=window.crypto?.randomUUID?.()||('goal-'+Date.now()+'-'+Math.random().toString(36).slice(2));
  const createdAt=new Date().toISOString().slice(0,10);
- const goal={id,type:'objective',modality:$('goalModality').value,objective:$('goalType').value,createdAt};
+ const objective=$('goalType').value,goal={id,type:'objective',modality:$('goalModality').value,objective,createdAt};
+ if(['Melhorar frequência de treinos','Criar consistência nos treinos'].includes(objective)){
+  const target=Number($('goalTargetPerWeek').value);
+  if(!Number.isInteger(target)||target<1||target>14){alert('Informe uma meta entre 1 e 14 treinos por semana.');return}
+  goal.targetPerWeek=target;
+ }
  const goals=[...getFitnessGoals(),goal];
  if(!(await persistFitnessGoals(goals)))return;
  $('goalForm').reset();$('goalFormWrap').hidden=true;
@@ -490,7 +508,12 @@ async function deleteFitnessGoal(id){
  if(!confirm('Excluir esta meta?'))return;
  await persistFitnessGoals(goals);
 }
-function syncFitnessGoalFields(){}
+function syncFitnessGoalFields(){
+ const field=$('weeklyGoalFields'),input=$('goalTargetPerWeek');
+ if(!field||!input)return;
+ const enabled=['Melhorar frequência de treinos','Criar consistência nos treinos'].includes($('goalType')?.value);
+ field.hidden=!enabled;input.required=enabled;
+}
 function renderProfileHistory(){
  const host=$('profileHistoryList');if(!host)return;
  const groups=new Map();
@@ -596,7 +619,9 @@ document.querySelectorAll('[data-profile-action]').forEach(button=>button.addEve
 $('newGoalButton').addEventListener('click',()=>{const wrap=$('goalFormWrap');wrap.hidden=!wrap.hidden;if(!wrap.hidden){const weight=currentUser?.user_metadata?.weight_kg;if(weight){$('goalWeightStart').value=weight}$('goalForm').scrollIntoView({behavior:'smooth',block:'center'})}});
 $('cancelGoalForm').addEventListener('click',()=>{$('goalFormWrap').hidden=true});
 $('goalType').addEventListener('change',syncFitnessGoalFields);
+$('goalType').addEventListener('change',syncFitnessGoalFields);
 $('goalForm').addEventListener('submit',createFitnessGoal);
+syncFitnessGoalFields();
 document.querySelectorAll('[data-profile-history-filter]').forEach(button=>button.addEventListener('click',()=>{activeProfileHistoryFilter=button.dataset.profileHistoryFilter;renderProfileHistory()}));
 $('profilePhotoInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;const allowed=['image/jpeg','image/png','image/webp'];if(!allowed.includes(file.type)){alert('Escolha uma imagem JPEG, PNG ou WebP.');e.target.value='';return}if(file.size>20*1024*1024){alert('A imagem original deve ter no máximo 20 MB.');e.target.value='';return}let compressed;try{compressed=await compressProfileImage(file)}catch(err){alert(err.message);e.target.value='';return}const previousPath=currentUser.user_metadata?.avatar_path,suffix=globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2),path=currentUser.id+'/'+Date.now()+'-'+suffix+'.jpg';const {error}=await db.storage.from('athlete-avatars').upload(path,compressed,{upsert:false,contentType:'image/jpeg',cacheControl:'3600'});if(error){alert('Não foi possível enviar a foto: '+error.message);e.target.value='';return}const {data,error:metaError}=await db.auth.updateUser({data:{avatar_path:path}});if(metaError){await db.storage.from('athlete-avatars').remove([path]);alert('A foto foi enviada, mas não foi possível atualizar o perfil: '+metaError.message);e.target.value='';return}currentUser=data.user;if(previousPath&&previousPath!==path)await db.storage.from('athlete-avatars').remove([previousPath]);const previewUrl=URL.createObjectURL(compressed),img=$('profilePhoto');img.src=previewUrl;img.hidden=false;$('profilePhotoFallback').hidden=true;$('dashboardAvatar').src=previewUrl;$('dashboardAvatar').hidden=false;$('dashboardAvatarFallback').hidden=true;e.target.value=''});
 $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!currentUser)return;const name=normalizeHumanText($('profileNameInput').value),birth=$('profileBirthDate').value,height=$('profileHeight').value,weight=$('profileWeight').value;const {data,error}=await db.auth.updateUser({data:{full_name:name||userName,birth_date:birth||null,height_cm:height?Number(height):null,weight_kg:weight?Number(weight):null}});if(error){alert('Não foi possível salvar o perfil: '+error.message);return}currentUser=data.user;userName=currentUser.user_metadata?.full_name||userName;render();toast()});
