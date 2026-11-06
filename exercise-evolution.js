@@ -34,7 +34,7 @@ async function load(){
  const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
  // A evolução considera todas as sessões concluídas do atleta autenticado.
  // Não depende da existência de uma linha em activities: a sessão concluída é a fonte do histórico de treino.
- const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').order('started_at',{ascending:false}).limit(500);
+ const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).order('started_at',{ascending:false}).limit(500);
  if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
  const sessionMap=new Map(sessions.map(s=>[s.id,s]));
