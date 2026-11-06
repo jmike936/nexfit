@@ -165,25 +165,31 @@
    for(const workout of q.data||[])workouts.push({program:p,workout,exercises:workout.training_exercises||[]});
   }
   const user=userRef();
-  const history=await dbRef().from('training_sessions').select('subworkout_id,started_at,finished_at').eq('athlete_id',user.id).eq('status','completed');
+  const activitiesQ=await dbRef().from('activities').select('activity_date,notes').eq('user_id',user.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+  if(activitiesQ.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(activitiesQ.error.message)+'</p></div>';return}
+  const activityDateBySession=new Map((activitiesQ.data||[]).map(activity=>({
+   sessionId:(activity.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],
+   date:String(activity.activity_date||'').slice(0,10)
+  })).filter(item=>item.sessionId&&/^\d{4}-\d{2}-\d{2}$/.test(item.date)).map(item=>[item.sessionId,item.date]));
+  const sessionIds=[...activityDateBySession.keys()];
+  const history=sessionIds.length?await dbRef().from('training_sessions').select('id,subworkout_id').eq('athlete_id',user.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds):{data:[],error:null};
   if(history.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(history.error.message)+'</p></div>';return}
   const lastExecution=new Map();
   for(const item of history.data||[]){
-   if(!item.subworkout_id)continue;
-   const date=item.finished_at||item.started_at;
-   if(!date)continue;
+   const date=activityDateBySession.get(item.id);
+   if(!item.subworkout_id||!date)continue;
    const previous=lastExecution.get(String(item.subworkout_id));
-   if(!previous||new Date(date)>new Date(previous))lastExecution.set(String(item.subworkout_id),date);
+   if(!previous||date>previous)lastExecution.set(String(item.subworkout_id),date);
   }
   const dateLabel=value=>{
-   if(!value)return '';
-   const date=new Date(value);
-   return Number.isNaN(date.getTime())?'':date.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'});
+   if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
+   const [year,month,day]=value.split('-');
+   return day+'/'+month+'/'+year;
   };
   workouts.sort((a,b)=>{
    const da=lastExecution.get(String(a.workout.id))||null,db=lastExecution.get(String(b.workout.id))||null;
    if(!da&&db)return -1;if(da&&!db)return 1;
-   if(da&&db){const diff=new Date(da)-new Date(db);if(diff)return diff}
+   if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
   });
   const cards=workouts.map(({program:p,workout,exercises})=>{
