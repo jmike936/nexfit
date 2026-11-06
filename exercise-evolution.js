@@ -32,9 +32,13 @@ function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2}
 function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'2-digit'}).format(d)}
 async function load(){
  const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
- // A evolução considera todas as sessões concluídas do atleta autenticado.
- // Não depende da existência de uma linha em activities: a sessão concluída é a fonte do histórico de treino.
- const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).order('started_at',{ascending:false}).limit(500);
+ // A Evolução só inclui sessões que ainda possuem atividade correspondente no histórico do atleta.
+ // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
+ const activitiesQ=await client.from('activities').select('notes').eq('user_id',u.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+ if(activitiesQ.error)throw activitiesQ.error;
+ const sessionIds=[...new Set((activitiesQ.data||[]).map(a=>(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1]).filter(Boolean))];
+ if(!sessionIds.length)return [];
+ const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
  if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
  const sessionMap=new Map(sessions.map(s=>[s.id,s]));
