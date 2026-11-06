@@ -77,7 +77,7 @@ function chart(points){
  const pts=series.map((p,i)=>({x:x(i),y:y(p.load),p}));
  const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-8)+'" y="'+(yy+4)+'" text-anchor="end">'+Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1})+'</text>'}).join('');
  const labels=pts.length===1?'<text x="'+pts[0].x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(pts[0].p.date)+'</text>':[pts[0],pts[Math.floor((pts.length-1)/2)],pts[pts.length-1]].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i).map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(p.p.date)+'</text>').join('');
- return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga registrada em uma série daquela sessão.</p>';
+ return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
 }
 async function render(host){
  const uid=user()?.id||null;if(cachedUserId!==uid){cachedUserId=uid}cache=null;
@@ -90,15 +90,21 @@ async function render(host){
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points,latest=points[points.length-1],previous=points.length>1?points[points.length-2]:null;
+   const points=item.points;
+   const sessionMap=new Map();
+   for(const point of points){const current=sessionMap.get(point.sessionId);if(!current||point.load>current.load)sessionMap.set(point.sessionId,{...point})}
+   const sessionPoints=[...sessionMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sessionId.localeCompare(b.sessionId));
+   const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
    const delta=previous?latest.load-previous.load:null;
-   const sessions=new Set(points.map(p=>p.sessionId)).size;
+   const deltaPercent=previous&&previous.load>0?(delta/previous.load)*100:null;
+   const first=sessionPoints[0],overallDelta=first?latest.load-first.load:0;
+   const sessions=sessionPoints.length;
    const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
    const heaviest=points.filter(p=>Number.isFinite(p.load)&&p.load>0).reduce((best,p)=>!best||p.load>best.load?p:best,null);
    const estimated=points.filter(p=>Number.isFinite(p.load)&&p.load>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.load*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
    const personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.load+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Séries registradas</span><strong>'+points.length+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
-   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação da última série registrada em relação à anterior: '+(delta>0?'+':'')+kg(delta);details.querySelector('.evolution-stats').after(note)}
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Maior carga na última sessão</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+kg(delta))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
+   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent=delta===null?'Ainda não há sessões anteriores para comparação.':'Comparação entre as maiores cargas de duas sessões consecutivas: '+(delta>0?'+':'')+kg(delta)+(deltaPercent!==null?' ('+(deltaPercent>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+kg(overallDelta)+'.';details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',paint);paint();
  }catch(error){host.innerHTML='<div class="evolution-empty"><strong>Não foi possível carregar a evolução</strong><p>'+esc(error?.message||'Verifique sua conexão e tente novamente.')+'</p><button type="button" class="btn alt" id="retryExerciseEvolution">Tentar novamente</button></div>';host.querySelector('#retryExerciseEvolution')?.addEventListener('click',()=>{cache=null;render(host)})}
