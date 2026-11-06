@@ -1,6 +1,6 @@
 (()=>{if(window.__nexfitExerciseEvolution)return;window.__nexfitExerciseEvolution=true;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const getClient=()=>window.db||(typeof window.supabase!=='undefined'?window.supabase:null)||(typeof dbClient!=='undefined'?dbClient:null)||(typeof db!=='undefined'?db:null);
+const getClient=()=>window.db||(typeof db!=='undefined'?db:null);
 const user=()=>window.currentUser||(typeof currentUser!=='undefined'?currentUser:null);
 const normalize=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR');
 const css=`
