@@ -164,7 +164,7 @@ body.logged .app{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
 @media(max-width:760px){body.logged .app{padding-bottom:calc(170px + env(safe-area-inset-bottom))}.nav{bottom:max(10px,env(safe-area-inset-bottom))}}
 
 /* Ajustes de navegação móvel e histórico compacto */
-@media(max-width:760px){.app{padding-bottom:calc(172px + env(safe-area-inset-bottom))}.page.active{padding-bottom:10px}.nav{bottom:max(10px,env(safe-area-inset-bottom));z-index:30}}
+@media(max-width:760px){.app{padding-bottom:calc(172px + env(safe-area-inset-bottom))}.page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom))}.nav{bottom:max(10px,env(safe-area-inset-bottom));z-index:30}}\nbody.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom))}\n@media(min-width:761px){body.logged .page.active{padding-bottom:112px}}
 .history-compact{gap:10px;padding:13px 0;min-width:0}.history-compact .historydate{min-width:0;width:76px;flex:0 0 76px;font-size:10px;line-height:1.3}.history-compact .sporticon{width:42px;height:42px;flex:0 0 42px}.history-compact .activitymain{min-width:0}.history-compact .activitymain strong{font-size:14px;line-height:1.3}.history-compact .history-metrics{display:block;margin-top:3px;font-size:12px;white-space:normal;line-height:1.35}.history-actions{display:flex;align-items:center;gap:5px;flex:none}.history-actions button{width:34px;height:34px;padding:6px;display:grid;place-items:center;border-radius:10px;font-size:15px;line-height:1}.history-actions .history-eye{border-color:#526273;color:var(--lime)}.history-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:420px){.history-compact{gap:7px}.history-compact .historydate{width:59px;flex-basis:59px;font-size:9px}.history-compact .sporticon{width:36px;height:36px;flex-basis:36px;font-size:17px}.history-compact .activitymain strong{font-size:13px}.history-compact .history-metrics{font-size:11px}.history-actions{gap:3px}.history-actions button{width:30px;height:32px;padding:5px}.history-actions .history-action{display:none}}
 
@@ -286,7 +286,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.0',APP_BUILD='20261105.8';
+const APP_VERSION='1.1.0',APP_BUILD='20261105.9';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -645,5 +645,5 @@ $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!curr
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261105.8"></script><script src="./workout-history.js?v=20261105.8"></script>
+</script><script src="./musculacao.js?v=20261105.9"></script><script src="./workout-history.js?v=20261105.9"></script>
 </body></html>
