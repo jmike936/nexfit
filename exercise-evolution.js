@@ -24,6 +24,12 @@ const css=`
 #strengthPage .evolution-record small{display:block;color:#a0a99c;margin-top:3px}
 #strengthPage .evolution-record b{white-space:nowrap;color:#b7f34a}
 #strengthPage .evolution-empty{padding:24px 16px;text-align:center;background:#1d271f;border:1px solid #303a30;border-radius:14px;color:#a0a99c}
+#strengthPage .personal-records{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px}
+#strengthPage .personal-record{min-width:0;padding:13px;background:#111922;border:1px solid #354454;border-radius:12px}
+#strengthPage .personal-record span{display:block;color:#a0a99c;font-size:11px}
+#strengthPage .personal-record strong{display:block;color:#b7f34a;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
+#strengthPage .personal-record small{display:block;color:#a0a99c;font-size:11px}
+@media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
 @media(max-width:420px){#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat strong{font-size:16px}}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
@@ -88,7 +94,10 @@ async function render(host){
    const delta=previous?latest.load-previous.load:null;
    const sessions=new Set(points.map(p=>p.sessionId)).size;
    const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
-   details.innerHTML='<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Maior carga</span><strong>'+kg(best.load)+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
+   const heaviest=points.filter(p=>Number.isFinite(p.load)&&p.load>0).reduce((best,p)=>!best||p.load>best.load?p:best,null);
+   const estimated=points.filter(p=>Number.isFinite(p.load)&&p.load>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.load*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
+   const personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.load+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Maior carga</span><strong>'+kg(best.load)+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação da última série registrada em relação à anterior: '+(delta>0?'+':'')+kg(delta);details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',paint);paint();
