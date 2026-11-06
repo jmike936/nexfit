@@ -29,14 +29,15 @@ const css=`
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
 let cache=null,cachedUserId=null;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
-function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'2-digit'}).format(d)}
+function dateLabel(value){if(typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)){const [y,m,d]=value.split('-');return d+'/'+m+'/'+y.slice(-2)}const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'2-digit'}).format(d)}
 async function load(){
  const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
  // A Evolução só inclui sessões que ainda possuem atividade correspondente no histórico do atleta.
  // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
- const activitiesQ=await client.from('activities').select('notes').eq('user_id',u.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+ const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',u.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
  if(activitiesQ.error)throw activitiesQ.error;
- const sessionIds=[...new Set((activitiesQ.data||[]).map(a=>(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1]).filter(Boolean))];
+ const activityDateBySession=new Map((activitiesQ.data||[]).map(a=>({id:(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],date:a.activity_date})).filter(a=>a.id&&a.date).map(a=>[a.id,a.date]));
+ const sessionIds=[...activityDateBySession.keys()];
  if(!sessionIds.length)return [];
  const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
  if(sessionsQ.error)throw sessionsQ.error;
@@ -56,7 +57,7 @@ async function load(){
   const key=normalize(name);if(!key)continue;
   const session=sessionMap.get(log.session_id);if(!session)continue;
   if(!grouped.has(key))grouped.set(key,{name,points:[]});
-  grouped.get(key).points.push({date:log.completed_at||session.finished_at||session.started_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
+  grouped.get(key).points.push({date:activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
  }
  return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 }
