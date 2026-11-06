@@ -32,8 +32,6 @@
  #strengthPage .training-card-actions{display:none!important}
  #strengthPage .training-card-actions{display:flex;gap:5px;justify-content:flex-end;border-top:1px solid #303a30;padding:4px 0}
  #strengthPage .training-card .tag{display:inline-block}
- #strengthPage .training-import-button{display:flex;justify-content:center;align-items:center;gap:9px;width:100%;min-height:48px;border-radius:13px;font-size:16px;margin:10px 0;background:#b7f34a;color:#141a0d}
- #strengthPage .training-import-button span{font-size:20px}
  #strengthPage .training-empty{text-align:center;padding:34px 18px;background:#1d271f;border:1px solid #303a30;border-radius:16px}
  #strengthPage .training-empty-icon{font-size:30px;color:#b7f34a}
  #strengthPage .training-empty .btn{margin-top:10px}
@@ -111,7 +109,7 @@
  function normalizeHumanText(value){
  const text=String(value??'').replace(/\s+/gu,' ').trim();
  if(!text||text===text.toLocaleLowerCase('pt-BR')||text!==text.toLocaleUpperCase('pt-BR'))return text;
- const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC','API','CPF','CNPJ','URL','CSV','XLSX','PDF']);
+ const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC','API','CPF','CNPJ','URL','PDF']);
  const particles=new Set(['a','as','o','os','um','uma','uns','umas','de','da','das','do','dos','e','em','no','na','nos','nas','por','com','para','sem','sob','sobre','entre','contra','após','até','perante']);
  let first=true;
  return text.toLocaleLowerCase('pt-BR').replace(/[\p{L}\p{M}]+/gu,word=>{
@@ -206,8 +204,6 @@
    <div id="exerciseEvolution" class="training-programs" hidden></div>
    <div class="training-toolbar"><label for="programSearch">Buscar treino</label><input id="programSearch" type="search" placeholder="Nome do treino"></div>
    <div id="programList" class="training-programs">Carregando treinos…</div>
-   <button class="btn training-import-button" id="toggleImporter"><span aria-hidden="true">⇧</span> Importar Treino</button>
-   <div id="importPanel" class="panel training-form-panel" style="display:none"><div class="training-panel-heading"><h3>Importar treino</h3><button class="btn alt" id="closeImporter" type="button">Fechar</button></div><label for="importCategory">Categoria do treino importado</label><select id="importCategory"><option>Musculação</option><option>Natação</option><option>Corrida</option><option>Pedal</option><option>Ciclismo</option><option>Caminhada</option><option>Funcional</option><option>Cross training</option><option>Outra</option></select><p class="muted">Use uma linha por série. Colunas: Treino, Exercício, Série, Repetições, Carga e Descanso.</p><input id="strengthFile" type="file" accept=".xlsx,.csv"><div id="strengthPreview" class="muted">Selecione um arquivo para visualizar os exercícios e séries.</div><button class="btn" id="strengthImport" disabled>Importar para meus programas</button></div>
    <details class="training-secondary"><summary>Gerenciar Programas de Treino</summary>
     <div class="panel training-form-panel"><h3>Criar programa</h3><label for="programCategory">Categoria</label><select id="programCategory"><option>Musculação</option><option>Natação</option><option>Corrida</option><option>Pedal</option><option>Ciclismo</option><option>Caminhada</option><option>Funcional</option><option>Cross training</option><option>Outra</option></select>${field('programTitle','Nome do programa','Ex.: Hipertrofia — bloco 1')}<label for="programDesc">Descrição</label><textarea id="programDesc" rows="2" placeholder="Objetivo e observações"></textarea><button class="btn" id="createProgram">Criar programa</button><div id="professionalProgramFields" style="display:none"><hr><h3>Enviar programa a outro atleta</h3>${field('athleteEmail','E-mail do atleta','aluno@email.com','email')}<button class="btn alt" id="createForAthlete" type="button">Enviar programa</button></div></div>
     <div id="programManagement" class="training-program-management"></div>
@@ -221,16 +217,13 @@
   `);
   section.classList.add('training-gallery');section.querySelector('.sectionhead')?.remove();
   section.querySelectorAll('[data-training-tab]').forEach(b=>b.onclick=()=>{activeTrainingTab=b.dataset.trainingTab;home()});
-  $('toggleImporter').onclick=()=>openImporter();$('closeImporter').onclick=()=>{$('importPanel').style.display='none'};
   $('createProgram').onclick=createProgram;$('createForAthlete').onclick=createProgramForAthlete;$('createWorkout').onclick=createWorkout;$('requestAccess').onclick=requestAccess;
-  $('strengthFile').onchange=e=>readStrengthFile(e.target.files?.[0]);$('strengthImport').onclick=importStrengthFile;
   const accountType=u.user_metadata?.account_type||'athlete';if(accountType!=='professional')$('professionalRequestControls').style.display='none';
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
   if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
   plans=q.data||[];showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
   const evolutionView=activeTrainingTab==='evolution';
   $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
-  section.querySelectorAll('.training-import-button,.training-form-panel,.training-secondary').forEach(el=>{if(el.classList.contains('training-secondary')||el.classList.contains('training-import-button'))el.hidden=evolutionView});
   if(evolutionView){
    try{
     if(typeof window.renderNexfitExerciseEvolution!=='function'){
@@ -299,144 +292,6 @@
   $('workoutTitle').value='';$('workoutDescription').value='';
   current=program;version=versionRow;
   await openWorkoutEditor(data.id);
- }
- function openImporter(){const p=$('importPanel');if(!p)return;p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'})}
-
- let importedExercises=[];
- function csvRows(text){
-  const out=[];let row=[],v='',q=false;
-  for(let i=0;i<text.length;i++){
-   const ch=text[i],n=text[i+1];
-   if(ch==='"'&&q&&n==='"'){v+='"';i++}
-   else if(ch==='"')q=!q;
-   else if((ch===','||ch===';'||ch==='\t')&&!q){row.push(v);v=''}
-   else if((ch==='\n'||ch==='\r')&&!q){if(ch==='\r'&&n==='\n')i++;row.push(v);if(row.some(x=>x.trim()))out.push(row);row=[];v=''}
-   else v+=ch;
-  }
-  row.push(v);if(row.some(x=>x.trim()))out.push(row);return out;
- }
- const normHeader=s=>String(s||'').replace(String.fromCharCode(65279),'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_');
- function parseRestSeconds(raw){
-  const value=String(raw??'').trim().toLowerCase();if(!value)return 0;
-  const clock=value.match(/^(\d+):([0-5]?\d)$/);if(clock)return Number(clock[1])*60+Number(clock[2]);
-  const amount=Number(value.replace(',','.').replace(/[^\d.-]/g,''));if(!Number.isFinite(amount))return 0;
-  return /min|minute/.test(value)?Math.round(amount*60):Math.max(0,Math.round(amount));
- }
- async function readStrengthFile(file){
-  importedExercises=[];$('strengthImport').disabled=true;
-  const preview=$('strengthPreview');
-  if(!file){preview.textContent='Selecione um arquivo Excel ou CSV.';return}
-  preview.textContent='Lendo arquivo e identificando os exercícios…';
-  try{
-   let matrix;
-   if(file.name.toLowerCase().endsWith('.csv'))matrix=csvRows(await file.text());
-   else{
-    if(!window.XLSX){
-     preview.textContent='Carregando leitor de Excel…';
-     await new Promise((ok,no)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';script.onload=ok;script.onerror=()=>no(Error('Não foi possível carregar o leitor Excel. Verifique sua conexão e tente novamente.'));document.head.append(script)});
-    }
-    const book=window.XLSX.read(await file.arrayBuffer(),{type:'array'});
-    matrix=window.XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''});
-   }
-   if(!matrix?.length)throw Error('A planilha está vazia ou não contém dados na primeira aba.');
-   const h=(matrix[0]||[]).map(normHeader);
-   const find=names=>h.findIndex(x=>names.includes(x));
-   const headerMap={sub:find(['treino','treino','divisao']),exercise:find(['exercicio','nome_exercicio']),set:find(['serie','set']),reps:find(['repeticoes','reps','repeticao','prescricao']),load:find(['carga','carga_kg','peso']),rest:find(['descanso','intervalo','int_recup'])};
-   const hasHeaders=headerMap.exercise>=0;
-   let ix,rows;
-   if(hasHeaders){
-    ix=headerMap;rows=matrix.slice(1);
-    if(ix.reps<0)throw Error('Não encontrei a coluna Repetições. Confira os cabeçalhos da planilha.');
-   }else{
-    // Formato sem cabeçalho: e-mail opcional | treino | exercício | descanso | repetições.
-    // Também aceita o formato compacto: treino | exercício | descanso | repetições.
-    const firstRow=matrix[0]||[];
-    if(firstRow.length>=5&&String(firstRow[0]||'').includes('@')){
-     ix={sub:1,exercise:2,rest:3,reps:4,set:-1,load:-1};rows=matrix;
-    }else if(firstRow.length>=4){
-     ix={sub:0,exercise:1,rest:2,reps:3,set:-1,load:-1};rows=matrix;
-    }else throw Error('Não reconheci os cabeçalhos. Use SUBTREINO, EXERCÍCIO, DESCANSO e REPETIÇÕES, com uma linha por exercício.');
-   }
-   const get=(r,k)=>{const value=String(r?.[ix[k]]??'');return k==='sub'||k==='exercise'?normalizeHumanText(value):value.trim()};
-   const groups=new Map();let validRows=0;
-   for(let ri=0;ri<rows.length;ri++){
-    const r=rows[ri],name=get(r,'exercise');if(!name)continue;
-    const sub=get(r,'sub')||'Treino A',key=sub+'||'+name;
-    const restSeconds=parseRestSeconds(get(r,'rest'));
-    const prescription=get(r,'reps').trim().toUpperCase();
-    if(!prescription)throw Error('Repetições não informadas para "'+name+'" (linha '+(ri+(hasHeaders?2:1))+').');
-    let repsList=[];
-    const multi=prescription.match(/^(\d+)\s*X\s*(MR|AMRAP|\d+(?:[.,]\d+)?)$/i);
-    if(multi){
-     const count=Number(multi[1]),rep=multi[2]==='MR'||multi[2]==='AMRAP'?'MR':Number(multi[2].replace(',','.'));
-     if(count<1||count>30)throw Error('Número de séries inválido para "'+name+'".');
-     repsList=Array(count).fill(rep);
-    }else{
-     const vals=prescription.match(/\d+(?:[.,]\d+)?|MR|AMRAP/gi)||[];
-     repsList=vals.map(v=>v==='MR'||v==='AMRAP'?'MR':Number(v.replace(',','.'))).filter(v=>v==='MR'||(Number.isFinite(v)&&v>0));
-    }
-    if(!repsList.length)throw Error('Formato de repetições não reconhecido para "'+name+'": '+prescription);
-    const loadRaw=get(r,'load').replace(/[a-zA-Z ]/g,'').replace(',','.');
-    const load=loadRaw===''?null:Number(loadRaw);
-    if(loadRaw!==''&&!Number.isFinite(load))throw Error('Carga inválida para "'+name+'".');
-    if(!groups.has(key))groups.set(key,{sub,name,sets:[],rest_seconds:restSeconds});
-    const group=groups.get(key);
-    if(ix.set>=0){
-     const setNo=Number(get(r,'set'))||group.sets.length+1;
-     group.sets.push({set_number:setNo,reps:repsList[0],load_kg:load});
-    }else{
-     repsList.forEach(rep=>group.sets.push({set_number:group.sets.length+1,reps:rep,load_kg:load}));
-    }
-    validRows++;
-   }
-   importedExercises=[...groups.values()];
-   if(!importedExercises.length)throw Error('Nenhum exercício válido foi encontrado. Confira a coluna Exercício.');
-   const totalSets=importedExercises.reduce((n,e)=>n+e.sets.length,0);
-   preview.innerHTML='<strong>Arquivo lido com sucesso</strong><p>'+importedExercises.length+' exercícios · '+[...new Set(importedExercises.map(x=>x.sub))].length+' treinos · '+totalSets+' séries reconhecidas.</p>'+importedExercises.map(x=>'<div class="item"><strong>'+esc(normalizeHumanText(x.sub))+' · '+esc(normalizeHumanText(x.name))+'</strong><div class="muted">'+x.sets.map(z=>z.reps+' reps'+(z.load_kg!=null?' · '+z.load_kg+' kg':'')).join(' / ')+' · descanso '+x.rest_seconds+'s</div></div>').join('');
-   $('strengthImport').disabled=false;
-  }catch(err){
-   importedExercises=[];preview.textContent='Não foi possível ler a planilha: '+(err?.message||String(err))+' Selecione outro arquivo ou ajuste as colunas e tente novamente.';
-   $('strengthImport').disabled=true;
-  }
- }
- async function importStrengthFile(){
-  if(!importedExercises.length){$('strengthPreview').textContent='Primeiro selecione e valide uma planilha com exercícios.';return}
-  const title=normalizeHumanText(prompt('Nome do programa importado:', $('strengthFile').files[0].name.replace(/\.[^.]+$/,'')));
-  if(!title?.trim()){$('strengthPreview').textContent='Importação cancelada. Nenhum programa foi criado.';return}
-  const btn=$('strengthImport'),preview=$('strengthPreview'),db=dbRef(),u=userRef();
-  btn.disabled=true;btn.textContent='Importando…';
-  const report=msg=>{preview.textContent=msg};
-  let programId=null;
-  try{
-   report('Etapa 1 de 4: criando o programa…');
-   await assertUniqueActiveCategory($('importCategory').value);
-   const {data:p,error}=await db.from('training_programs').insert({athlete_id:u.id,created_by:u.id,title,description:'[MODALIDADE: '+$('importCategory').value+'] Importado de Excel/CSV',status:'active'}).select().single();
-   if(error)throw Error('Não foi possível criar o programa: '+error.message);
-   programId=p.id;
-   report('Etapa 2 de 4: criando a versão inicial…');
-   const {data:v,error:ve}=await db.from('training_program_versions').insert({program_id:p.id,version_number:1,created_by:u.id,change_note:'Importação de planilha',status:'active'}).select().single();
-   if(ve)throw Error('O programa foi criado, mas a versão não pôde ser gravada: '+ve.message);
-   report('Etapa 3 de 4: organizando os treinos e exercícios…');
-   const up=await db.from('training_programs').update({current_version_id:v.id}).eq('id',p.id);
-   if(up.error)throw Error('A versão foi criada, mas não foi possível vinculá-la ao programa: '+up.error.message);
-   const subs=[...new Set(importedExercises.map(x=>x.sub))];
-   for(let i=0;i<subs.length;i++){
-    report('Etapa 3 de 4: gravando '+subs[i]+' ('+(i+1)+' de '+subs.length+')…');
-    const {data:s,error:se}=await db.from('training_subworkouts').insert({version_id:v.id,title:subs[i],position:i+1}).select().single();
-    if(se)throw Error('Falha ao criar '+subs[i]+': '+se.message);
-    const rows=importedExercises.filter(x=>x.sub===subs[i]).map((x,j)=>({subworkout_id:s.id,name:x.name,position:j+1,sets:x.sets.map(z=>({reps:z.reps,load_kg:z.load_kg})),rest_seconds:x.rest_seconds}));
-    const ins=await db.from('training_exercises').insert(rows);
-    if(ins.error)throw Error('Falha ao gravar exercícios de '+subs[i]+': '+ins.error.message);
-   }
-   report('Etapa 4 de 4: finalizando e atualizando a lista…');
-   alert('Importação concluída! Programa "'+title.trim()+'" criado com '+importedExercises.length+' exercícios em '+subs.length+' treinos.');
-   home();
-  }catch(err){
-   report('Importação interrompida. '+(programId?'O programa já foi criado; confira a lista antes de tentar novamente. ':'Nenhum programa foi criado. ')+(err?.message||String(err)));
-   alert('Não foi possível concluir a importação.\n\n'+(err?.message||String(err)));
-  }finally{
-   btn.disabled=!importedExercises.length;btn.textContent='Importar para meus programas';
-  }
  }
  async function createProgram(){
   const title=normalizeHumanText($('programTitle').value);
@@ -949,7 +804,7 @@
   const q=await db.from('training_programs').select('*').eq('athlete_id',u.id).eq('status','active').order('updated_at',{ascending:false});
   if(q.error)return alert(q.error.message);
   const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
-  if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar ou importar seu programa.');
+  if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar seu programa.');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section));
   const showPrograms=()=>{
    shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(normalizeHumanText(p.title))+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
