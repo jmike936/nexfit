@@ -201,7 +201,9 @@
    <div class="training-tabs" role="tablist" aria-label="Treinos">
     <button type="button" class="${activeTrainingTab==='mine'?'active':''}" data-training-tab="mine">Meus Treinos</button>
     <button type="button" class="${activeTrainingTab==='models'?'active':''}" data-training-tab="models">Modelos</button>
+    <button type="button" class="${activeTrainingTab==='evolution'?'active':''}" data-training-tab="evolution">Evolução</button>
    </div>
+   <div id="exerciseEvolution" class="training-programs" hidden></div>
    <div class="training-toolbar"><label for="programSearch">Buscar treino</label><input id="programSearch" type="search" placeholder="Nome do treino"></div>
    <div id="programList" class="training-programs">Carregando treinos…</div>
    <button class="btn training-import-button" id="toggleImporter"><span aria-hidden="true">⇧</span> Importar Treino</button>
@@ -225,7 +227,12 @@
   const accountType=u.user_metadata?.account_type||'athlete';if(accountType!=='professional')$('professionalRequestControls').style.display='none';
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
   if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
-  plans=q.data||[];showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();await renderProgramList();
+  plans=q.data||[];showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
+  const evolutionView=activeTrainingTab==='evolution';
+  $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
+  section.querySelectorAll('.training-import-button,.training-form-panel,.training-secondary').forEach(el=>{if(el.classList.contains('training-secondary')||el.classList.contains('training-import-button'))el.hidden=evolutionView});
+  if(evolutionView){if(typeof window.renderNexfitExerciseEvolution==='function')await window.renderNexfitExerciseEvolution($('exerciseEvolution'));else $('exerciseEvolution').textContent='O histórico de evolução ainda está carregando. Atualize a tela.'}
+  else await renderProgramList();
   $('programSearch').oninput=()=>{const term=$('programSearch').value.toLocaleLowerCase('pt-BR');section.querySelectorAll('.training-card').forEach(card=>card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none')};
   const nq=await db.from('app_notifications').select('*').order('created_at',{ascending:false}).limit(8);
   if($('notifications'))$('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>'<div class="item"><strong>'+esc(n.title)+'</strong><p class="muted">'+esc(n.body)+'</p></div>').join('')||'Nenhuma notificação.';
