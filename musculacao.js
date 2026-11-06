@@ -195,6 +195,8 @@
 
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Meus Treinos','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
+  if(session){if(sessionView==='exercise'){shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep()}else renderExercisePicker();return}
+  if(!restoreAttempted){restoreAttempted=true;if(await restoreWorkoutState())return}
   shell('Meus Treinos',`
    <div class="training-tabs" role="tablist" aria-label="Treinos">
     <button type="button" class="${activeTrainingTab==='mine'?'active':''}" data-training-tab="mine">Meus Treinos</button>
@@ -630,7 +632,50 @@
   alert('Pedido enviado ao atleta para aprovação.');
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
+ let sessionView='picker',restSnapshot=null,restoreAttempted=false;
+ const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
+ function persistWorkoutState(){
+  if(!session||!userRef()?.id)return;
+  try{const rest=activeRest?{deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex}:null;
+   localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,updatedAt:Date.now()}));
+  }catch(e){console.warn('Não foi possível guardar a sessão localmente',e)}
+ }
+ function clearPersistedWorkout(){try{if(userRef()?.id)localStorage.removeItem(sessionStorageKey())}catch(_){}}
+ async function restoreWorkoutState(){
+  if(session)return true;const u=userRef(),db=dbRef();if(!u||!db)return false;
+  let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
+  if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
+  const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
+  if(sq.error||!sq.data||sq.data.status==='completed'){clearPersistedWorkout();return false}
+  const [pq,vq,wq,eq,lq]=await Promise.all([
+   db.from('training_programs').select('*').eq('id',saved.programId).maybeSingle(),
+   db.from('training_program_versions').select('*').eq('id',saved.versionId).maybeSingle(),
+   db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
+   db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position'),
+   db.from('training_set_logs').select('*').eq('session_id',saved.sessionId)
+  ]);
+  if(pq.error||vq.error||wq.error||eq.error||lq.error||!pq.data||!vq.data||!eq.data?.length)return false;
+  session=sq.data;current=pq.data;version=vq.data;subworkouts=wq.data||[];sessionExerciseRows=eq.data;sessionPlan=[];
+  sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
+  sessionSetLogs=lq.data||[];sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
+  sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
+  if(sessionView==='exercise'){
+   shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
+   if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
+    const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
+    activeRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
+    const panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
+    if(panel){panel.hidden=false;$('nextStepText').textContent=rest.nextText}if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
+    if(activeRest.paused){const b=$('pauseRest');if(b){b.setAttribute('aria-label','Continuar descanso');b.title='Continuar descanso';b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
+    else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
+   }
+  }else renderExercisePicker();
+  persistWorkoutState();return true;
+ }
+ window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
+
  function renderSessionStep(){
+  sessionView='exercise';
   const host=$('sessionExercises');if(!host)return;
   if(sessionIndex>=sessionPlan.length){renderExercisePicker();return}
   const item=sessionPlan[sessionIndex],e=item.exercise,set=item.set,setNo=item.setIndex+1,total=(e.sets||[]).length;
@@ -666,6 +711,7 @@
    if(button){button.setAttribute('aria-label','Continuar descanso');button.title='Continuar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}
    tickRestTimer();
   }
+  if(activeRest){restSnapshot={deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex};persistWorkoutState()}
  }
  function tickRestTimer(){
   if(!activeRest)return;
@@ -675,8 +721,8 @@
   if(activeRest.paused||remaining>0)return;
   const rest=activeRest;
   if(!rest.notified){
-   rest.notified=true;
-   if(notificationsAllowed){try{new Notification('Descanso finalizado',{body:rest.nextText,tag:'nexfit-rest-'+(session?.id||'active')})}catch(_){}}
+   rest.notified=true;persistWorkoutState();
+   if(notificationsAllowed){try{const notice=new Notification('Descanso finalizado',{body:rest.nextText,tag:'nexfit-rest-'+(session?.id||'active')});notice.onclick=()=>{try{window.focus()}catch(_){};if(session)tickRestTimer();else home()}}catch(_){}}
    if(navigator.vibrate)navigator.vibrate([180,80,180]);
    const text=$('nextStepText');if(text)text.textContent='Descanso concluído. '+rest.nextText;
   }
@@ -709,6 +755,7 @@
  }
  function renderExercisePicker(){
   if(!session)return;
+  sessionView='picker';
   const sub=subworkouts.find(s=>s.id===session.subworkout_id);
   let cards=sessionExerciseRows.map((e,index)=>{
    const p=exerciseProgress(index),label=p.status==='done'?'Feito':p.status==='skipped'?'Não executado':p.status==='partial'?'Parcial':'Pendente';
@@ -724,6 +771,7 @@
   $('cancelSession').onclick=exitSessionToHome;
  }
  function exitSessionToHome(){
+  clearPersistedWorkout();restSnapshot=null;
   if(timer)clearInterval(timer);
   timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();
   const homeButton=document.querySelector('.nav button[data-page="home"]');
@@ -764,7 +812,7 @@
   renderExercisePicker();
  }
  function advanceAfterSet(item){
-  sessionIndex++;
+  sessionIndex++;restSnapshot=null;persistWorkoutState();
   const next=sessionPlan[sessionIndex];
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
@@ -777,7 +825,7 @@
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
   const {error}=await dbRef().from('training_set_logs').insert(row);
   if(error)return alert('Não foi possível salvar esta série: '+error.message);
-  sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));
+  sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
   const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),complete=$('completeSet');
   if(complete)complete.disabled=true;
   const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
@@ -789,7 +837,7 @@
   const nextText=sameExercise?'Próxima: série '+(next.setIndex+1)+' de '+next.exercise.name+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):next?'Exercício concluído. Após o descanso, escolha qual exercício iniciar.':'Último descanso do treino.';
   $('nextStepText').textContent=nextText;
   const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;advanceAfterSet(item)};
-  activeRest={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};
+  activeRest={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};restSnapshot={deadline,total:rest,remaining:rest,paused:false,nextText,notified:false,itemIndex:sessionIndex};persistWorkoutState();
   $('skipRest').onclick=advance;
   timer=setInterval(tickRestTimer,250);tickRestTimer();
  }
@@ -801,12 +849,13 @@
   await enableWorkoutNotifications();
   const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
   if(error)return alert(error.message);
-  session=data;sessionExerciseRows=ex.data;sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
+  session=data;sessionExerciseRows=ex.data;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
   ex.data.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionIndex=0;sessionLoads={};renderExercisePicker();
+  sessionIndex=0;sessionLoads={};persistWorkoutState();renderExercisePicker();
  }
  async function finishSession(){
   if(!session)return;
+  clearPersistedWorkout();restSnapshot=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;
   const {error}=await dbRef().from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
   if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
