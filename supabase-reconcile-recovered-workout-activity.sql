@@ -30,19 +30,19 @@ BEGIN
 
   marker := '[NEXFIT_SESSION:' || target_session::text || ']';
 
-  SELECT count(*), min(a.id)
+  SELECT count(*), (array_agg(a.id))[1]
     INTO original_count, original_activity_id
   FROM public.activities a
   WHERE a.user_id = session_row.athlete_id
     AND a.sport = 'Musculação'
     AND a.activity_date = (session_row.started_at AT TIME ZONE 'America/Sao_Paulo')::date
-    AND btrim(regexp_replace(COALESCE(a.notes, ''), '\\s*\\[NEXFIT_SESSION:[a-f0-9-]+\\]', '', 'gi')) = btrim(session_row.expected_notes);
+    AND btrim(regexp_replace(COALESCE(a.notes, ''), '\s*\[NEXFIT_SESSION:[a-f0-9-]+\]', '', 'gi')) = btrim(session_row.expected_notes);
 
   IF original_count <> 1 THEN
     RAISE EXCEPTION 'Esperava exatamente 1 atividade original com descrição "%", mas encontrei %. Nenhuma alteração realizada.', session_row.expected_notes, original_count;
   END IF;
 
-  SELECT count(*), min(a.id)
+  SELECT count(*), (array_agg(a.id))[1]
     INTO recovered_count, recovered_activity_id
   FROM public.activities a
   WHERE a.user_id = session_row.athlete_id
@@ -58,7 +58,7 @@ BEGIN
   -- o trigger de limpeza apague a sessão e as séries legítimas.
   IF recovered_count = 1 AND recovered_activity_id <> original_activity_id THEN
     UPDATE public.activities
-       SET notes = btrim(regexp_replace(COALESCE(notes, ''), '\\s*\\[NEXFIT_SESSION:[a-f0-9-]+\\]', '', 'gi'))
+       SET notes = btrim(regexp_replace(COALESCE(notes, ''), '\s*\[NEXFIT_SESSION:[a-f0-9-]+\]', '', 'gi'))
      WHERE id = recovered_activity_id;
 
     DELETE FROM public.activities WHERE id = recovered_activity_id;
