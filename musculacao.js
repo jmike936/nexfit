@@ -282,7 +282,7 @@
   const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
   if(error)return alert('Não foi possível criar o treino: '+error.message);
   $('workoutTitle').value='';$('workoutDescription').value='';
-  await openProgram(program.id);
+  current=program;version=versionRow;
   await openWorkoutEditor(data.id);
  }
  function openImporter(){const p=$('importPanel');if(!p)return;p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'})}
