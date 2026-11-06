@@ -50,9 +50,9 @@ async function load(){
   const key=normalize(name);if(!key)continue;
   const session=sessionMap.get(log.session_id);if(!session)continue;
   if(!grouped.has(key))grouped.set(key,{name,points:[]});
-  grouped.get(key).points.push({date:session.finished_at||session.started_at||log.completed_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
+  grouped.get(key).points.push({date:log.completed_at||session.finished_at||session.started_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
  }
- return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date))})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+ return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 }
 function chart(points){
  const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.load>old.load)bySession.set(p.sessionId,p)}
@@ -67,7 +67,7 @@ function chart(points){
  return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga registrada em uma série daquela sessão.</p>';
 }
 async function render(host){
- const uid=user()?.id||null;if(cachedUserId!==uid){cache=null;cachedUserId=uid}
+ const uid=user()?.id||null;if(cachedUserId!==uid){cachedUserId=uid}cache=null;
  host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas…</div>';
  try{
   if(!cache)cache=await load();
@@ -80,7 +80,7 @@ async function render(host){
    const points=item.points,latest=points[points.length-1],best=points.reduce((a,b)=>b.load>a.load?b:a,points[0]),previous=points.length>1?points[points.length-2]:null;
    const delta=previous?latest.load-previous.load:null;
    const sessions=new Set(points.map(p=>p.sessionId)).size;
-   const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,30);
+   const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
    details.innerHTML='<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Maior carga</span><strong>'+kg(best.load)+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação da última série registrada em relação à anterior: '+(delta>0?'+':'')+kg(delta);details.querySelector('.evolution-stats').after(note)}
   };
