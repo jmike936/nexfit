@@ -196,7 +196,7 @@
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Meus Treinos','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
   if(session){if(sessionView==='exercise'){shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep()}else renderExercisePicker();return}
-  if(!restoreAttempted){restoreAttempted=true;if(await restoreWorkoutState())return}
+  if(!restoreAttempted){restoreAttempted=true;restorePromise=restoreWorkoutState()}if(restorePromise){const pending=restorePromise;const restored=await pending;if(restorePromise===pending)restorePromise=null;if(restored)return}
   shell('Meus Treinos',`
    <div class="training-tabs" role="tablist" aria-label="Treinos">
     <button type="button" class="${activeTrainingTab==='mine'?'active':''}" data-training-tab="mine">Meus Treinos</button>
@@ -632,7 +632,7 @@
   alert('Pedido enviado ao atleta para aprovação.');
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
- let sessionView='picker',restSnapshot=null,restoreAttempted=false;
+ let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null;
  const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
  function persistWorkoutState(){
   if(!session||!userRef()?.id)return;
@@ -674,7 +674,7 @@
   }else renderExercisePicker();
   persistWorkoutState();return true;
  }
- window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
+ window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);\n  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persistWorkoutState();return}if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});\n  window.addEventListener('pageshow',()=>{if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});
 
  function renderSessionStep(){
   sessionView='exercise';
