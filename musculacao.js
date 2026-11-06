@@ -123,7 +123,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine';
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -282,8 +282,8 @@
   const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
   if(error)return alert('Não foi possível criar o treino: '+error.message);
   $('workoutTitle').value='';$('workoutDescription').value='';
-  await openProgram(program.id);
-  alert('Treino criado. Agora você pode adicionar e organizar os exercícios.');
+  current=program;version=versionRow;
+  await openWorkoutEditor(data.id);
  }
  function openImporter(){const p=$('importPanel');if(!p)return;p.style.display='block';p.scrollIntoView({behavior:'smooth',block:'start'})}
 
@@ -458,6 +458,7 @@
   if(error)return alert(error.message);home();
  }
  async function openProgram(id){
+  editorSubworkoutId=null;
   const db=dbRef();current=plans.find(p=>p.id===id);if(!current)return;
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
   if(error)return alert(error.message);
@@ -494,7 +495,32 @@
  }
  async function addSubworkout(){
   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
-  const {error}=await dbRef().from('training_subworkouts').insert({version_id:version.id,title,position:subworkouts.length+1});if(error)return alert(error.message);openProgram(current.id);
+  const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:version.id,title,position:subworkouts.length+1}).select().single();if(error)return alert(error.message);await openWorkoutEditor(data.id);
+ }
+ async function refreshWorkoutEditorOrProgram(){
+  if(editorSubworkoutId){await openWorkoutEditor(editorSubworkoutId);return}
+  await openProgram(current.id);
+ }
+ async function openWorkoutEditor(subId){
+  if(!current||!version)return;
+  const db=dbRef(),subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
+  if(subQuery.error||!subQuery.data)return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));
+  const sub=subQuery.data;editorSubworkoutId=sub.id;
+  const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
+  if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
+  const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
+  shell('Criar treino',`<div class="panel">
+   <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
+   <p class="muted">${esc(normalizeHumanText(current.title))} · ${esc(normalizeHumanText(sub.title))}</p>
+   <h2>${esc(normalizeHumanText(sub.title))}</h2>
+   <p class="muted">${esc(sub.description||'Adicione os exercícios que farão parte deste treino.')}</p>
+   <div class="training-program-management">${rows||'<p class="muted">Nenhum exercício adicionado. Comece adicionando o primeiro exercício.</p>'}</div>
+   <button class="btn" type="button" id="addExerciseFocused">＋ Adicionar exercício</button>
+  </div>`);
+  $('backToProgram').onclick=()=>{editorSubworkoutId=null;openProgram(current.id)};
+  $('addExerciseFocused').onclick=()=>addExercise(sub.id);
+  section.querySelectorAll('[data-edit-focused-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editFocusedEx));
+  section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteFocusedEx));
  }
  async function renderSubworkouts(){
   const db=dbRef();let html='';
@@ -517,7 +543,7 @@
   const {data,error}=await dbRef().from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
   if(error)return alert(error.message);
   const r=await dbRef().from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(name),position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
-  if(r.error)return alert(r.error.message);openProgram(current.id);
+  if(r.error)return alert(r.error.message);await refreshWorkoutEditorOrProgram();
  }
  function showProgramEditor(title,fields,onSave){
   let overlay=$('programEditorModal');
@@ -560,7 +586,7 @@
    const title=normalizeHumanText($('editorSubTitle').value);if(!title)return alert('Informe um nome para o treino.');
    const {error}=await dbRef().from('training_subworkouts').update({title,description:normalizeHumanText($('editorSubDescription').value)||null}).eq('id',item.id);
    if(error){alert('Não foi possível salvar o treino: '+error.message);return false}
-   await openProgram(current.id);return true;
+   await refreshWorkoutEditorOrProgram();return true;
   });
  }
  async function deleteSubworkout(id){
@@ -610,7 +636,7 @@
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const {error}=await db.from('training_exercises').update({name,sets,rest_seconds:rest}).eq('id',id);
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
-   await openProgram(current.id);return true;
+   await refreshWorkoutEditorOrProgram();return true;
   });
  }
  async function deleteExercise(id){
@@ -621,7 +647,7 @@
   if(used.error)return alert('Não foi possível verificar o histórico: '+used.error.message);
   if((used.count||0)>0)return alert('Este exercício tem séries registradas. Para preservar o histórico, ele não pode ser excluído.');
   const {error}=await db.from('training_exercises').delete().eq('id',id);
-  if(error)return alert('Não foi possível excluir o exercício: '+error.message);await openProgram(current.id);
+  if(error)return alert('Não foi possível excluir o exercício: '+error.message);await refreshWorkoutEditorOrProgram();
  }
  async function requestDeletion(){
   const reason=prompt('Motivo do pedido de arquivamento (opcional):')||null;
