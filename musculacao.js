@@ -704,7 +704,7 @@
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
   if(sessionView==='exercise'){
    shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
-   if(saved.draftLoad!==null&&$('sessionLoad'))$('sessionLoad').value=saved.draftLoad;
+   if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true';}
    if(saved.draftReps!==null&&$('sessionReps'))$('sessionReps').value=saved.draftReps;
    if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
     const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
@@ -741,7 +741,7 @@
  function adjustLoad(loadKey,delta){
   const input=$('sessionLoad');if(!input)return;
   const value=Number(input.value||0),next=Math.max(0,value+delta);
-  input.value=Number(next.toFixed(2));sessionLoads[loadKey]=input.value;
+  input.value=Number(next.toFixed(2));input.dataset.userEdited='true';sessionLoads[loadKey]=input.value;
  }
  async function enableWorkoutNotifications(){
   if(!('Notification' in window)){notificationsAllowed=false;return}
