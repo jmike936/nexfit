@@ -778,11 +778,14 @@
   rest.advance();
  }
  document.addEventListener('visibilitychange',()=>{if(activeRest)tickRestTimer()});
- function skipCurrentSet(){
+ async function skipCurrentSet(){
   if(!session)return;
-  const item=sessionPlan[sessionIndex];if(!item)return;
-  if(!confirm('Pular esta série? Ela será registrada no histórico como não executada.'))return;
-  skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));advanceAfterSet(item);
+  const item=sessionPlan[sessionIndex];if(!item||hasSetLog(item.exercise.id,item.setIndex+1))return;
+  if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.'))return;
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
+  const {error}=await dbRef().from('training_set_logs').insert(row);
+  if(error)return alert('Não foi possível registrar a série como não realizada: '+error.message);
+  sessionSetLogs.push(row);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();advanceAfterSet(item);
  }
  function skipCurrentExercise(){
   if(!session)return;
@@ -819,7 +822,14 @@
   $('finishWorkout').onclick=()=>{const unfinished=sessionExerciseRows.map((_,i)=>exerciseProgress(i)).filter(x=>x.status!=='done').length;if(unfinished&&!confirm(unfinished+' exercício(s) ainda não estão marcados como feitos. Eles aparecerão como não executados/parciais no histórico. Finalizar mesmo assim?'))return;finishSession()};
   $('cancelSession').onclick=exitSessionToHome;
  }
- function exitSessionToHome(){
+ async function exitSessionToHome(){
+  if(!session)return;
+  if(!confirm('Quer encerrar este treino agora? Se escolher sair, as séries já registradas nesta sessão também serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar.'))return;
+  const db=dbRef(),sessionId=session.id;
+  const {error:logsError}=await db.from('training_set_logs').delete().eq('session_id',sessionId);
+  if(logsError)return alert('Não foi possível cancelar o treino e apagar as séries registradas: '+logsError.message);
+  const {error:sessionError}=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userRef().id);
+  if(sessionError)return alert('As séries foram apagadas, mas não foi possível remover a sessão. Tente novamente ou contate o suporte: '+sessionError.message);
   clearPersistedWorkout();restSnapshot=null;
   if(timer)clearInterval(timer);
   timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();
