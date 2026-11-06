@@ -38,3 +38,8 @@ Depois de aplicar as mudanças do app, execute `supabase-workout-edit-policies.s
 ## Foto e dados do perfil
 
 Depois de publicar a atualização do perfil, execute `supabase-profile-photo.sql` no SQL Editor do Supabase para criar o bucket privado das fotos e suas políticas de acesso. O próprio perfil permite adicionar uma imagem JPEG, PNG ou WebP de até 5 MB. Nome, data de nascimento, altura e peso são opcionais e editáveis; a idade é calculada a partir da data informada.
+
+
+## Isolamento do histórico por perfil
+
+Antes de publicar a Build `20261106.1`, execute `supabase-activities-isolation.sql` no SQL Editor do Supabase. O script remove políticas antigas/adicionais da tabela `activities` e recria políticas RLS restritas ao `auth.uid()` para leitura, inserção, edição e exclusão. A aplicação também filtra as consultas pelo `user_id` da sessão autenticada; o filtro no frontend é defesa adicional e não substitui o RLS.
