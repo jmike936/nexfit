@@ -90,14 +90,14 @@ async function render(host){
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points,latest=points[points.length-1],best=points.reduce((a,b)=>b.load>a.load?b:a,points[0]),previous=points.length>1?points[points.length-2]:null;
+   const points=item.points,latest=points[points.length-1],previous=points.length>1?points[points.length-2]:null;
    const delta=previous?latest.load-previous.load:null;
    const sessions=new Set(points.map(p=>p.sessionId)).size;
    const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
    const heaviest=points.filter(p=>Number.isFinite(p.load)&&p.load>0).reduce((best,p)=>!best||p.load>best.load?p:best,null);
    const estimated=points.filter(p=>Number.isFinite(p.load)&&p.load>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.load*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
    const personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.load+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Maior carga</span><strong>'+kg(best.load)+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Última carga</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Séries registradas</span><strong>'+points.length+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação da última série registrada em relação à anterior: '+(delta>0?'+':'')+kg(delta);details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',paint);paint();
