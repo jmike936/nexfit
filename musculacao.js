@@ -800,8 +800,9 @@
  }
  function exerciseProgress(index){
   const exercise=sessionExerciseRows[index],sets=exercise?.sets||[];
-  const done=sets.filter((_,i)=>hasSetLog(exercise.id,i+1)).length;
-  const skipped=sets.filter((_,i)=>skippedSetKeys.has(exercise.id+':'+(i+1))).length;
+  const logForSet=(setNumber)=>sessionSetLogs.find(x=>x.exercise_id===exercise.id&&Number(x.set_number)===Number(setNumber));
+  const done=sets.filter((_,i)=>{const row=logForSet(i+1);return row&&Number(row.reps_completed)>0}).length;
+  const skipped=sets.filter((_,i)=>skippedSetKeys.has(exercise.id+':'+(i+1))||Number(logForSet(i+1)?.reps_completed)===0).length;
   const status=done===sets.length&&sets.length?'done':done?'partial':skipped===sets.length&&sets.length?'skipped':skipped?'partial':'pending';
   return {done,total:sets.length,skipped,status};
  }
