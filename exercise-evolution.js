@@ -1,6 +1,6 @@
 (()=>{if(window.__nexfitExerciseEvolution)return;window.__nexfitExerciseEvolution=true;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const db=()=>window.db||(typeof window.supabase!=='undefined'?window.supabase:null)||(typeof dbClient!=='undefined'?dbClient:null)||(typeof db!=='undefined'?db:null);
+const getClient=()=>window.db||(typeof window.supabase!=='undefined'?window.supabase:null)||(typeof dbClient!=='undefined'?dbClient:null)||(typeof db!=='undefined'?db:null);
 const user=()=>window.currentUser||(typeof currentUser!=='undefined'?currentUser:null);
 const normalize=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR');
 const css=`
@@ -31,7 +31,7 @@ let cache=null,cachedUserId=null;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
 function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}
 async function load(){
- const client=db(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
+ const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
  const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').order('started_at',{ascending:false}).limit(500);
  if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
