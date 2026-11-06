@@ -29,7 +29,7 @@ const css=`
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
 let cache=null,cachedUserId=null;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
-function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}
+function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'2-digit'}).format(d)}
 async function load(){
  const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
  const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').order('started_at',{ascending:false}).limit(500);
