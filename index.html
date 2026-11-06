@@ -247,7 +247,7 @@ const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes
 let db = null, currentUser = null, activities = [], userName = 'Atleta', authMode = 'signin';
 const icons={'Musculação':'🏋️','Corrida':'🏃','Caminhada':'🚶','Ciclismo':'🚴','Natação':'🏊','Funcional':'⚡','Cross training':'🔥','Yoga':'🧘','Pilates':'🤸','Outra':'✦'};
 const $=id=>document.getElementById(id);
-function fmtDate(s){const m=String(s||'').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);if(m)return m[3]+'/'+m[2]+'/'+m[1];const d=new Date(s);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
+function fmtDate(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return m[3]+'/'+m[2]+'/'+m[1];const d=new Date(s);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
 function parseDurationSeconds(value){
  const text=String(value||'').trim();
  if(/^\d+(?:[.,]\d+)?$/.test(text))return Math.max(0,Math.round(Number(text.replace(',','.'))*60));
