@@ -700,7 +700,7 @@
   if(pq.error||vq.error||wq.error||eq.error||lq.error||!pq.data||!vq.data||!eq.data?.length)return false;
   session=sq.data;current=pq.data;version=vq.data;subworkouts=wq.data||[];sessionExerciseRows=eq.data;sessionPlan=[];
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionSetLogs=lq.data||[];sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
+  sessionSetLogs=lq.data||[];await preloadPreviousLoads(eq.data);sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
   if(sessionView==='exercise'){
    shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
