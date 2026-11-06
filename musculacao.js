@@ -274,7 +274,7 @@
    for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Editar treino" aria-label="Editar treino">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Excluir treino" aria-label="Excluir treino">'+trashIcon+'</button></div></div>');
   }
   host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
-  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{await openProgram(b.dataset.editTraining);await editSubworkout(b.dataset.trainingId)});
+  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{await openProgram(b.dataset.editTraining);await openWorkoutEditor(b.dataset.trainingId)});
   host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{await openProgram(b.dataset.deleteTraining);await deleteSubworkout(b.dataset.trainingId)});
  }
 
@@ -379,15 +379,16 @@
   const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
   if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
   const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
-  shell('Criar treino',`<div class="panel">
+  shell('Editar treino',`<div class="panel">
    <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
-   <p class="muted">${esc(normalizeHumanText(current.title))} · ${esc(normalizeHumanText(sub.title))}</p>
-   <h2>${esc(normalizeHumanText(sub.title))}</h2>
-   <p class="muted">${esc(sub.description||'Adicione os exercícios que farão parte deste treino.')}</p>
+   <p class="muted">${esc(normalizeHumanText(current.title))}</p>
+   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>${esc(normalizeHumanText(sub.title))}</h2><button class="icon-action" type="button" id="editFocusedWorkoutDetails" title="Editar nome e descrição" aria-label="Editar nome e descrição">${editIcon}</button></div>
+   <p class="muted">${esc(sub.description||'Sem descrição.')}</p>
    <div class="training-program-management">${rows||'<p class="muted">Nenhum exercício adicionado. Comece adicionando o primeiro exercício.</p>'}</div>
    <button class="btn" type="button" id="addExerciseFocused">＋ Adicionar exercício</button>
   </div>`);
   $('backToProgram').onclick=()=>{editorSubworkoutId=null;openProgram(current.id)};
+  $('editFocusedWorkoutDetails').onclick=()=>editSubworkout(sub.id);
   $('addExerciseFocused').onclick=()=>addExercise(sub.id);
   section.querySelectorAll('[data-edit-focused-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editFocusedEx));
   section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteFocusedEx));
