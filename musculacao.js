@@ -231,8 +231,16 @@
   const evolutionView=activeTrainingTab==='evolution';
   $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
   section.querySelectorAll('.training-import-button,.training-form-panel,.training-secondary').forEach(el=>{if(el.classList.contains('training-secondary')||el.classList.contains('training-import-button'))el.hidden=evolutionView});
-  if(evolutionView){if(typeof window.renderNexfitExerciseEvolution==='function')await window.renderNexfitExerciseEvolution($('exerciseEvolution'));else $('exerciseEvolution').textContent='O histórico de evolução ainda está carregando. Atualize a tela.'}
-  else await renderProgramList();
+  if(evolutionView){
+   try{
+    if(typeof window.renderNexfitExerciseEvolution!=='function'){
+     $('exerciseEvolution').textContent='Preparando histórico de evolução…';
+     await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./exercise-evolution.js?v=20261106.8';script.onload=resolve;script.onerror=()=>reject(new Error('Não foi possível carregar o módulo de evolução.'));document.head.append(script)});
+    }
+    if(typeof window.renderNexfitExerciseEvolution!=='function')throw new Error('O módulo de evolução não foi inicializado.');
+    await window.renderNexfitExerciseEvolution($('exerciseEvolution'));
+   }catch(error){$('exerciseEvolution').textContent=error.message||'Não foi possível abrir a evolução. Tente novamente.'}
+  }else await renderProgramList();
   $('programSearch').oninput=()=>{const term=$('programSearch').value.toLocaleLowerCase('pt-BR');section.querySelectorAll('.training-card').forEach(card=>card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none')};
   const nq=await db.from('app_notifications').select('*').order('created_at',{ascending:false}).limit(8);
   if($('notifications'))$('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>'<div class="item"><strong>'+esc(n.title)+'</strong><p class="muted">'+esc(n.body)+'</p></div>').join('')||'Nenhuma notificação.';
