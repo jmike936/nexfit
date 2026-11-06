@@ -1,7 +1,7 @@
 (()=>{if(window.__nexfitExerciseEvolution)return;window.__nexfitExerciseEvolution=true;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const db=()=>window.db||window.supabaseClient||window.client||window.db;
-const user=()=>window.currentUser||window.currentUserData||null;
+const db=()=>window.db||(typeof window.supabase!=='undefined'?window.supabase:null)||(typeof dbClient!=='undefined'?dbClient:null)||(typeof db!=='undefined'?db:null);
+const user=()=>window.currentUser||(typeof currentUser!=='undefined'?currentUser:null);
 const normalize=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR');
 const css=`
 #strengthPage .evolution-wrap{display:grid;gap:14px}
@@ -27,7 +27,7 @@ const css=`
 @media(max-width:420px){#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat strong{font-size:16px}}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
-let cache=null;
+let cache=null,cachedUserId=null;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
 function dateLabel(value){const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})}
 async function load(){
@@ -67,6 +67,7 @@ function chart(points){
  return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga registrada em uma série daquela sessão.</p>';
 }
 async function render(host){
+ const uid=user()?.id||null;if(cachedUserId!==uid){cache=null;cachedUserId=uid}
  host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas…</div>';
  try{
   if(!cache)cache=await load();
