@@ -176,9 +176,9 @@
    if(!previous||new Date(date)>new Date(previous))lastExecution.set(String(item.subworkout_id),date);
   }
   const dateLabel=value=>{
-   if(!value)return 'Pendente / sem registros';
+   if(!value)return '';
    const date=new Date(value);
-   return Number.isNaN(date.getTime())?'Pendente / sem registros':date.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'});
+   return Number.isNaN(date.getTime())?'':date.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'});
   };
   workouts.sort((a,b)=>{
    const da=lastExecution.get(String(a.workout.id))||null,db=lastExecution.get(String(b.workout.id))||null;
@@ -190,7 +190,9 @@
    const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
    const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
    const category=programCategory(p.description),last=lastExecution.get(String(workout.id))||null;
-   return '<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+' <span style="font-size:11px;font-weight:500;color:#a0a99c">| '+esc(dateLabel(last))+'</span></strong><small>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+' · '+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>';
+   const lastDate=dateLabel(last);
+   const executionInfo=lastDate?' <span style="font-size:10px;font-weight:500;color:#a0a99c">· Última execução registrada</span> <span style="font-size:11px;font-weight:600;color:#B7F34A">'+esc(lastDate)+'</span>':'';
+   return '<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+executionInfo+'</strong><small>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+' · '+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>';
   });
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
   host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout));
