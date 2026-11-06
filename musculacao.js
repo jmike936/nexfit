@@ -674,7 +674,9 @@
   }else renderExercisePicker();
   persistWorkoutState();return true;
  }
- window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);\n  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persistWorkoutState();return}if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});\n  window.addEventListener('pageshow',()=>{if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});
+ window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persistWorkoutState();return}if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});
+  window.addEventListener('pageshow',()=>{if(!session&&userRef()?.id&&section.classList.contains('active')){restoreAttempted=false;home()}});
 
  function renderSessionStep(){
   sessionView='exercise';
