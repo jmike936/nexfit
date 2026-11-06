@@ -36,7 +36,8 @@ async function load(){
  // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
  const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',u.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
  if(activitiesQ.error)throw activitiesQ.error;
- const sessionIds=[...new Set((activitiesQ.data||[]).map(a=>(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1]).filter(Boolean))];
+ const activityDateBySession=new Map((activitiesQ.data||[]).map(a=>({id:(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],date:a.activity_date})).filter(a=>a.id&&a.date).map(a=>[a.id,a.date]));
+ const sessionIds=[...activityDateBySession.keys()];
  if(!sessionIds.length)return [];
  const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
  if(sessionsQ.error)throw sessionsQ.error;
