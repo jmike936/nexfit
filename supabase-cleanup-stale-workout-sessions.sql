@@ -17,7 +17,10 @@ WHERE s.finished_at IS NULL
 GROUP BY s.athlete_id, s.id, s.status, s.started_at
 ORDER BY s.started_at ASC;
 
--- 2) Limpeza transacional. Execute somente após revisar a prévia.
+-- 2) Limpeza transacional.
+-- IMPORTANTE: o bloco abaixo fica desativado por padrão.
+-- Após revisar a prévia, remova os delimitadores /* e */ para executar a limpeza.
+/*
 BEGIN;
 
 CREATE TEMP TABLE nexfit_stale_sessions ON COMMIT DROP AS
@@ -37,6 +40,7 @@ USING nexfit_stale_sessions AS stale
 WHERE s.id = stale.id;
 
 COMMIT;
+*/
 
 -- Observação: sessões com menos de 30 dias não são removidas automaticamente.
 -- Se a aplicação futuramente adotar status explícitos (active/cancelled/abandoned),
