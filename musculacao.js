@@ -83,6 +83,7 @@
  #strengthPage .execution-load-stat small{margin-top:-4px;color:#a0a99c;font-size:10px}
  #strengthPage .execution-reps-label{display:block;margin:8px 0 5px;color:#a0a99c;font-size:12px}
  #strengthPage .execution-reps-input{width:100%;padding:11px;border:1px solid #354454;border-radius:10px;background:#111922;color:#f4f7fa}
+ #strengthPage .execution-feedback{margin:10px 0 0;padding:9px 11px;border:1px solid #354454;border-radius:10px;color:#dce8d2;background:#18221a;font-size:12px;line-height:1.4}#strengthPage .execution-feedback[data-state="error"]{border-color:#8b4545;color:#ffb7b7;background:#2a191b}#strengthPage .execution-feedback[data-state="success"]{border-color:#526b32;color:#d5ff7b}
  #strengthPage .execution-actions{display:grid;grid-template-columns:1.35fr 1fr;gap:8px;margin-top:10px}
  #strengthPage .execution-primary,#strengthPage .execution-secondary{min-height:48px;border-radius:13px;padding:11px 14px;font-weight:800;cursor:pointer}
  #strengthPage .execution-primary{border:0;background:#b7f34a;color:#141a0d}
@@ -106,6 +107,22 @@
  const nav=document.querySelector('.nav');if(!nav)return;
  const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab)return;
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
+ let executionFeedbackTimer=null,handlingSetAction=false;
+ function setExecutionFeedback(message,state='info'){
+  const feedback=$('executionFeedback');if(!feedback)return;
+  feedback.textContent=message;feedback.dataset.state=state;
+  if(executionFeedbackTimer)clearTimeout(executionFeedbackTimer);
+  if(state!=='error')executionFeedbackTimer=setTimeout(()=>{if(feedback.isConnected)feedback.textContent=''},6500);
+ }
+ section.addEventListener('click',async event=>{
+  const button=event.target?.closest?.('#completeSet, #skipSet');if(!button||!section.contains(button))return;
+  event.preventDefault();if(handlingSetAction)return;
+  handlingSetAction=true;button.disabled=true;
+  setExecutionFeedback('Toque recebido. Verificando a série…');
+  try{if(button.id==='completeSet')await completeCurrentSet();else await skipCurrentSet()}
+  catch(error){setExecutionFeedback('Falha ao processar o comando: '+(error?.message||'erro inesperado.'),'error')}
+  finally{handlingSetAction=false;const restPanel=$('restPanel');if(button.isConnected&&(!restPanel||restPanel.hidden))button.disabled=false}
+ });
  function normalizeHumanText(value){
  const text=String(value??'').replace(/\s+/gu,' ').trim();
  if(!text||text===text.toLocaleLowerCase('pt-BR')||text!==text.toLocaleUpperCase('pt-BR'))return text;
@@ -632,11 +649,11 @@
   if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=previousLoad??set.load_kg??(item.setIndex>0?(sessionLoads[e.id+':'+(item.setIndex-1)]??''):'');
   const loadValue=sessionLoads[loadKey],loggedSets=sessionSetLogs.length,allSets=sessionPlan.length;
   const media=e.media_url?'<img class="execution-media" src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(normalizeHumanText(e.name))+'">':'';
-  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">Registrar carga</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">Registrar carga</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   if($('sessionReps'))$('sessionReps').oninput=()=>{const actual=Number($('sessionReps').value),suggested=previousLoadsByExercise[identity]?.[actual],loadInput=$('sessionLoad');if(suggested!==undefined&&loadInput&&!loadInput.dataset.userEdited){loadInput.value=String(suggested);sessionLoads[loadKey]=String(suggested);const hint=$('previousLoadHint');if(hint)hint.textContent='Última carga registrada'}persistWorkoutState()};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
-  $('completeSet').addEventListener('click',event=>{event.preventDefault();completeCurrentSet()});$('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
+  $('skipExercise').onclick=skipCurrentExercise;
   $('pauseRest').onclick=toggleRestPause;$('exitSession').onclick=exitSessionToHome;
  }
  function adjustLoad(loadKey,delta){
@@ -680,13 +697,14 @@
  }
  document.addEventListener('visibilitychange',()=>{if(activeRest)tickRestTimer()});
  async function skipCurrentSet(){
-  if(!session)return;
-  const item=sessionPlan[sessionIndex];if(!item||hasSetLog(item.exercise.id,item.setIndex+1))return;
-  if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.'))return;
+  if(!session){setExecutionFeedback('A sessão de treino não está ativa.','error');return}
+  const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já consta como registrada.','error');return}
+  if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
-  const {error}=await dbRef().from('training_set_logs').insert(row);
-  if(error)return alert('Não foi possível registrar a série como não realizada: '+error.message);
-  sessionSetLogs.push(row);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();advanceAfterSet(item);
+  setExecutionFeedback('Registrando série como não realizada…');
+  try{const {error}=await dbRef().from('training_set_logs').insert(row);if(error)throw new Error(error.message)}
+  catch(error){setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');return alert('Não foi possível registrar a série como não realizada: '+(error?.message||'erro inesperado.'))}
+  sessionSetLogs.push(row);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
  function skipCurrentExercise(){
   if(!session)return;
@@ -778,25 +796,25 @@
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
  async function completeCurrentSet(){
-  if(savingSet)return;
-  if(!session)return alert('A sessão de treino não está ativa. Volte à lista de exercícios e tente novamente.');
+  if(savingSet){setExecutionFeedback('Já existe um registro de série em andamento.');return}
+  if(!session){setExecutionFeedback('A sessão de treino não está ativa. Volte à lista de exercícios.','error');return alert('A sessão de treino não está ativa. Volte à lista de exercícios e tente novamente.')}
   const item=sessionPlan[sessionIndex],button=$('completeSet');
-  if(!item)return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.');
+  if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.')}
   const repsInput=$('sessionReps');
   const reps=repsInput?repsInput.value.trim():String(item.set.reps??'');
   const load=$('sessionLoad')?.value.trim()??'';
-  if(!reps||reps==='MR'||Number(reps)<1)return alert('Informe as repetições realizadas.');
-  if(load!==''&&!Number.isFinite(Number(load)))return alert('Informe uma carga válida.');
+  if(!reps||reps==='MR'||Number(reps)<1){setExecutionFeedback('Informe as repetições realizadas.','error');return alert('Informe as repetições realizadas.')}
+  if(load!==''&&!Number.isFinite(Number(load))){setExecutionFeedback('Informe uma carga válida.','error');return alert('Informe uma carga válida.')}
   if(load!=='')sessionLoads[item.exercise.id+':'+item.setIndex]=load;
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
-  savingSet=true;if(button)button.disabled=true;
+  savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Dados válidos. Enviando série ao Supabase…');
   try{
    const {error}=await dbRef().from('training_set_logs').insert(row);
    if(error)throw new Error(error.message);
-   sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
+   sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série registrada com sucesso. Preparando o descanso…','success');
   }catch(error){
    if(button)button.disabled=false;
-   alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
+   setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
    return;
   }finally{savingSet=false}
   const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),complete=$('completeSet');
