@@ -121,7 +121,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -636,7 +636,7 @@
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   if($('sessionReps'))$('sessionReps').oninput=()=>{const actual=Number($('sessionReps').value),suggested=previousLoadsByExercise[identity]?.[actual],loadInput=$('sessionLoad');if(suggested!==undefined&&loadInput&&!loadInput.dataset.userEdited){loadInput.value=String(suggested);sessionLoads[loadKey]=String(suggested);const hint=$('previousLoadHint');if(hint)hint.textContent='Última carga registrada'}persistWorkoutState()};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
-  $('completeSet').onclick=completeCurrentSet;$('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
+  $('completeSet').addEventListener('click',event=>{event.preventDefault();completeCurrentSet()});$('skipSet').onclick=skipCurrentSet;$('skipExercise').onclick=skipCurrentExercise;
   $('pauseRest').onclick=toggleRestPause;$('exitSession').onclick=exitSessionToHome;
  }
  function adjustLoad(loadKey,delta){
@@ -778,20 +778,33 @@
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
  async function completeCurrentSet(){
-  const item=sessionPlan[sessionIndex],repsInput=$('sessionReps');
+  if(savingSet)return;
+  if(!session)return alert('A sessão de treino não está ativa. Volte à lista de exercícios e tente novamente.');
+  const item=sessionPlan[sessionIndex],button=$('completeSet');
+  if(!item)return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.');
+  const repsInput=$('sessionReps');
   const reps=repsInput?repsInput.value.trim():String(item.set.reps??'');
   const load=$('sessionLoad')?.value.trim()??'';
   if(!reps||reps==='MR'||Number(reps)<1)return alert('Informe as repetições realizadas.');
+  if(load!==''&&!Number.isFinite(Number(load)))return alert('Informe uma carga válida.');
   if(load!=='')sessionLoads[item.exercise.id+':'+item.setIndex]=load;
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
-  const {error}=await dbRef().from('training_set_logs').insert(row);
-  if(error)return alert('Não foi possível salvar esta série: '+error.message);
-  sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
+  savingSet=true;if(button)button.disabled=true;
+  try{
+   const {error}=await dbRef().from('training_set_logs').insert(row);
+   if(error)throw new Error(error.message);
+   sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
+  }catch(error){
+   if(button)button.disabled=false;
+   alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
+   return;
+  }finally{savingSet=false}
   const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),complete=$('completeSet');
   if(complete)complete.disabled=true;
   const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
   if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
   if(!rest){advanceAfterSet(item);return}
+  if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
   panel.hidden=false;const deadline=Date.now()+rest*1000;
   const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
   const nextLoad=next?.set.load_kg??(sameExercise?(sessionLoads[next.exercise.id+':'+item.setIndex]??null):null);
