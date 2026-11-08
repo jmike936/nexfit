@@ -454,7 +454,7 @@
  async function addExercise(subId){
   const name=normalizeHumanText(prompt('Nome do exercício:'));if(!name)return;
   const raw=prompt('Séries e repetições (ex.: 12,10,8):','12,10,8')||'12,10,8';
-  const rest=parseRestSeconds(prompt('Descanso em segundos ou minutos (ex.: 60 ou 1 min):','90')||'90');
+  let rest;try{rest=parseRestSeconds(prompt('Descanso em segundos ou minutos (ex.: 60 ou 1 min):','90')||'90')}catch(err){return alert(err.message)}
   let reps;try{reps=parseRepScheme(raw)}catch(err){return alert(err.message)}
   const sets=reps.map(value=>({reps:value,load_kg:null}));
   if(!sets.length)return alert('Informe repetições válidas.');
@@ -518,6 +518,19 @@
   const {error}=await db.from('training_subworkouts').delete().eq('id',item.id);
   if(error)return alert('Não foi possível excluir o treino: '+error.message);await openProgram(current.id);
  }
+ function parseRestSeconds(value){
+  const text=String(value??'').trim().toLocaleLowerCase('pt-BR');
+  if(!text)return 0;
+  const clock=text.match(/^(\\d{1,2}):([0-5]?\\d)$/);
+  if(clock)return Number(clock[1])*60+Number(clock[2]);
+  const match=text.match(/^(\\d+(?:[.,]\\d+)?)\\s*(min|minuto|minutos|m|s|seg|segundo|segundos)?$/);
+  if(!match)throw new Error('Informe o descanso em segundos, minutos ou mm:ss.');
+  const amount=Number(match[1].replace(',','.'));
+  const unit=match[2]||'s';
+  const seconds=/^(min|minuto|minutos|m)$/.test(unit)?amount*60:amount;
+  if(!Number.isFinite(seconds)||seconds<0||seconds>3600)throw new Error('O descanso deve ficar entre 0 e 60 minutos.');
+  return Math.round(seconds);
+ }
  function parseRepScheme(raw){
   const text=String(raw||'').trim().toUpperCase();
   const multi=text.match(/^(\d+)\s*X\s*(MR|AMRAP|\d+(?:[.,]\d+)?)$/);
@@ -549,8 +562,7 @@
     loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));
     if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){alert('Há uma carga inválida.');return false}
    }
-   const restText=$('editorExerciseRest').value.trim(),rest=parseRestSeconds(restText);
-   if(!rest&&restText!=='0'){alert('Informe um descanso válido.');return false}
+   const restText=$('editorExerciseRest').value.trim();let rest;try{rest=parseRestSeconds(restText)}catch(err){alert(err.message);return false}
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const {error}=await db.from('training_exercises').update({name,sets,rest_seconds:rest}).eq('id',id);
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
@@ -698,7 +710,7 @@
  document.addEventListener('visibilitychange',()=>{if(activeRest)tickRestTimer()});
  async function skipCurrentSet(){
   if(!session){setExecutionFeedback('A sessão de treino não está ativa.','error');return}
-  const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já consta como registrada.','error');return}
+  const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
   setExecutionFeedback('Registrando série como não realizada…');
@@ -795,11 +807,30 @@
   const next=sessionPlan[sessionIndex];
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
+ function continueAfterRecordedSet(item){
+  let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
+  const panel=$('restPanel'),complete=$('completeSet');
+  if(complete)complete.disabled=true;
+  const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
+  if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
+  if(!rest){advanceAfterSet(item);return}
+  if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
+  panel.hidden=false;const deadline=Date.now()+rest*1000;
+  const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
+  const nextLoad=next?.set.load_kg??(sameExercise?(sessionLoads[next.exercise.id+':'+item.setIndex]??null):null);
+  const nextText=sameExercise?'Próxima: série '+(next.setIndex+1)+' de '+next.exercise.name+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):next?'Exercício concluído. Após o descanso, escolha qual exercício iniciar.':'Último descanso do treino.';
+  $('nextStepText').textContent=nextText;
+  const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;advanceAfterSet(item)};
+  activeRest={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};restSnapshot={deadline,total:rest,remaining:rest,paused:false,nextText,notified:false,itemIndex:sessionIndex};persistWorkoutState();
+  $('skipRest').onclick=advance;
+  timer=setInterval(tickRestTimer,250);tickRestTimer();
+ }
  async function completeCurrentSet(){
   if(savingSet){setExecutionFeedback('Já existe um registro de série em andamento.');return}
   if(!session){setExecutionFeedback('A sessão de treino não está ativa. Volte à lista de exercícios.','error');return alert('A sessão de treino não está ativa. Volte à lista de exercícios e tente novamente.')}
   const item=sessionPlan[sessionIndex],button=$('completeSet');
   if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.')}
+  if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   const repsInput=$('sessionReps');
   const reps=repsInput?repsInput.value.trim():String(item.set.reps??'');
   const load=$('sessionLoad')?.value.trim()??'';
@@ -817,21 +848,7 @@
    setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
    return;
   }finally{savingSet=false}
-  const rest=parseRestSeconds(item.exercise.rest_seconds),panel=$('restPanel'),complete=$('completeSet');
-  if(complete)complete.disabled=true;
-  const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
-  if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
-  if(!rest){advanceAfterSet(item);return}
-  if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
-  panel.hidden=false;const deadline=Date.now()+rest*1000;
-  const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
-  const nextLoad=next?.set.load_kg??(sameExercise?(sessionLoads[next.exercise.id+':'+item.setIndex]??null):null);
-  const nextText=sameExercise?'Próxima: série '+(next.setIndex+1)+' de '+next.exercise.name+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):next?'Exercício concluído. Após o descanso, escolha qual exercício iniciar.':'Último descanso do treino.';
-  $('nextStepText').textContent=nextText;
-  const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;advanceAfterSet(item)};
-  activeRest={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};restSnapshot={deadline,total:rest,remaining:rest,paused:false,nextText,notified:false,itemIndex:sessionIndex};persistWorkoutState();
-  $('skipRest').onclick=advance;
-  timer=setInterval(tickRestTimer,250);tickRestTimer();
+  continueAfterRecordedSet(item);
  }
  async function startSession(subId){
   const db=dbRef(),sub=subworkouts.find(s=>s.id===subId);
