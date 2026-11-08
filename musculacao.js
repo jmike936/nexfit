@@ -521,9 +521,9 @@
  function parseRestSeconds(value){
   const text=String(value??'').trim().toLocaleLowerCase('pt-BR');
   if(!text)return 0;
-  const clock=text.match(/^(\\d{1,2}):([0-5]?\\d)$/);
-  if(clock)return Number(clock[1])*60+Number(clock[2]);
-  const match=text.match(/^(\\d+(?:[.,]\\d+)?)\\s*(min|minuto|minutos|m|s|seg|segundo|segundos)?$/);
+  const clock=text.match(/^(\d{1,2}):([0-5]?\d)$/);
+  if(clock){const seconds=Number(clock[1])*60+Number(clock[2]);if(seconds>3600)throw new Error('O descanso deve ficar entre 0 e 60 minutos.');return seconds}
+  const match=text.match(/^(\d+(?:[.,]\d+)?)\s*(min|minuto|minutos|m|s|seg|segundo|segundos)?$/);
   if(!match)throw new Error('Informe o descanso em segundos, minutos ou mm:ss.');
   const amount=Number(match[1].replace(',','.'));
   const unit=match[2]||'s';
