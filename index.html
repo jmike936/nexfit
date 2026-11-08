@@ -173,6 +173,13 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 .recent-summary{width:100%;cursor:pointer;text-align:left;transition:background .18s ease;border-radius:12px;padding:11px 9px;margin:2px 0}.recent-summary:hover,.recent-summary:focus-visible{background:#ffffff0a;outline:1px solid var(--line)}.recent-summary .sporticon{flex:0 0 42px}.recent-summary .activitymain{display:flex;flex-direction:column;gap:4px;min-width:0}.recent-category{font-size:13px;font-weight:700;color:var(--text);line-height:1.2}.recent-date{font-size:11px;color:var(--muted)}.recent-metrics{font-size:14px;font-weight:700;color:var(--text);white-space:normal}.recent-chevron{font-size:24px;color:var(--muted);padding:0 5px}.profile-history-group summary{display:flex;align-items:center;gap:9px}.profile-history-category-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:#a7ed3918;color:var(--lime);font-size:19px}.profile-history-category-name{font-weight:700}.profile-history-group-content .history-compact{padding-left:8px}.profile-history-group-content .history-compact .historydate{width:72px;flex-basis:72px}
 @media(max-width:420px){.recent-summary{gap:9px;padding:10px 6px}.recent-summary .sporticon{width:38px;height:38px;flex-basis:38px}.recent-metrics{font-size:12px}.profile-history-group-content .history-compact .historydate{width:58px;flex-basis:58px}}
 
+/* A tela inicial ocupa toda a largura útil em dispositivos móveis. */
+@media(max-width:760px){
+ body.logged .app>.dashboard-page{
+  width:100%;max-width:none;min-width:0;
+  align-self:stretch;margin-left:0;margin-right:0;
+ }
+}
 /* Navegação móvel no fluxo do layout: o conteúdo rola em área própria e nunca passa por baixo do menu. */
 @media(max-width:760px){
  html,body{height:100%;min-height:100%;overflow:hidden}
@@ -310,7 +317,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.1',APP_BUILD='20261108.26';
+const APP_VERSION='1.1.1',APP_BUILD='20261108.27';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -688,5 +695,5 @@ $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!curr
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261108.26"></script><script src="./workout-history.js?v=20261108.26"></script><script src="./exercise-evolution.js?v=20261108.26"></script>
+</script><script src="./musculacao.js?v=20261108.27"></script><script src="./workout-history.js?v=20261108.27"></script><script src="./exercise-evolution.js?v=20261108.27"></script>
 </body></html>
