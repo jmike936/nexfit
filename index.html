@@ -172,6 +172,17 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 .history-item-focus{outline:2px solid var(--lime);outline-offset:3px;border-radius:12px;transition:outline .2s ease}\n/* Resumo clicável das atividades recentes e categorias no histórico do perfil */
 .recent-summary{width:100%;cursor:pointer;text-align:left;transition:background .18s ease;border-radius:12px;padding:11px 9px;margin:2px 0}.recent-summary:hover,.recent-summary:focus-visible{background:#ffffff0a;outline:1px solid var(--line)}.recent-summary .sporticon{flex:0 0 42px}.recent-summary .activitymain{display:flex;flex-direction:column;gap:4px;min-width:0}.recent-category{font-size:13px;font-weight:700;color:var(--text);line-height:1.2}.recent-date{font-size:11px;color:var(--muted)}.recent-metrics{font-size:14px;font-weight:700;color:var(--text);white-space:normal}.recent-chevron{font-size:24px;color:var(--muted);padding:0 5px}.profile-history-group summary{display:flex;align-items:center;gap:9px}.profile-history-category-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:#a7ed3918;color:var(--lime);font-size:19px}.profile-history-category-name{font-weight:700}.profile-history-group-content .history-compact{padding-left:8px}.profile-history-group-content .history-compact .historydate{width:72px;flex-basis:72px}
 @media(max-width:420px){.recent-summary{gap:9px;padding:10px 6px}.recent-summary .sporticon{width:38px;height:38px;flex-basis:38px}.recent-metrics{font-size:12px}.profile-history-group-content .history-compact .historydate{width:58px;flex-basis:58px}}
+
+/* Navegação inferior: reserva espaço real para o conteúdo e fica abaixo de modais. */
+:root{--bottom-nav-clearance:calc(104px + env(safe-area-inset-bottom))}
+.nav{z-index:4;bottom:calc(10px + env(safe-area-inset-bottom));min-height:64px}
+body.logged .app{padding-bottom:var(--bottom-nav-clearance)}
+body.logged .page.active{padding-bottom:var(--bottom-nav-clearance);scroll-padding-bottom:var(--bottom-nav-clearance)}
+@media(max-width:760px){
+ body.logged .app{padding-bottom:var(--bottom-nav-clearance)}
+ body.logged .page.active{padding-bottom:var(--bottom-nav-clearance)}
+ .nav{bottom:calc(10px + env(safe-area-inset-bottom))}
+}
 </style></head>
 <body><section class="authscreen" id="authScreen"><div class="authcard"><div class="authbrand"><img class="brand-logo-image" src="./assets/nexfit-neon-logo.svg" alt="NEXFIT — Seu próximo nível"></div><h1 id="authTitle" class="auth-title">Faça Login para continuar</h1><form id="authForm"><div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" placeholder="voce@exemplo.com" required></div><div class="field"><label for="authPassword">Senha</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required></div><div class="field" id="accountTypeField" style="display:none"><label for="accountType">Categoria do perfil</label><select id="accountType"><option value="athlete">Atleta</option><option value="professional">Personal / Profissional</option></select></div><button class="primary" id="authSubmit" type="submit" style="width:100%;margin-top:8px">Entrar</button></form><button class="secondary" id="resendConfirmation" type="button" style="display:none;width:100%;margin-top:10px">Reenviar e-mail de confirmação</button><p class="auth-signup-prompt">Não tem uma conta? <button class="auth-signup-link" type="button" onclick="setAuthMode('signup')">Cadastre-se</button></p><p class="autherror" id="authError" role="status"></p><div class="auth-footer"><p class="authhint">Cadastro gratuito<br>Seus registros ficam salvos na sua conta e sincronizados na nuvem</p><p class="auth-version">NEXFIT · Versão <span id="loginAppVersion">1.1.0</span> · Build <span id="loginAppBuild">20261105.5</span></p></div></div></section><main class="app">
 <header class="top"><div class="brand"><img class="brand-logo-image" src="./assets/nexfit-neon-logo.svg" alt="NEXFIT — Seu próximo nível"></div><div class="topright"><span class="pill">WEB · GRATUITA</span><div class="avatar" id="avatar">A</div><button class="signout" id="signoutBtn" onclick="signOut()">Sair</button></div></header>
@@ -287,7 +298,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.1',APP_BUILD='20261108.24';
+const APP_VERSION='1.1.1',APP_BUILD='20261108.25';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -665,5 +676,5 @@ $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!curr
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261108.24"></script><script src="./workout-history.js?v=20261108.24"></script><script src="./exercise-evolution.js?v=20261108.24"></script>
+</script><script src="./musculacao.js?v=20261108.25"></script><script src="./workout-history.js?v=20261108.25"></script><script src="./exercise-evolution.js?v=20261108.25"></script>
 </body></html>
