@@ -121,7 +121,7 @@
   setExecutionFeedback('Toque recebido. Verificando a série…');
   try{if(button.id==='completeSet')await completeCurrentSet();else await skipCurrentSet()}
   catch(error){setExecutionFeedback('Falha ao processar o comando: '+(error?.message||'erro inesperado.'),'error')}
-  finally{handlingSetAction=false;if(button.isConnected&&button.id==='skipSet')button.disabled=false}
+  finally{handlingSetAction=false;const restPanel=$('restPanel');if(button.isConnected&&(!restPanel||restPanel.hidden))button.disabled=false}
  });
  function normalizeHumanText(value){
  const text=String(value??'').replace(/\s+/gu,' ').trim();
