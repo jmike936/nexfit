@@ -319,7 +319,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.1',APP_BUILD='20261108.31';
+const APP_VERSION='1.1.1',APP_BUILD='20261108.32';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -430,7 +430,7 @@ async function init(){
  if(!configured){showError('O ambiente ainda precisa ser conectado ao Supabase para habilitar o login.');$('authSubmit').disabled=true;return}
  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
  const {data:{session}}=await db.auth.getSession();
- db.auth.onAuthStateChange((event,session)=>{if(session) loadUser(session.user,event==='SIGNED_IN'); else {currentUser=null;activities=[];document.body.classList.remove('logged')}});
+ db.auth.onAuthStateChange((event,session)=>{if(session){if(currentUser?.id!==session.user.id)loadUser(session.user,false)}else{currentUser=null;activities=[];document.body.classList.remove('logged')}});
  if(session) await loadUser(session.user);
  if(session&&returnedFromEmail){showFeedback('E-mail confirmado!','Sua conta NEXFIT foi confirmada com sucesso. Você já pode acessar e registrar suas atividades.');history.replaceState(null,'',location.pathname+location.search.split('?')[0]);}
 }
@@ -708,5 +708,5 @@ initializeDurationPicker();
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261108.31"></script><script src="./workout-history.js?v=20261108.31"></script><script src="./exercise-evolution.js?v=20261108.31"></script>
+</script><script src="./musculacao.js?v=20261108.32"></script><script src="./workout-history.js?v=20261108.32"></script><script src="./exercise-evolution.js?v=20261108.32"></script>
 </body></html>
