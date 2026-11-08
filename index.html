@@ -421,7 +421,7 @@ function latestActivitiesBySport(items){
 function activityDisplayTitle(activity){
  const notes=cleanActivityNotes(activity.notes);
  if(String(activity.sport||'').trim().toLocaleLowerCase('pt-BR')==='musculação'){
-  const parts=notes.split(/\\s*[·|]\\s*/).map(part=>part.trim()).filter(Boolean);
+  const parts=notes.split(/\s*[·|]\s*/).map(part=>part.trim()).filter(Boolean);
   return parts.length?parts[parts.length-1]:'Treino de musculação';
  }
  return notes||'—';
