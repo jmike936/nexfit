@@ -855,11 +855,14 @@
   if(!session){setExecutionFeedback('A sessão de treino não está ativa.','error');return}
   const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
-  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
-  setExecutionFeedback('Registrando série como não realizada…');
-  let savedRow;try{savedRow=await saveSetLogOnce(row)}
-  catch(error){setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');return alert('Não foi possível registrar a série como não realizada: '+(error?.message||'erro inesperado.'))}
-  if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta',completed_at:new Date().toISOString()};
+  setExecutionFeedback('Salvando série neste aparelho…');
+  if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
+  persistWorkoutState();
+  if(navigator.onLine&&!session.localOnly){
+   try{const savedRow=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===savedRow.exercise_id&&Number(x.set_number)===Number(savedRow.set_number)?savedRow:x);setExecutionFeedback('Série sincronizada com sucesso.','success')}
+   catch(_){setExecutionFeedback('Série guardada neste aparelho; sincronização pendente.','success')}
+  }else setExecutionFeedback('Série guardada neste aparelho; será sincronizada quando a conexão voltar.','success');skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
  function skipCurrentExercise(){
   if(!session)return;
@@ -980,46 +983,57 @@
   if(!reps||reps==='MR'||Number(reps)<1){setExecutionFeedback('Informe as repetições realizadas.','error');return alert('Informe as repetições realizadas.')}
   if(load!==''&&!Number.isFinite(Number(load))){setExecutionFeedback('Informe uma carga válida.','error');return alert('Informe uma carga válida.')}
   if(load!=='')sessionLoads[item.exercise.id+':'+item.setIndex]=load;
-  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
-  savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Dados válidos. Enviando série ao Supabase…');
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load),completed_at:new Date().toISOString()};
+  savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Salvando série neste aparelho…');
   try{
-   const savedRow=await saveSetLogOnce(row);
-   if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);
-   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série registrada com sucesso. Preparando o descanso…','success');
+   if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
+   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
+   if(navigator.onLine&&!session.localOnly){
+    try{
+     const savedRow=await saveSetLogOnce(row);
+     sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===savedRow.exercise_id&&Number(x.set_number)===Number(savedRow.set_number)?savedRow:x);
+     setExecutionFeedback('Série registrada e sincronizada. Preparando o descanso…','success');
+    }catch(_){setExecutionFeedback('Série guardada neste aparelho; sincronização pendente.','success')}
+   }else setExecutionFeedback('Série guardada neste aparelho; será sincronizada quando a conexão voltar.','success');
+   persistWorkoutState();
   }catch(error){
    if(button)button.disabled=false;
-   setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
+   setExecutionFeedback('Não foi possível guardar a série neste aparelho: '+(error?.message||'verifique o armazenamento disponível.'),'error');
+   alert('Não foi possível guardar a série. '+(error?.message||'Verifique o armazenamento do aparelho.'));
    return;
   }finally{savingSet=false}
   continueAfterRecordedSet(item);
  }
- async function startSession(subId){
-  const db=dbRef(),sub=subworkouts.find(s=>s.id===subId);
-  const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
-  if(ex.error)return alert(ex.error.message);
-  if(!ex.data?.length)return alert('Este treino ainda não possui exercícios.');
+ async function startSession(subId,cachedExercises=null){
+  const db=dbRef(),user=userRef();let exercises=cachedExercises;
+  if(navigator.onLine){
+   const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
+   if(!ex.error&&ex.data?.length)exercises=ex.data;
+   else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.');
+  }
+  if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
   await enableWorkoutNotifications();
-  const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
-  if(error)return alert(error.message);
-  session=data;sessionExerciseRows=ex.data;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
-  await preloadPreviousLoads(ex.data);
-  ex.data.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
+  const startedAt=new Date().toISOString();
+  const sessionId=window.crypto?.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+  const payload={id:sessionId,athlete_id:user.id,program_id:current.id,version_id:version.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
+  let created=null,localOnly=true;
+  if(navigator.onLine){
+   const result=await db.from('training_sessions').insert(payload).select().single();
+   if(!result.error){created=result.data;localOnly=false}
+   else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message);
+  }
+  session={...(created||payload),localOnly};sessionExerciseRows=exercises;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
+  try{await preloadPreviousLoads(exercises)}catch(_){}
+  exercises.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
   sessionIndex=0;sessionLoads={};persistWorkoutState();renderExercisePicker();
  }
  async function finishSession(){
   if(!session)return;
-  restSnapshot=null;
-  if(timer)clearInterval(timer);timer=null;activeRest=null;
-  const {error}=await dbRef().from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
-  if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
-  clearPersistedWorkout();
-  const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
-  const sub=subworkouts.find(s=>s.id===session.subworkout_id),now=new Date(),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  const notes=current.title+' · '+(sub?.title||'Treino')+' [NEXFIT_SESSION:'+session.id+']';
-  const {data:activity,error:activityError}=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select().single();
-  if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
-  else{if(typeof activities!=='undefined'&&typeof render==='function'){activities.unshift({id:activity.id,sport:activity.sport,date:activity.activity_date,duration:activity.duration_minutes,distance:0,notes:activity.notes||''});render()}alert('Treino concluído! Todas as séries foram salvas e o treino foi registrado no histórico.')}
-  session=null;sessionPlan=[];sessionExerciseRows=[];home();
+  restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;
+  session.status='completed';session.finished_at=new Date().toISOString();persistWorkoutState();
+  const synced=await syncPendingWorkout();
+  if(synced){clearPersistedWorkout();alert('Treino concluído e sincronizado com o histórico.')}else{alert('Treino concluído e guardado neste aparelho. Será enviado ao Supabase automaticamente quando a conexão voltar. Não apague os dados do navegador antes da sincronização.')}
+  session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];home();
  }
  window.beginStrengthActivity=async function(){
   const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
