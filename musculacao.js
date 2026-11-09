@@ -456,7 +456,20 @@
   return data||[];
  }
  function exerciseCatalogOptions(items,selectedId=''){
-  return '<option value="">Selecione um exercício…</option>'+items.map(item=>'<option value="'+esc(item.id)+'" '+(String(item.id)===String(selectedId)?'selected':'')+'>'+esc(normalizeHumanText(item.name))+(item.category?' · '+esc(normalizeHumanText(item.category)):'')+'</option>').join('');
+  const grouped=new Map();
+  const uncategorized='Outros';
+  for(const item of items||[]){
+   const category=normalizeHumanText(item.category||uncategorized);
+   if(!grouped.has(category))grouped.set(category,[]);
+   grouped.get(category).push(item);
+  }
+  const groups=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'}));
+  const options=groups.map(([category,groupItems])=>{
+   const rows=groupItems.slice().sort((a,b)=>normalizeHumanText(a.name).localeCompare(normalizeHumanText(b.name),'pt-BR',{sensitivity:'base'}))
+    .map(item=>'<option value="'+esc(item.id)+'" '+(String(item.id)===String(selectedId)?'selected':'')+'>'+esc(normalizeHumanText(item.name))+'</option>').join('');
+   return '<optgroup label="'+esc(category)+'">'+rows+'</optgroup>';
+  }).join('');
+  return '<option value="">Selecione um exercício…</option>'+options;
  }
  function exerciseCatalogKey(value){
   return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
