@@ -558,6 +558,9 @@
    const panel=$('newCatalogExerciseFields'),opening=panel.style.display==='none';
    panel.style.display=opening?'block':'none';
    $('editorCatalogExercise').disabled=opening;
+   $('catalogPickerToggle').disabled=opening;
+   $('catalogPickerPanel').style.display='none';
+   $('catalogPickerToggle').setAttribute('aria-expanded','false');
    if(opening)$('newCatalogExerciseName').focus();
   };
  }
