@@ -459,7 +459,7 @@
   return '<option value="">Selecione um exercício…</option>'+items.map(item=>'<option value="'+esc(item.id)+'" '+(String(item.id)===String(selectedId)?'selected':'')+'>'+esc(normalizeHumanText(item.name))+(item.category?' · '+esc(normalizeHumanText(item.category)):'')+'</option>').join('');
  }
  function exerciseCatalogKey(value){
-  return String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
+  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
  }
  async function saveNewCatalogExercise(name,category){
   const clean=normalizeHumanText(name),key=exerciseCatalogKey(clean);
@@ -491,14 +491,14 @@
    +editorField('editorExerciseReps','Séries e repetições','12, 10, 8','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
    +editorField('editorExerciseRest','Descanso','90','text','Segundos, mm:ss ou minutos');
   showProgramEditor('Adicionar exercício',fields,async()=>{
+   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
+   let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
    let item=null;
    if($('newCatalogExerciseFields').style.display!=='none'){
     try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value);item=saved.item;if(saved.duplicate)alert('Esse exercício já existia no catálogo. Vamos reutilizar o cadastro existente.')}
     catch(err){alert('Não foi possível cadastrar o exercício: '+err.message);return false}
    }else item=catalog.find(x=>String(x.id)===String($('editorCatalogExercise').value));
    if(!item){alert('Selecione um exercício ou cadastre um novo.');return false}
-   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
-   let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
    const sets=reps.map(value=>({reps:value,load_kg:null}));
    const {data,error}=await dbRef().from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
    if(error){alert(error.message);return false}
