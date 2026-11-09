@@ -137,7 +137,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,finishingSession=false;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,finishingSession=false,workoutSyncPromise=null;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -842,7 +842,8 @@
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
   skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
  };
- async function syncPendingWorkout(){
+ async function syncPendingWorkout(){  if(workoutSyncPromise)return workoutSyncPromise;
+  workoutSyncPromise=(async()=>{
   if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
   if(!await syncPendingWorkoutCancellations())return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
@@ -880,7 +881,10 @@
   if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
+  })();
+  try{return await workoutSyncPromise}finally{workoutSyncPromise=null}
  }
+
  window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
  window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState();else if(navigator.onLine)syncPendingWorkout()});
