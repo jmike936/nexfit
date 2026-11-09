@@ -1,5 +1,5 @@
 (()=>{if(window.__nexfitExerciseEvolution)return;window.__nexfitExerciseEvolution=true;
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normalizeHumanText=s=>{const text=String(s??'').normalize('NFC').replace(/\\s+/gu,' ').trim();if(!text)return '';const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC']);let first=true;return text.toLocaleLowerCase('pt-BR').replace(/[\\p{L}\\p{M}]+/gu,word=>{const upper=word.toLocaleUpperCase('pt-BR');if(acronyms.has(upper))return upper;if(first){first=false;return word.charAt(0).toLocaleUpperCase('pt-BR')+word.slice(1)}return word})};\nconst esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const getClient=()=>window.db||(typeof db!=='undefined'?db:null);
 const user=()=>window.currentUser||(typeof currentUser!=='undefined'?currentUser:null);
 const normalize=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR');
@@ -62,7 +62,7 @@ async function load(){
   const name=exerciseMap.get(log.exercise_id);if(!name)continue;
   const key=normalize(name);if(!key)continue;
   const session=sessionMap.get(log.session_id);if(!session)continue;
-  if(!grouped.has(key))grouped.set(key,{name,points:[]});
+  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name),points:[]});
   grouped.get(key).points.push({date:activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
  }
  return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
@@ -85,7 +85,7 @@ async function render(host){
  try{
   if(!cache)cache=await load();
   if(!cache.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre as repetições e a carga das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
-  const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(x.name)+'</option>').join('');
+  const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
   host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe como suas cargas evoluem em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
