@@ -262,10 +262,8 @@
   const key='nexfit-offline-workouts:'+String(userRef()?.id||'');let cached=[];
   try{cached=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){}
   const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
-  const vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
-  if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId);return alert('Não foi possível carregar a versão deste programa.')}
-  const sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');
-  if(sq.error){if(snapshot)return startOfflineWorkout(workoutId);return alert(sq.error.message)}
+  let vq,sq;
+  try{vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId);return alert('Não foi possível carregar a versão deste programa.')}sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');if(sq.error){if(snapshot)return startOfflineWorkout(workoutId);return alert(sq.error.message)}}catch(error){if(snapshot)return startOfflineWorkout(workoutId);return alert('Sem conexão e sem cópia offline deste treino.')}
   current=program;version=vq.data;subworkouts=sq.data||[];
   await startSession(workoutId,snapshot?.exercises||null);
  }
@@ -795,6 +793,7 @@
   if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==userRef().id||!saved.session)return false;
+  try{
   const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
   const sessionPayload={id:pendingSession.id,athlete_id:userRef().id,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
   const created=await dbRef().from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
@@ -824,6 +823,7 @@
   saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(sessionStorageKey(),JSON.stringify(saved))}catch(_){}
   if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
   return true;
+  }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
  }
  window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
  window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
@@ -1050,9 +1050,7 @@
  async function startSession(subId,cachedExercises=null){
   const db=dbRef(),user=userRef();let exercises=cachedExercises;
   if(navigator.onLine){
-   const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
-   if(!ex.error&&ex.data?.length)exercises=ex.data;
-   else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.');
+   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.')}catch(error){if(!exercises?.length)return alert('Sem conexão e sem cópia offline deste treino. Abra-o com internet antes de iniciar.')}
   }
   if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
   await enableWorkoutNotifications();
