@@ -752,7 +752,7 @@ $('profileForm').addEventListener('submit',async e=>{e.preventDefault();if(!curr
 initializeDurationPicker();
 initializePwaInstall();
 initializeAppVersion();
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Cache offline indisponível',error)))}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(error=>console.warn('Cache offline indisponível',error)))}
 init();
 </script><script src="./musculacao.js?v=20261109.44"></script><script src="./workout-history.js?v=20261109.44"></script><script src="./exercise-evolution.js?v=20261109.44"></script>
 </body></html>
