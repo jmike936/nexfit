@@ -29,10 +29,10 @@ alter table public.training_exercises
 -- Migra os nomes já utilizados nos treinos para o catálogo global.
 -- A chave ignora caixa e espaços repetidos, evitando entradas duplicadas por digitação.
 insert into public.training_exercise_catalog (name, normalized_name)
-select min(trim(e.name)), lower(regexp_replace(trim(e.name), '\\s+', ' ', 'g'))
+select min(trim(e.name)), lower(regexp_replace(trim(e.name), '[[:space:]]+', ' ', 'g'))
 from public.training_exercises e
 where nullif(trim(e.name), '') is not null
-group by lower(regexp_replace(trim(e.name), '\\s+', ' ', 'g'))
+group by lower(regexp_replace(trim(e.name), '[[:space:]]+', ' ', 'g'))
 on conflict (normalized_name) do nothing;
 
 -- Relaciona os exercícios existentes ao item correspondente do catálogo.
@@ -40,7 +40,7 @@ update public.training_exercises e
 set catalog_exercise_id = c.id
 from public.training_exercise_catalog c
 where e.catalog_exercise_id is null
-  and lower(regexp_replace(trim(e.name), '\\s+', ' ', 'g')) = c.normalized_name;
+  and lower(regexp_replace(trim(e.name), '[[:space:]]+', ' ', 'g')) = c.normalized_name;
 
 create index if not exists training_exercises_catalog_exercise_id_idx
   on public.training_exercises (catalog_exercise_id);
