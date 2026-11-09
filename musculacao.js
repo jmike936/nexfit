@@ -809,7 +809,13 @@
   session=remoteSession||saved.session;current=saved.current;version=saved.version;subworkouts=saved.subworkouts||[];
   sessionExerciseRows=saved.sessionExerciseRows||[];sessionPlan=[];
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionSetLogs=remoteLogs||saved.sessionSetLogs||[];sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
+  const localLogs=Array.isArray(saved.sessionSetLogs)?saved.sessionSetLogs:[],serverLogs=Array.isArray(remoteLogs)?remoteLogs:null;
+  if(serverLogs){
+   const mergedLogs=new Map();
+   for(const row of serverLogs)if(row?.exercise_id!=null&&row?.set_number!=null)mergedLogs.set(String(row.exercise_id)+':'+String(row.set_number),row);
+   for(const row of localLogs)if(row?.exercise_id!=null&&row?.set_number!=null){const key=String(row.exercise_id)+':'+String(row.set_number);if(!mergedLogs.has(key))mergedLogs.set(key,row)}
+   sessionSetLogs=[...mergedLogs.values()];
+  }else sessionSetLogs=localLogs;sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
   if(sessionView==='exercise'){
    shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
