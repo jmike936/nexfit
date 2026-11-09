@@ -759,6 +759,7 @@
   if(session)return true;const u=userRef(),db=dbRef();if(!u||!db)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
+  if(saved.session?.status==='completed'||saved.session?.finished_at){await syncPendingWorkout();return false}
   let remoteSession=null,remoteLogs=null;
   if(navigator.onLine&&!saved.localOnly){
    const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
@@ -827,7 +828,7 @@
  }
  window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
  window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState();else if(navigator.onLine)syncPendingWorkout()});
 
  function renderSessionStep(){
   sessionView='exercise';
@@ -1059,9 +1060,7 @@
   const payload={id:sessionId,athlete_id:user.id,program_id:current.id,version_id:version.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
   let created=null,localOnly=true;
   if(navigator.onLine){
-   const result=await db.from('training_sessions').insert(payload).select().single();
-   if(!result.error){created=result.data;localOnly=false}
-   else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message);
+   try{const result=await db.from('training_sessions').insert(payload).select().single();if(!result.error){created=result.data;localOnly=false}else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message)}catch(error){console.warn('Iniciando sessão local por falha de conexão',error)}
   }
   session={...(created||payload),localOnly};sessionExerciseRows=exercises;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
   try{await preloadPreviousLoads(exercises)}catch(_){}
