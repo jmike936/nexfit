@@ -1091,9 +1091,14 @@
  function markExerciseNotDone(index){
   const exercise=sessionExerciseRows[index];if(!exercise)return;
   if(!confirm('Marcar "'+exercise.name+'" como não executado?'))return;
+  const previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices);
   skippedExerciseIndices.add(index);
   for(let i=0;i<(exercise.sets||[]).length;i++)if(!hasSetLog(exercise.id,i+1))skippedSetKeys.add(exercise.id+':'+(i+1));
-  persistWorkoutState();renderExercisePicker();
+  if(!persistWorkoutState()){
+   skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;
+   return alert('Não foi possível guardar a alteração neste aparelho. Libere espaço no armazenamento e tente novamente. O exercício permanece pendente.');
+  }
+  renderExercisePicker();
  }
  function advanceAfterSet(item){
   sessionIndex++;restSnapshot=null;persistWorkoutState();
