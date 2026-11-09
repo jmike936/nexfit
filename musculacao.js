@@ -270,7 +270,7 @@
 
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Meus Treinos','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
-  if(session){if(sessionView==='exercise'){shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep()}else renderExercisePicker();return}
+  if(session){if(sessionView==='exercise'){shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();if(activeRest)restoreActiveRestUI()}else renderExercisePicker();return}
   if(!restoreAttempted){restoreAttempted=true;restorePromise=restoreWorkoutState()}if(restorePromise){const pending=restorePromise;const restored=await pending;if(restorePromise===pending)restorePromise=null;if(restored)return}
   shell('Meus Treinos',`
    <div class="training-tabs" role="tablist" aria-label="Treinos">
@@ -818,10 +818,7 @@
    if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
     const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
     activeRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
-    const panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
-    if(panel){panel.hidden=false;$('nextStepText').textContent=rest.nextText}if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
-    if(activeRest.paused){const button=$('pauseRest');if(button){button.setAttribute('aria-label','Continuar descanso');button.title='Continuar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
-    else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
+    restoreActiveRestUI();
    }
   }else renderExercisePicker();
   persistWorkoutState();
@@ -887,6 +884,25 @@
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   $('skipExercise').onclick=skipCurrentExercise;
   $('pauseRest').onclick=toggleRestPause;$('exitSession').onclick=exitSessionToHome;
+ }
+ function restoreActiveRestUI(){
+  if(!activeRest)return false;
+  const rest=activeRest,panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
+  if(!panel)return false;
+  panel.hidden=false;
+  const nextText=$('nextStepText');if(nextText)nextText.textContent=rest.nextText;
+  if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
+  const pauseButton=$('pauseRest');
+  if(pauseButton){
+   pauseButton.onclick=toggleRestPause;
+   if(rest.paused){pauseButton.setAttribute('aria-label','Continuar descanso');pauseButton.title='Continuar descanso';pauseButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}
+   else{pauseButton.setAttribute('aria-label','Pausar descanso');pauseButton.title='Pausar descanso';pauseButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>'}
+  }
+  const skipButton=$('skipRest');if(skipButton)skipButton.onclick=()=>{if(activeRest===rest)rest.advance()};
+  if(timer)clearInterval(timer);timer=null;
+  if(rest.paused)tickRestTimer();
+  else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
+  return true;
  }
  function adjustLoad(loadKey,delta){
   const input=$('sessionLoad');if(!input)return;
