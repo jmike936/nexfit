@@ -172,13 +172,33 @@
    host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic));
    return;
   }
+  if(!navigator.onLine||window.__nexfitOfflineMode){
+   let cached=[];try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(userRef()?.id||''))||'[]')}catch(_){}
+   if(!cached.length){host.innerHTML='<div class="training-empty"><h3>Treinos disponíveis offline</h3><p class="muted">Abra esta tela com internet pelo menos uma vez para guardar seus programas neste aparelho.</p></div>';return}
+   host.innerHTML='<p class="muted">Modo offline · programas guardados neste aparelho</p><div class="training-list">'+cached.map(x=>'<article class="training-card"><button class="training-card-main" data-offline-workout="'+esc(x.subworkout.id)+'"><div class="training-card-placeholder">↻</div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(x.subworkout.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(x.program.title||'Programa'))+' · '+(x.exercises||[]).length+' exercícios</small></span><span class="training-chevron">›</span></button></article>').join('')+'</div>';
+   host.querySelectorAll('[data-offline-workout]').forEach(b=>b.onclick=()=>startOfflineWorkout(b.dataset.offlineWorkout));
+   return;
+  }
+  window.__nexfitOfflineMode=false;
   const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
   if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
   const workouts=[];
   for(const p of programs){
-   const q=await dbRef().from('training_subworkouts').select('id,title,description,position,training_exercises(id,name,media_url)').eq('version_id',p.current_version_id).order('position');
+   const q=await dbRef().from('training_subworkouts').select('id,title,description,position,training_exercises(*)').eq('version_id',p.current_version_id).order('position');
    if(q.error)continue;
-   for(const workout of q.data||[])workouts.push({program:p,workout,exercises:workout.training_exercises||[]});
+   const versionQuery=await dbRef().from('training_program_versions').select('*').eq('id',p.current_version_id).maybeSingle();
+   if(versionQuery.error||!versionQuery.data)continue;
+   for(const workout of q.data||[]){
+    const exercises=workout.training_exercises||[];
+    workouts.push({program:p,workout,exercises});
+    try{
+     const key='nexfit-offline-workouts:'+String(userRef()?.id||'');
+     const snapshots=JSON.parse(localStorage.getItem(key)||'[]');
+     const snapshot={program:p,version:versionQuery.data,subworkouts:q.data.map(({training_exercises,...sub})=>sub),subworkout:{id:workout.id,title:workout.title,description:workout.description,position:workout.position},exercises};
+     const next=snapshots.filter(x=>String(x.subworkout?.id)!==String(workout.id));next.push(snapshot);
+     localStorage.setItem(key,JSON.stringify(next));
+    }catch(error){console.warn('Não foi possível atualizar o cache offline do treino',error)}
+   }
   }
   const user=userRef();
   const activitiesQ=await dbRef().from('activities').select('activity_date,notes').eq('user_id',user.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
@@ -226,15 +246,28 @@
   activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
  }
 
+ async function startOfflineWorkout(workoutId){
+  const user=userRef();let cached=[];
+  try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(user?.id||''))||'[]')}catch(_){}
+  const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
+  if(!snapshot||!snapshot.exercises?.length)return alert('Este treino não está disponível offline. Abra-o com internet antes de iniciar.');
+  current=snapshot.program;version=snapshot.version;subworkouts=snapshot.subworkouts||[snapshot.subworkout];
+  await startSession(workoutId,snapshot.exercises);
+ }
+
  async function startListedWorkout(programId,versionId,workoutId){
   const program=plans.find(p=>String(p.id)===String(programId)&&canManageProgramLocally(p)&&p.status==='active');
   if(!program)return alert('Este programa não está ativo.');
+  if(!navigator.onLine||window.__nexfitOfflineMode)return startOfflineWorkout(workoutId);
+  const key='nexfit-offline-workouts:'+String(userRef()?.id||'');let cached=[];
+  try{cached=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){}
+  const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
   const vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
-  if(vq.error||!vq.data)return alert('Não foi possível carregar a versão deste programa.');
+  if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId);return alert('Não foi possível carregar a versão deste programa.')}
   const sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');
-  if(sq.error)return alert(sq.error.message);
+  if(sq.error){if(snapshot)return startOfflineWorkout(workoutId);return alert(sq.error.message)}
   current=program;version=vq.data;subworkouts=sq.data||[];
-  await startSession(workoutId);
+  await startSession(workoutId,snapshot?.exercises||null);
  }
 
  async function home(){
@@ -266,8 +299,18 @@
   $('createProgram').onclick=createProgram;$('createForAthlete').onclick=createProgramForAthlete;$('createWorkout').onclick=createWorkout;$('requestAccess').onclick=requestAccess;
   const accountType=u.user_metadata?.account_type||'athlete';if(accountType!=='professional')$('professionalRequestControls').style.display='none';
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
-  if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
-  plans=q.data||[];showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
+  if(q.error){
+   window.__nexfitOfflineMode=true;
+   try{plans=JSON.parse(localStorage.getItem('nexfit-offline-programs:'+u.id)||'[]')}catch(_){plans=[]}
+   if(!plans.length){$('programList').textContent='Não foi possível carregar os programas. Conecte-se à internet e tente novamente.';return}
+   $('programList').innerHTML='<p class="muted">Modo offline · programas salvos neste aparelho.</p>';
+   $('exerciseEvolution').hidden=true;$('programSearch').parentElement.hidden=false;$('programList').hidden=false;
+   await renderProgramList();
+   return;
+  }
+  plans=q.data||[];
+  try{localStorage.setItem('nexfit-offline-programs:'+u.id,JSON.stringify(plans))}catch(error){console.warn('Não foi possível guardar os programas offline',error)}
+  showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
   const evolutionView=activeTrainingTab==='evolution';
   $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
   if(evolutionView){
