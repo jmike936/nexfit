@@ -768,6 +768,17 @@
   }
   const localFallback=!!(saved.session&&saved.current&&saved.version&&saved.sessionExerciseRows?.length);
   if(!remoteSession&&!localFallback)return false;
+  if(remoteSession&&!localFallback){
+   const [pq,vq,wq,eq]=await Promise.all([
+    db.from('training_programs').select('*').eq('id',saved.programId).maybeSingle(),
+    db.from('training_program_versions').select('*').eq('id',saved.versionId).maybeSingle(),
+    db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
+    db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position')
+   ]);
+   if(pq.error||vq.error||wq.error||eq.error||!pq.data||!vq.data||!eq.data?.length)return false;
+   saved.current=pq.data;saved.version=vq.data;saved.subworkouts=wq.data||[];saved.sessionExerciseRows=eq.data;saved.session=remoteSession;
+  }
+  if(remoteSession?.status==='completed'){clearPersistedWorkout();return false}
   session=remoteSession||saved.session;current=saved.current;version=saved.version;subworkouts=saved.subworkouts||[];
   sessionExerciseRows=saved.sessionExerciseRows||[];sessionPlan=[];
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
