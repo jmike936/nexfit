@@ -843,7 +843,8 @@
   skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
  };
  async function syncPendingWorkout(){  if(workoutSyncPromise)return workoutSyncPromise;
-  workoutSyncPromise=(async()=>{
+  const syncUserId=userRef()?.id;if(!syncUserId)return false;
+  const runSync=async()=>{
   if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
   if(!await syncPendingWorkoutCancellations())return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
@@ -871,7 +872,7 @@
    const existing=await dbRef().from('activities').select('id').eq('user_id',userRef().id).eq('notes',notes).maybeSingle();
    if(existing.error)return false;
    let activityId=existing.data?.id;
-   if(!existing.data){const activity=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();if(activity.error)return false;activityId=activity.data.id}
+   if(!existing.data){const activity=await dbRef().from('activities').insert({id:pendingSession.id,user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();if(activity.error){const raced=await dbRef().from('activities').select('id').eq('id',pendingSession.id).eq('user_id',userRef().id).eq('notes',notes).maybeSingle();if(raced.error||!raced.data)return false;activityId=raced.data.id}else activityId=activity.data.id}
    if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
    clearPersistedWorkout();
    if(typeof window.render==='function')window.render();
@@ -881,6 +882,15 @@
   if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
+  };
+  workoutSyncPromise=(async()=>{
+   if(navigator.locks?.request){
+    return navigator.locks.request('nexfit-workout-sync:'+syncUserId,async()=>{
+     if(userRef()?.id!==syncUserId)return false;
+     return runSync();
+    });
+   }
+   return runSync();
   })();
   try{return await workoutSyncPromise}finally{workoutSyncPromise=null}
  }
