@@ -748,7 +748,8 @@
   for(const row of logs.data||[]){const identity=nameById.get(row.exercise_id),reps=Number(row.reps_completed),load=Number(row.load_kg);if(!identity||!Number.isFinite(reps)||reps<1||!Number.isFinite(load)||load<0)continue;if(!previousLoadsByExercise[identity])previousLoadsByExercise[identity]={};if(previousLoadsByExercise[identity][reps]===undefined)previousLoadsByExercise[identity][reps]=load}
  }
  let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null,restoreUserId=null,restoreGeneration=0;
- const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
+ const sessionStorageKeyFor=userId=>'nexfit-active-workout:'+String(userId||'');
+ const sessionStorageKey=()=>sessionStorageKeyFor(userRef()?.id);
  function persistWorkoutState(){
   if(!session||!userRef()?.id)return false;
   try{const rest=activeRest?{deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex}:null;
@@ -767,17 +768,17 @@
    localStorage.setItem(key,JSON.stringify(queue));return true;
   }catch(error){console.warn('Não foi possível guardar o cancelamento pendente',error);return false}
  }
- async function syncPendingWorkoutCancellations(){
-  if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
-  const key=pendingWorkoutCancellationsKey();let pending=[];
+ async function syncPendingWorkoutCancellations(syncUserId,syncDb){
+  if(!navigator.onLine||!syncDb||!syncUserId||userRef()?.id!==syncUserId)return false;
+  const key='nexfit-pending-workout-cancellations:'+syncUserId;let pending=[];
   try{pending=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){return false}
   if(!Array.isArray(pending)||!pending.length)return true;
   for(const item of pending){
-   if(!item?.sessionId||item.userId!==userRef().id)continue;
-   const logs=await dbRef().from('training_set_logs').delete().eq('session_id',item.sessionId);
-   if(logs.error)return false;
-   const removed=await dbRef().from('training_sessions').delete().eq('id',item.sessionId).eq('athlete_id',userRef().id);
-   if(removed.error)return false;
+   if(!item?.sessionId||item.userId!==syncUserId)continue;
+   const logs=await syncDb.from('training_set_logs').delete().eq('session_id',item.sessionId);
+   if(logs.error||userRef()?.id!==syncUserId)return false;
+   const removed=await syncDb.from('training_sessions').delete().eq('id',item.sessionId).eq('athlete_id',syncUserId);
+   if(removed.error||userRef()?.id!==syncUserId)return false;
    pending=pending.filter(row=>row.sessionId!==item.sessionId);
    try{localStorage.setItem(key,JSON.stringify(pending))}catch(error){console.warn('Cancelamento concluído, mas não foi possível atualizar a fila local',error);return false}
   }
@@ -843,50 +844,62 @@
   skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
  };
  async function syncPendingWorkout(){  if(workoutSyncPromise)return workoutSyncPromise;
-  const syncUserId=userRef()?.id;if(!syncUserId)return false;
+  const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
+  const isSameAccount=()=>userRef()?.id===syncUserId;
   const runSync=async()=>{
-  if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
-  if(!await syncPendingWorkoutCancellations())return false;
-  let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
-  if(!saved||saved.userId!==userRef().id||!saved.session)return false;
+  if(!navigator.onLine||!isSameAccount())return false;
+  if(!await syncPendingWorkoutCancellations(syncUserId,syncDb)||!isSameAccount())return false;
+  const storageKey=sessionStorageKeyFor(syncUserId);
+  let saved;try{saved=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(_){saved=null}
+  if(!saved||saved.userId!==syncUserId||!saved.session)return false;
   try{
   const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
-  const sessionPayload={id:pendingSession.id,athlete_id:userRef().id,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
-  const created=await dbRef().from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
-  if(created.error)return false;
+  const sessionPayload={id:pendingSession.id,athlete_id:syncUserId,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
+  const created=await syncDb.from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
+  if(created.error||!isSameAccount())return false;
   if(logs.length){
    const rows=logs.map(row=>({session_id:pendingSession.id,exercise_id:row.exercise_id,set_number:row.set_number,reps_completed:row.reps_completed,load_kg:row.load_kg??null,duration_seconds:row.duration_seconds??null,distance_m:row.distance_m??null,notes:row.notes??null,completed_at:row.completed_at||new Date().toISOString()}));
-   const savedLogs=await dbRef().from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
-   if(savedLogs.error)return false;
+   const savedLogs=await syncDb.from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
+   if(savedLogs.error||!isSameAccount())return false;
   }
   if(pendingSession.status==='completed'||pendingSession.finished_at){
    const finishedAt=pendingSession.finished_at||new Date().toISOString();
-   const updated=await dbRef().from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',userRef().id);
-   if(updated.error)return false;
+   const updated=await syncDb.from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',syncUserId);
+   if(updated.error||!isSameAccount())return false;
    const started=new Date(pendingSession.started_at||Date.now()),finished=new Date(finishedAt);
    const minutes=Math.max(1,Math.round((finished.getTime()-started.getTime())/60000));
    const sub=(saved.subworkouts||[]).find(x=>x.id===saved.subworkoutId)||{title:'Treino'};
    const title=saved.current?.title||'Treino';
    const notes=title+' · '+(sub.title||'Treino')+' [NEXFIT_SESSION:'+pendingSession.id+']';
    const now=new Date(finishedAt),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-   const existing=await dbRef().from('activities').select('id').eq('user_id',userRef().id).eq('notes',notes).maybeSingle();
-   if(existing.error)return false;
+   const existing=await syncDb.from('activities').select('id').eq('user_id',syncUserId).eq('notes',notes).maybeSingle();
+   if(existing.error||!isSameAccount())return false;
    let activityId=existing.data?.id;
-   if(!existing.data){const activity=await dbRef().from('activities').insert({id:pendingSession.id,user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();if(activity.error){const raced=await dbRef().from('activities').select('id').eq('id',pendingSession.id).eq('user_id',userRef().id).eq('notes',notes).maybeSingle();if(raced.error||!raced.data)return false;activityId=raced.data.id}else activityId=activity.data.id}
+   if(!existing.data){
+    const activity=await syncDb.from('activities').insert({id:pendingSession.id,user_id:syncUserId,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();
+    if(!isSameAccount())return false;
+    if(activity.error){
+     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',notes).maybeSingle();
+     if(raced.error||!raced.data||!isSameAccount())return false;
+     activityId=raced.data.id;
+    }else activityId=activity.data.id;
+   }
+   if(!isSameAccount())return false;
    if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
-   clearPersistedWorkout();
+   try{localStorage.removeItem(storageKey)}catch(_){}
    if(typeof window.render==='function')window.render();
    return true;
   }
-  saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(sessionStorageKey(),JSON.stringify(saved))}catch(_){}
-  if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
+  if(!isSameAccount())return false;
+  saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(storageKey,JSON.stringify(saved))}catch(_){}
+  if(isSameAccount()&&session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
   };
   workoutSyncPromise=(async()=>{
    if(navigator.locks?.request){
     return navigator.locks.request('nexfit-workout-sync:'+syncUserId,async()=>{
-     if(userRef()?.id!==syncUserId)return false;
+     if(!isSameAccount())return false;
      return runSync();
     });
    }
