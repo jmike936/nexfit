@@ -321,7 +321,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.1',APP_BUILD='20261109.38';
+const APP_VERSION='1.1.1',APP_BUILD='20261109.40';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -752,5 +752,5 @@ initializeDurationPicker();
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261109.38"></script><script src="./workout-history.js?v=20261109.38"></script><script src="./exercise-evolution.js?v=20261109.38"></script>
+</script><script src="./musculacao.js?v=20261109.40"></script><script src="./workout-history.js?v=20261109.40"></script><script src="./exercise-evolution.js?v=20261109.40"></script>
 </body></html>
