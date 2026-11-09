@@ -710,7 +710,7 @@
  function persistWorkoutState(){
   if(!session||!userRef()?.id)return;
   try{const rest=activeRest?{deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex}:null;
-   localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,draftReps:$('sessionReps')?.value??null,draftLoad:$('sessionLoad')?.value??null,updatedAt:Date.now()}));
+   localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,draftReps:$('sessionReps')?.value??null,draftLoad:$('sessionLoad')?.value??null,session,sessionSetLogs,sessionExerciseRows,current,version,subworkouts,localOnly:!!session.localOnly,updatedAt:Date.now()}));
   }catch(e){console.warn('Não foi possível guardar a sessão localmente',e)}
  }
  function clearPersistedWorkout(){try{if(userRef()?.id)localStorage.removeItem(sessionStorageKey())}catch(_){}}
@@ -718,35 +718,71 @@
   if(session)return true;const u=userRef(),db=dbRef();if(!u||!db)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
-  const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
-  if(sq.error||!sq.data||sq.data.status==='completed'){clearPersistedWorkout();return false}
-  const [pq,vq,wq,eq,lq]=await Promise.all([
-   db.from('training_programs').select('*').eq('id',saved.programId).maybeSingle(),
-   db.from('training_program_versions').select('*').eq('id',saved.versionId).maybeSingle(),
-   db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
-   db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position'),
-   db.from('training_set_logs').select('*').eq('session_id',saved.sessionId)
-  ]);
-  if(pq.error||vq.error||wq.error||eq.error||lq.error||!pq.data||!vq.data||!eq.data?.length)return false;
-  session=sq.data;current=pq.data;version=vq.data;subworkouts=wq.data||[];sessionExerciseRows=eq.data;sessionPlan=[];
+  let remoteSession=null,remoteLogs=null;
+  if(navigator.onLine&&!saved.localOnly){
+   const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
+   if(!sq.error&&sq.data)remoteSession=sq.data;
+   if(remoteSession){const lq=await db.from('training_set_logs').select('*').eq('session_id',saved.sessionId);if(!lq.error)remoteLogs=lq.data||[]}
+  }
+  const localFallback=!!(saved.session&&saved.current&&saved.version&&saved.sessionExerciseRows?.length);
+  if(!remoteSession&&!localFallback)return false;
+  session=remoteSession||saved.session;current=saved.current;version=saved.version;subworkouts=saved.subworkouts||[];
+  sessionExerciseRows=saved.sessionExerciseRows||[];sessionPlan=[];
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionSetLogs=lq.data||[];await preloadPreviousLoads(eq.data);sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
+  sessionSetLogs=remoteLogs||saved.sessionSetLogs||[];sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
   if(sessionView==='exercise'){
    shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
-   if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true';}
+   if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true'}
    if(saved.draftReps!==null&&$('sessionReps'))$('sessionReps').value=saved.draftReps;
    if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
     const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
     activeRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
     const panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
     if(panel){panel.hidden=false;$('nextStepText').textContent=rest.nextText}if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
-    if(activeRest.paused){const b=$('pauseRest');if(b){b.setAttribute('aria-label','Continuar descanso');b.title='Continuar descanso';b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
+    if(activeRest.paused){const button=$('pauseRest');if(button){button.setAttribute('aria-label','Continuar descanso');button.title='Continuar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
     else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
    }
   }else renderExercisePicker();
-  persistWorkoutState();return true;
+  persistWorkoutState();
+  if(navigator.onLine)syncPendingWorkout();
+  return true;
  }
+ async function syncPendingWorkout(){
+  if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
+  let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
+  if(!saved||saved.userId!==userRef().id||!saved.session)return false;
+  const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
+  const sessionPayload={id:pendingSession.id,athlete_id:userRef().id,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
+  const created=await dbRef().from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
+  if(created.error)return false;
+  if(logs.length){
+   const rows=logs.map(row=>({session_id:pendingSession.id,exercise_id:row.exercise_id,set_number:row.set_number,reps_completed:row.reps_completed,load_kg:row.load_kg??null,duration_seconds:row.duration_seconds??null,distance_m:row.distance_m??null,notes:row.notes??null,completed_at:row.completed_at||new Date().toISOString()}));
+   const savedLogs=await dbRef().from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
+   if(savedLogs.error)return false;
+  }
+  if(pendingSession.status==='completed'||pendingSession.finished_at){
+   const finishedAt=pendingSession.finished_at||new Date().toISOString();
+   const updated=await dbRef().from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',userRef().id);
+   if(updated.error)return false;
+   const started=new Date(pendingSession.started_at||Date.now()),finished=new Date(finishedAt);
+   const minutes=Math.max(1,Math.round((finished.getTime()-started.getTime())/60000));
+   const sub=(saved.subworkouts||[]).find(x=>x.id===saved.subworkoutId)||{title:'Treino'};
+   const title=saved.current?.title||'Treino';
+   const notes=title+' · '+(sub.title||'Treino')+' [NEXFIT_SESSION:'+pendingSession.id+']';
+   const now=new Date(finishedAt),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+   const existing=await dbRef().from('activities').select('id').eq('user_id',userRef().id).eq('notes',notes).maybeSingle();
+   if(existing.error)return false;
+   if(!existing.data){const activity=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes});if(activity.error)return false}
+   clearPersistedWorkout();
+   if(typeof window.render==='function')window.render();
+   return true;
+  }
+  saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(sessionStorageKey(),JSON.stringify(saved))}catch(_){}
+  if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
+  return true;
+ }
+ window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
  window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState()});
 
