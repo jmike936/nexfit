@@ -471,6 +471,9 @@
   }).join('');
   return '<option value="">Selecione um exercício…</option>'+options;
  }
+ function exerciseSearchKey(value){
+  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
+ }
  function exerciseCatalogKey(value){
   const key=String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
   const aliases={leg45:'legpress45',legpress45grau:'legpress45',legpress45graus:'legpress45',agachamento:'agachamentolivre'};
@@ -527,8 +530,8 @@
   });
   const pickerPanel=$('catalogPickerPanel'),pickerToggle=$('catalogPickerToggle'),pickerSelect=$('editorCatalogExercise');
   const renderCatalogPicker=(query='')=>{
-   const key=exerciseCatalogKey(query);
-   const filtered=key?catalog.filter(item=>exerciseCatalogKey(item.name+' '+(item.category||'')).includes(key)):catalog;
+   const key=exerciseSearchKey(query);
+   const filtered=key?catalog.filter(item=>exerciseSearchKey(item.name+' '+(item.category||'')).includes(key)):catalog;
    const grouped=new Map();
    filtered.forEach(item=>{const category=normalizeHumanText(item.category||'Outros');if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push(item)});
    const html=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).map(([category,items])=>
