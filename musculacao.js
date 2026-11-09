@@ -472,7 +472,9 @@
   return '<option value="">Selecione um exercício…</option>'+options;
  }
  function exerciseCatalogKey(value){
-  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
+  const key=String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
+  const aliases={leg45:'legpress45',legpress45grau:'legpress45',legpress45graus:'legpress45',agachamento:'agachamentolivre'};
+  return aliases[key]||key;
  }
  async function saveNewCatalogExercise(name,category){
   const clean=normalizeHumanText(name),key=exerciseCatalogKey(clean);
