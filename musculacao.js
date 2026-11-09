@@ -749,10 +749,11 @@
  let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null;
  const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
  function persistWorkoutState(){
-  if(!session||!userRef()?.id)return;
+  if(!session||!userRef()?.id)return false;
   try{const rest=activeRest?{deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex}:null;
    localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,draftReps:$('sessionReps')?.value??null,draftLoad:$('sessionLoad')?.value??null,session,sessionSetLogs,sessionExerciseRows,current,version,subworkouts,localOnly:!!session.localOnly,updatedAt:Date.now()}));
-  }catch(e){console.warn('Não foi possível guardar a sessão localmente',e)}
+   return true;
+  }catch(e){console.warn('Não foi possível guardar a sessão localmente',e);return false}
  }
  function clearPersistedWorkout(){try{if(userRef()?.id)localStorage.removeItem(sessionStorageKey())}catch(_){}}
  async function restoreWorkoutState(){
@@ -827,7 +828,9 @@
    const now=new Date(finishedAt),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
    const existing=await dbRef().from('activities').select('id').eq('user_id',userRef().id).eq('notes',notes).maybeSingle();
    if(existing.error)return false;
-   if(!existing.data){const activity=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes});if(activity.error)return false}
+   let activityId=existing.data?.id;
+   if(!existing.data){const activity=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();if(activity.error)return false;activityId=activity.data.id}
+   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
    clearPersistedWorkout();
    if(typeof window.render==='function')window.render();
    return true;
@@ -913,7 +916,7 @@
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta',completed_at:new Date().toISOString()};
   setExecutionFeedback('Salvando série neste aparelho…');
   if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
-  persistWorkoutState();
+  if(!persistWorkoutState()){sessionSetLogs=sessionSetLogs.filter(x=>!(x.exercise_id===row.exercise_id&&Number(x.set_number)===Number(row.set_number)));return alert('Não há espaço disponível para guardar a série neste aparelho. Libere espaço antes de continuar.')}
   if(navigator.onLine&&!session.localOnly){
    try{const savedRow=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===savedRow.exercise_id&&Number(x.set_number)===Number(savedRow.set_number)?savedRow:x);setExecutionFeedback('Série sincronizada com sucesso.','success')}
    catch(_){setExecutionFeedback('Série guardada neste aparelho; sincronização pendente.','success')}
@@ -1049,7 +1052,7 @@
   savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Salvando série neste aparelho…');
   try{
    if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
-   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();
+   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));if(!persistWorkoutState())throw new Error('Não há espaço disponível para guardar o treino neste aparelho.');
    if(navigator.onLine&&!session.localOnly){
     try{
      const savedRow=await saveSetLogOnce(row);
@@ -1084,12 +1087,12 @@
   session={...(created||payload),localOnly};sessionExerciseRows=exercises;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
   try{await preloadPreviousLoads(exercises)}catch(_){}
   exercises.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionIndex=0;sessionLoads={};persistWorkoutState();renderExercisePicker();
+  sessionIndex=0;sessionLoads={};if(!persistWorkoutState()){session=null;sessionPlan=[];sessionExerciseRows=[];return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.')}renderExercisePicker();
  }
  async function finishSession(){
   if(!session)return;
   restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;
-  session.status='completed';session.finished_at=new Date().toISOString();persistWorkoutState();
+  session.status='completed';session.finished_at=new Date().toISOString();if(!persistWorkoutState()){session.status='in_progress';session.finished_at=null;return alert('Não foi possível guardar a conclusão neste aparelho. Libere espaço e tente novamente.')}
   const synced=await syncPendingWorkout();
   if(synced){clearPersistedWorkout();alert('Treino concluído e sincronizado com o histórico.')}else{alert('Treino concluído e guardado neste aparelho. Será enviado ao Supabase automaticamente quando a conexão voltar. Não apague os dados do navegador antes da sincronização.')}
   session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];home();
