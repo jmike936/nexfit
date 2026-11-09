@@ -497,8 +497,11 @@
   let catalog;try{catalog=await loadExerciseCatalog()}catch(err){return alert(err.message)}
   const categories=['Peito','Costas','Ombros','Bíceps','Tríceps','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Antebraços','Cardio','Funcional','Corpo inteiro'];
   const categoryOptions='<option value="">Selecione o grupo muscular</option>'+categories.map(x=>'<option>'+esc(x)+'</option>').join('');
-  const fields='<div class="field"><label for="searchCatalogExercise">Pesquisar exercício</label><input id="searchCatalogExercise" type="search" placeholder="Digite o nome ou grupo muscular…"></div>'
-   +'<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise">'+exerciseCatalogOptions(catalog)+'</select></div>'
+  const fields='<div class="field"><label>Exercício</label><div class="catalog-picker" style="position:relative">'
+   +'<button type="button" id="catalogPickerToggle" class="secondary" aria-expanded="false" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><span id="catalogPickerLabel">Selecione um exercício…</span><span aria-hidden="true">▾</span></button>'
+   +'<div id="catalogPickerPanel" style="display:none;position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;background:#111a23;border:1px solid #354454;border-radius:10px;padding:10px;box-shadow:0 12px 28px #0009;max-height:320px;overflow:auto">'
+   +'<input id="searchCatalogExercise" type="search" placeholder="Pesquisar exercício ou grupo…" aria-label="Pesquisar exercício" style="width:100%;margin-bottom:8px">'
+   +'<div id="catalogPickerResults"></div></div></div><select id="editorCatalogExercise" style="display:none">'+exerciseCatalogOptions(catalog)+'</select></div>'
    +'<button type="button" class="secondary" id="toggleNewCatalogExercise" style="margin:4px 0 12px">＋ Cadastrar novo exercício</button>'
    +'<div id="newCatalogExerciseFields" style="display:none;border:1px solid #354454;border-radius:10px;padding:12px;margin-bottom:12px">'
    +'<div class="field"><label for="newCatalogExerciseName">Nome do exercício</label><input id="newCatalogExerciseName" type="text" placeholder="Ex.: Supino inclinado com halteres"></div>'
@@ -522,12 +525,34 @@
    if(result.error){alert(result.error.message);return false}
    await refreshWorkoutEditorOrProgram();return true;
   });
-  $('searchCatalogExercise').oninput=()=>{
-   const query=exerciseCatalogKey($('searchCatalogExercise').value);
-   const filtered=query?catalog.filter(item=>exerciseCatalogKey(item.name+' '+(item.category||'')).includes(query)):catalog;
-   const select=$('editorCatalogExercise'),selected=select.value;
-   select.innerHTML=exerciseCatalogOptions(filtered,selected);
-   if(!filtered.length)select.innerHTML='<option value="">Nenhum exercício encontrado</option>';
+  const pickerPanel=$('catalogPickerPanel'),pickerToggle=$('catalogPickerToggle'),pickerSelect=$('editorCatalogExercise');
+  const renderCatalogPicker=(query='')=>{
+   const key=exerciseCatalogKey(query);
+   const filtered=key?catalog.filter(item=>exerciseCatalogKey(item.name+' '+(item.category||'')).includes(key)):catalog;
+   const grouped=new Map();
+   filtered.forEach(item=>{const category=normalizeHumanText(item.category||'Outros');if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push(item)});
+   const html=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).map(([category,items])=>
+    '<div style="font-weight:700;padding:7px 5px 3px;color:var(--text-muted,#9aa8b7)">'+esc(category)+'</div>'+
+    items.sort((a,b)=>normalizeHumanText(a.name).localeCompare(normalizeHumanText(b.name),'pt-BR',{sensitivity:'base'})).map(item=>
+     '<button type="button" data-catalog-pick="'+esc(item.id)+'" style="display:block;width:100%;text-align:left;padding:9px 8px;border:0;border-radius:6px;background:transparent;color:inherit">'+esc(normalizeHumanText(item.name))+'</button>'
+    ).join('')
+   ).join('');
+   $('catalogPickerResults').innerHTML=html||'<p class="muted" style="padding:8px">Nenhum exercício encontrado.</p>';
+  };
+  renderCatalogPicker();
+  pickerToggle.onclick=()=>{
+   const opening=pickerPanel.style.display==='none';
+   pickerPanel.style.display=opening?'block':'none';
+   pickerToggle.setAttribute('aria-expanded',String(opening));
+   if(opening)$('searchCatalogExercise').focus();
+  };
+  $('searchCatalogExercise').oninput=()=>renderCatalogPicker($('searchCatalogExercise').value);
+  $('catalogPickerResults').onclick=e=>{
+   const option=e.target.closest('[data-catalog-pick]');if(!option)return;
+   const item=catalog.find(x=>String(x.id)===String(option.dataset.catalogPick));if(!item)return;
+   pickerSelect.value=String(item.id);
+   $('catalogPickerLabel').textContent=normalizeHumanText(item.name);
+   pickerPanel.style.display='none';pickerToggle.setAttribute('aria-expanded','false');
   };
   $('toggleNewCatalogExercise').onclick=()=>{
    const panel=$('newCatalogExerciseFields'),opening=panel.style.display==='none';
