@@ -1042,10 +1042,14 @@
    rows.push({session_id:session.id,exercise_id:exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:item.set.load_kg??null});
   }
   for(const row of rows)row.completed_at=new Date().toISOString();
+  const previousLogs=sessionSetLogs.slice(),previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices);
   for(const row of rows)if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
   skippedExerciseIndices.delete(index);
   for(const row of rows)skippedSetKeys.delete(row.exercise_id+':'+row.set_number);
-  persistWorkoutState();
+  if(!persistWorkoutState()){
+   sessionSetLogs=previousLogs;skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;
+   return alert('Não foi possível guardar as séries deste exercício neste aparelho. Libere espaço no armazenamento e tente novamente. Nenhuma série foi confirmada.');
+  }
   if(navigator.onLine&&!session.localOnly){
    for(const row of rows){try{const saved=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===saved.exercise_id&&Number(x.set_number)===Number(saved.set_number)?saved:x)}catch(_){setExecutionFeedback('Séries guardadas neste aparelho; sincronização pendente.','success')}}
   }
