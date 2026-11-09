@@ -15,7 +15,7 @@ const APP_FILES = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_FILES))
+      .then(cache => Promise.all([cache.addAll(APP_FILES), cache.add('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').catch(() => null)]))
       .then(() => self.skipWaiting())
   );
 });
