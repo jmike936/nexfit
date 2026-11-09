@@ -807,15 +807,23 @@
   rest.advance();
  }
  document.addEventListener('visibilitychange',()=>{if(activeRest)tickRestTimer()});
+ async function saveSetLogOnce(row){
+  const db=dbRef();
+  const {error}=await db.from('training_set_logs').upsert(row,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
+  if(error)throw new Error(error.message);
+  const {data,error:readError}=await db.from('training_set_logs').select('*').eq('session_id',row.session_id).eq('exercise_id',row.exercise_id).eq('set_number',row.set_number).single();
+  if(readError||!data)throw new Error(readError?.message||'Não foi possível confirmar o registro da série.');
+  return data;
+ }
  async function skipCurrentSet(){
   if(!session){setExecutionFeedback('A sessão de treino não está ativa.','error');return}
   const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
   setExecutionFeedback('Registrando série como não realizada…');
-  try{const {error}=await dbRef().from('training_set_logs').insert(row);if(error)throw new Error(error.message)}
+  let savedRow;try{savedRow=await saveSetLogOnce(row)}
   catch(error){setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');return alert('Não foi possível registrar a série como não realizada: '+(error?.message||'erro inesperado.'))}
-  sessionSetLogs.push(row);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
+  if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
  function skipCurrentExercise(){
   if(!session)return;
@@ -888,9 +896,9 @@
    if(reps==='MR'){const value=prompt('Quantas repetições você realizou na série '+(item.setIndex+1)+' de '+exercise.name+'?');if(value===null)return;if(!Number(value)||Number(value)<1)return alert('Informe um número de repetições válido.');reps=Number(value)}
    rows.push({session_id:session.id,exercise_id:exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:item.set.load_kg??null});
   }
-  const {error}=await dbRef().from('training_set_logs').insert(rows);
-  if(error)return alert('Não foi possível marcar o exercício como feito: '+error.message);
-  sessionSetLogs.push(...rows);skippedExerciseIndices.delete(index);
+  try{for(const row of rows){const saved=await saveSetLogOnce(row);if(!hasSetLog(saved.exercise_id,saved.set_number))sessionSetLogs.push(saved)}}
+  catch(error){return alert('Não foi possível confirmar todas as séries do exercício: '+error.message+'. Você pode tentar novamente sem duplicar as séries já salvas.')}
+  skippedExerciseIndices.delete(index);
   for(const row of rows)skippedSetKeys.delete(row.exercise_id+':'+row.set_number);
   renderExercisePicker();
  }
@@ -939,9 +947,9 @@
   const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
   savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Dados válidos. Enviando série ao Supabase…');
   try{
-   const {error}=await dbRef().from('training_set_logs').insert(row);
-   if(error)throw new Error(error.message);
-   sessionSetLogs.push(row);skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série registrada com sucesso. Preparando o descanso…','success');
+   const savedRow=await saveSetLogOnce(row);
+   if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);
+   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série registrada com sucesso. Preparando o descanso…','success');
   }catch(error){
    if(button)button.disabled=false;
    setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
