@@ -321,7 +321,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.1',APP_BUILD='20261108.33';
+const APP_VERSION='1.1.1',APP_BUILD='20261108.34';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
@@ -451,7 +451,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentUse
 window.addEventListener('pageshow',()=>{if(currentUser)restoreScreenState(currentUser.id)});window.addEventListener('load',()=>{if(currentUser)restoreScreenState(currentUser.id)});const screenRestoreObserver=new MutationObserver(()=>{if(!currentUser)return;const state=readScreenState(currentUser.id);if(!state||Date.now()-Number(state.lastInteraction)>SCREEN_STATE_TTL)return;if(document.getElementById(String(state.page))?.classList.contains('page')){restoreScreenState(currentUser.id);screenRestoreObserver.disconnect()}});screenRestoreObserver.observe(document.body,{childList:true,subtree:true});
 async function signOut(){if(currentUser){try{localStorage.removeItem(screenStateKey(currentUser.id))}catch{}}if(db)await db.auth.signOut()}
 let activityLoadToken=0;
-async function loadUser(user,navigateHome=false){currentUser=user;const loadToken=++activityLoadToken;activities=[];userName=normalizeHumanText(user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split('@')[0]||'Atleta');document.body.classList.add('logged');if(navigateHome){try{localStorage.removeItem(screenStateKey(user.id))}catch{}go('home');lastUserInteraction=Date.now();saveScreenState(user.id,'home',lastUserInteraction)}else restoreScreenState(user.id);$('authSubmit').disabled=false;showError('');const {data,error}=await db.from('activities').select('*').eq('user_id',user.id).order('activity_date',{ascending:false});if(loadToken!==activityLoadToken||currentUser?.id!==user.id)return;if(error){alert('Erro ao carregar atividades: '+error.message);return}activities=(data||[]).map(a=>({id:a.id,sport:a.sport,date:a.activity_date,createdAt:a.created_at||null,duration:a.duration_minutes,distance:a.distance_km||0,notes:a.notes||''}));render();restoreScreenState(user.id)}
+async function loadUser(user,navigateHome=false){currentUser=user;const loadToken=++activityLoadToken;activities=[];userName=normalizeHumanText(user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split('@')[0]||'Atleta');document.body.classList.add('logged');if(navigateHome){try{localStorage.removeItem(screenStateKey(user.id))}catch{}go('home');lastUserInteraction=Date.now();saveScreenState(user.id,'home',lastUserInteraction)}else restoreScreenState(user.id);$('authSubmit').disabled=false;showError('');const {data,error}=await db.from('activities').select('*').eq('user_id',user.id).order('activity_date',{ascending:false});if(loadToken!==activityLoadToken||currentUser?.id!==user.id)return;if(error){alert('Erro ao carregar atividades: '+error.message);return}activities=(data||[]).map(a=>({id:a.id,sport:a.sport,date:a.activity_date,createdAt:a.created_at||null,duration:a.duration_minutes,distance:a.distance_km||0,notes:a.notes||''}));render();await syncFitnessGoalAchievements();restoreScreenState(user.id)}
 function latestActivitiesBySport(items){
  const latest=new Map();
  items.forEach((activity,index)=>{
@@ -486,14 +486,18 @@ function closeNotifications(){$('notificationBack').classList.remove('show')}
 async function markNotificationsRead(){const items=getFitnessNotifications().map(item=>({...item,read:true}));const {data,error}=await db.auth.updateUser({data:{fitness_notifications:items}});if(error){alert('Não foi possível atualizar as notificações: '+error.message);return}currentUser=data.user;renderNotificationCenter()}
 function fitnessGoalProgress(goal){
  if(goal.type==='objective'){
-  const target=Number(goal.targetValue??goal.targetPerWeek),unit=String(goal.targetUnit||'treinos').toLowerCase(),sessions=['vezes','treinos','sessões'].includes(unit),weekly=goal.targetPeriod==='week'||(!goal.targetPeriod&&Number(goal.targetPerWeek)>0),deadline=goal.targetPeriod==='deadline'&&goal.targetDate;
-  if(target>0&&sessions&&(weekly||deadline)){
-   const now=new Date(),start=weekly?new Date(now):new Date((goal.createdAt||now.toISOString().slice(0,10))+'T00:00:00'),end=weekly?new Date(now):new Date(goal.targetDate+'T23:59:59');
-   if(weekly){const day=(now.getDay()+6)%7;start.setHours(0,0,0,0);start.setDate(now.getDate()-day);end.setTime(start.getTime());end.setDate(start.getDate()+7)}
-   const count=activities.filter(a=>a.sport===goal.modality&&(()=>{const d=new Date(a.date+'T12:00:00');return d>=start&&d<=end})()).length,percent=Math.min(100,Math.round(count/target*100));
-   return {label:goal.objective||'Meta',targetText:target+' '+unit+(weekly?' por semana':' até '+fmtDate(goal.targetDate)),currentText:count+' de '+target+' '+unit+(weekly?' nesta semana':' registrados'),percent,complete:false,count,target,tracked:true,weekly};
+  const target=Number(goal.targetValue??goal.targetPerWeek),unit=String(goal.targetUnit||'treinos').toLowerCase(),sessions=['vezes','treinos','sessões'].includes(unit),period=goal.targetPeriod||'none',weekly=period==='week'||(!goal.targetPeriod&&Number(goal.targetPerWeek)>0),monthly=period==='month',daily=period==='day',deadline=period==='deadline'&&goal.targetDate,recurring=weekly||monthly||daily;
+  if(target>0&&sessions&&(recurring||deadline||period==='none')){
+   const now=new Date(),created=new Date((goal.createdAt||now.toISOString().slice(0,10))+'T00:00:00');
+   let start=created,end=new Date(now);
+   if(weekly){start=new Date(now);const day=(now.getDay()+6)%7;start.setHours(0,0,0,0);start.setDate(now.getDate()-day);end=new Date(start);end.setDate(start.getDate()+7)}
+   else if(monthly){start=new Date(now.getFullYear(),now.getMonth(),1);end=new Date(now.getFullYear(),now.getMonth()+1,1)}
+   else if(daily){start=new Date(now);start.setHours(0,0,0,0);end=new Date(start);end.setDate(start.getDate()+1)}
+   else if(deadline)end=new Date(goal.targetDate+'T23:59:59');
+   const count=activities.filter(a=>a.sport===goal.modality&&(()=>{const d=new Date(a.date+'T12:00:00');return d>=start&&d<=end})()).length,percent=Math.min(100,Math.round(count/target*100)),periodLabel=weekly?'nesta semana':monthly?'neste mês':daily?'hoje':deadline?'até '+fmtDate(goal.targetDate):'desde a criação';
+   return {label:goal.objective||'Meta',targetText:target+' '+unit+(weekly?' por semana':monthly?' por mês':daily?' por dia':deadline?' até '+fmtDate(goal.targetDate):''),currentText:count+' de '+target+' '+unit+' '+periodLabel,percent,complete:!recurring&&percent>=100,count,target,tracked:true,weekly,recurring};
   }
-  return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt)};
+  return {label:goal.objective||'Meta',targetText:'',currentText:'',percent:0,complete:Boolean(goal.completedAt),tracked:false,recurring:false};
  }
  const meta=currentUser?.user_metadata||{};let current,start,target,unit='',label='';
  if(goal.type==='weight'){
@@ -518,13 +522,13 @@ function fitnessGoalIcon(type){
 function renderFitnessGoalCard(goal,complete=false){
  const p=fitnessGoalProgress(goal),id=esc(goal.id),status=complete?'<span class="profile-goal-complete">Meta alcançada</span>':'';
  if(goal.type==='objective'){
-  const weekly=p.tracked===true,deadline=goal.targetDate?new Date(goal.targetDate+'T23:59:59'):null,now=new Date(),daysLeft=deadline?Math.ceil((deadline-now)/86400000):null;
+  const tracked=p.tracked===true,weekly=p.weekly===true,deadline=goal.targetDate?new Date(goal.targetDate+'T23:59:59'):null,now=new Date(),daysLeft=deadline?Math.ceil((deadline-now)/86400000):null;
   const elapsed=deadline?Math.max(0,Math.min(1,(now-new Date((goal.createdAt||now.toISOString().slice(0,10))+'T00:00:00'))/(deadline-new Date((goal.createdAt||now.toISOString().slice(0,10))+'T00:00:00')))):(now.getDay()===0?1:now.getDay()/7),expected=Math.round(elapsed*100),behind=weekly&&p.percent<expected,lag=weekly?Math.min(1,Math.max(0,(expected-p.percent)/100)):0;
   const red=behind?'rgb(255,'+Math.round(122*(1-lag))+','+Math.round(122*(1-lag))+')':'var(--lime)';
   const deadlineInfo=deadline?'<div class="profile-goal-current">'+(daysLeft<0?'<span style="color:var(--red)">Prazo vencido há '+Math.abs(daysLeft)+' dias</span>':daysLeft===0?'<span style="color:var(--red)">Prazo termina hoje</span>':'Prazo até '+esc(fmtDate(goal.targetDate))+' · '+daysLeft+' dias restantes')+'</div>':'';
-  const progress=weekly?'<div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%;background:'+(deadline?red:'var(--lime)')+'"></span></div><b style="color:'+(deadline&&behind?'var(--red)':'var(--lime)')+'">'+p.percent+'%</b></div><div class="profile-goal-current">'+esc(p.currentText)+'</div>'+(deadline?'<small class="muted">'+(behind?'Abaixo do ritmo esperado nesta semana.':'Ritmo semanal dentro do esperado.')+'</small>':''):'';
+  const progress=tracked?'<div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%;background:'+(deadline?red:'var(--lime)')+'"></span></div><b style="color:'+(deadline&&behind?'var(--red)':'var(--lime)')+'">'+p.percent+'%</b></div><div class="profile-goal-current">'+esc(p.currentText)+'</div>'+(deadline?'<small class="muted">'+(behind?'Abaixo do ritmo esperado nesta semana.':'Ritmo semanal dentro do esperado.')+'</small>':''):'';
   const unsupported=deadline&&!weekly?'<small class="muted">Prazo definido. O acompanhamento automático por treinos ainda não está disponível para este indicador.</small>':'';
-  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(goal.customName||p.label)+'</strong><small>'+esc(goal.objective||p.label)+' · '+esc(goal.modality||'Modalidade não informada')+' · '+esc(goal.metric||'Meta pessoal')+' · '+esc(goal.targetValue??goal.targetPerWeek??'')+' '+esc(goal.targetUnit||(goal.targetPerWeek?'treinos':''))+(goal.targetPeriod&&goal.targetPeriod!=='none'?' / '+(goal.targetPeriod==='week'?'semana':goal.targetPeriod==='month'?'mês':goal.targetPeriod==='day'?'dia':'até '+fmtDate(goal.targetDate)):'')+'</small></span></div>'+progress+deadlineInfo+unsupported+(!weekly?'<div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div>':'')+'<div class="profile-goal-actions">'+(!weekly&&!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
+  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon('objective')+'</span><span class="profile-goal-copy"><strong>'+esc(goal.customName||p.label)+'</strong><small>'+esc(goal.objective||p.label)+' · '+esc(goal.modality||'Modalidade não informada')+' · '+esc(goal.metric||'Meta pessoal')+' · '+esc(goal.targetValue??goal.targetPerWeek??'')+' '+esc(goal.targetUnit||(goal.targetPerWeek?'treinos':''))+(goal.targetPeriod&&goal.targetPeriod!=='none'?' / '+(goal.targetPeriod==='week'?'semana':goal.targetPeriod==='month'?'mês':goal.targetPeriod==='day'?'dia':'até '+fmtDate(goal.targetDate)):'')+'</small></span></div>'+progress+deadlineInfo+unsupported+(!weekly?'<div class="profile-goal-current">'+status+(status?' · ':'')+'Criada em '+esc(fmtDate(goal.createdAt||new Date().toISOString().slice(0,10)))+'</div>':'')+'<div class="profile-goal-actions">'+(!tracked&&!complete?'<button class="secondary" type="button" data-goal-complete="'+id+'">Concluir meta</button>':'')+'<button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div></article>';
  }
  return '<article class="profile-goal-card"><div class="profile-goal-title"><span class="profile-goal-icon">'+fitnessGoalIcon(goal.type)+'</span><span class="profile-goal-copy"><strong>'+esc(p.label)+'</strong><small>Meta: '+esc(p.targetText)+'</small></span></div><div class="profile-goal-progress"><div class="bar"><span style="width:'+p.percent+'%"></span></div><b>'+p.percent+'%</b></div><div class="profile-goal-current">'+status+(status?' · ':'')+'Atual: '+esc(p.currentText)+'</div>'+(!complete?'<div class="profile-goal-actions"><button class="secondary" type="button" data-goal-update="'+id+'">Atualizar progresso</button><button class="secondary" type="button" data-goal-delete="'+id+'" aria-label="Excluir meta" title="Excluir meta">🗑</button></div>':'')+'</article>';
 }
@@ -540,6 +544,19 @@ function renderProfileGoals(){
  host.querySelectorAll('[data-goal-update]').forEach(button=>button.onclick=()=>updateFitnessGoal(button.dataset.goalUpdate));
  host.querySelectorAll('[data-goal-complete]').forEach(button=>button.onclick=()=>completeFitnessGoal(button.dataset.goalComplete));
  host.querySelectorAll('[data-goal-delete]').forEach(button=>button.onclick=()=>deleteFitnessGoal(button.dataset.goalDelete));
+}
+async function syncFitnessGoalAchievements(){
+ const goals=getFitnessGoals().map(goal=>({...goal})),notifications=getFitnessNotifications();
+ const achieved=[];
+ goals.forEach(goal=>{
+  if(goal.type!=='objective'||goal.completedAt)return;
+  const progress=fitnessGoalProgress(goal);
+  if(progress.complete&&!progress.recurring){goal.completedAt=new Date().toISOString().slice(0,10);achieved.push({id:'goal-'+goal.id+'-'+Date.now()+'-'+achieved.length,title:'Meta alcançada!',message:'Parabéns! Você concluiu: '+(goal.customName||progress.label||goal.objective||'sua meta')+'.',createdAt:new Date().toISOString(),read:false})}
+ });
+ if(!achieved.length)return;
+ const {data,error}=await db.auth.updateUser({data:{fitness_goals:goals,fitness_notifications:[...achieved,...notifications].slice(0,50)}});
+ if(error){console.error('Falha ao registrar meta alcançada:',error);return}
+ currentUser=data.user;render();
 }
 async function persistFitnessGoals(goals,extra={}){
  const {data,error}=await db.auth.updateUser({data:{fitness_goals:goals,...extra}});
@@ -679,7 +696,7 @@ $('activityForm').addEventListener('submit',async e=>{
  const {data,error}=await db.from('activities').insert(row).select().single();
  if(error){alert('Não foi possível salvar: '+error.message);return}
  activities.unshift({id:data.id,sport:data.sport,date:data.activity_date,createdAt:data.created_at||new Date().toISOString(),duration:data.duration_minutes,distance:data.distance_km||0,notes:data.notes||''});
- render();e.target.reset();$('distanceUnit').value='km';closeModal();toast()
+ render();await syncFitnessGoalAchievements();e.target.reset();$('distanceUnit').value='km';closeModal();toast()
 });
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 async function editActivity(id){
@@ -720,5 +737,5 @@ initializeDurationPicker();
 initializePwaInstall();
 initializeAppVersion();
 init();
-</script><script src="./musculacao.js?v=20261108.33"></script><script src="./workout-history.js?v=20261108.33"></script><script src="./exercise-evolution.js?v=20261108.33"></script>
+</script><script src="./musculacao.js?v=20261108.34"></script><script src="./workout-history.js?v=20261108.34"></script><script src="./exercise-evolution.js?v=20261108.34"></script>
 </body></html>
