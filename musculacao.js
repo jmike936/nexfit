@@ -172,13 +172,33 @@
    host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic));
    return;
   }
+  if(!navigator.onLine||window.__nexfitOfflineMode){
+   let cached=[];try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(userRef()?.id||''))||'[]')}catch(_){}
+   if(!cached.length){host.innerHTML='<div class="training-empty"><h3>Treinos disponíveis offline</h3><p class="muted">Abra esta tela com internet pelo menos uma vez para guardar seus programas neste aparelho.</p></div>';return}
+   host.innerHTML='<p class="muted">Modo offline · programas guardados neste aparelho</p><div class="training-list">'+cached.map(x=>'<article class="training-card"><button class="training-card-main" data-offline-workout="'+esc(x.subworkout.id)+'"><div class="training-card-placeholder">↻</div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(x.subworkout.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(x.program.title||'Programa'))+' · '+(x.exercises||[]).length+' exercícios</small></span><span class="training-chevron">›</span></button></article>').join('')+'</div>';
+   host.querySelectorAll('[data-offline-workout]').forEach(b=>b.onclick=()=>startOfflineWorkout(b.dataset.offlineWorkout));
+   return;
+  }
+  window.__nexfitOfflineMode=false;
   const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
   if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
   const workouts=[];
   for(const p of programs){
-   const q=await dbRef().from('training_subworkouts').select('id,title,description,position,training_exercises(id,name,media_url)').eq('version_id',p.current_version_id).order('position');
+   const q=await dbRef().from('training_subworkouts').select('id,title,description,position,training_exercises(*)').eq('version_id',p.current_version_id).order('position');
    if(q.error)continue;
-   for(const workout of q.data||[])workouts.push({program:p,workout,exercises:workout.training_exercises||[]});
+   const versionQuery=await dbRef().from('training_program_versions').select('*').eq('id',p.current_version_id).maybeSingle();
+   if(versionQuery.error||!versionQuery.data)continue;
+   for(const workout of q.data||[]){
+    const exercises=workout.training_exercises||[];
+    workouts.push({program:p,workout,exercises});
+    try{
+     const key='nexfit-offline-workouts:'+String(userRef()?.id||'');
+     const snapshots=JSON.parse(localStorage.getItem(key)||'[]');
+     const snapshot={program:p,version:versionQuery.data,subworkouts:q.data.map(({training_exercises,...sub})=>sub),subworkout:{id:workout.id,title:workout.title,description:workout.description,position:workout.position},exercises};
+     const next=snapshots.filter(x=>String(x.subworkout?.id)!==String(workout.id));next.push(snapshot);
+     localStorage.setItem(key,JSON.stringify(next));
+    }catch(error){console.warn('Não foi possível atualizar o cache offline do treino',error)}
+   }
   }
   const user=userRef();
   const activitiesQ=await dbRef().from('activities').select('activity_date,notes').eq('user_id',user.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
@@ -226,15 +246,26 @@
   activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
  }
 
+ async function startOfflineWorkout(workoutId){
+  const user=userRef();let cached=[];
+  try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(user?.id||''))||'[]')}catch(_){}
+  const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
+  if(!snapshot||!snapshot.exercises?.length)return alert('Este treino não está disponível offline. Abra-o com internet antes de iniciar.');
+  current=snapshot.program;version=snapshot.version;subworkouts=snapshot.subworkouts||[snapshot.subworkout];
+  await startSession(workoutId,snapshot.exercises);
+ }
+
  async function startListedWorkout(programId,versionId,workoutId){
   const program=plans.find(p=>String(p.id)===String(programId)&&canManageProgramLocally(p)&&p.status==='active');
   if(!program)return alert('Este programa não está ativo.');
-  const vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
-  if(vq.error||!vq.data)return alert('Não foi possível carregar a versão deste programa.');
-  const sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');
-  if(sq.error)return alert(sq.error.message);
+  if(!navigator.onLine||window.__nexfitOfflineMode)return startOfflineWorkout(workoutId);
+  const key='nexfit-offline-workouts:'+String(userRef()?.id||'');let cached=[];
+  try{cached=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){}
+  const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
+  let vq,sq;
+  try{vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId);return alert('Não foi possível carregar a versão deste programa.')}sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');if(sq.error){if(snapshot)return startOfflineWorkout(workoutId);return alert(sq.error.message)}}catch(error){if(snapshot)return startOfflineWorkout(workoutId);return alert('Sem conexão e sem cópia offline deste treino.')}
   current=program;version=vq.data;subworkouts=sq.data||[];
-  await startSession(workoutId);
+  await startSession(workoutId,snapshot?.exercises||null);
  }
 
  async function home(){
@@ -266,8 +297,18 @@
   $('createProgram').onclick=createProgram;$('createForAthlete').onclick=createProgramForAthlete;$('createWorkout').onclick=createWorkout;$('requestAccess').onclick=requestAccess;
   const accountType=u.user_metadata?.account_type||'athlete';if(accountType!=='professional')$('professionalRequestControls').style.display='none';
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
-  if(q.error){$('programList').textContent='A estrutura do NEXFIT ainda precisa ser inicializada no Supabase. '+q.error.message;return}
-  plans=q.data||[];showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
+  if(q.error){
+   window.__nexfitOfflineMode=true;
+   try{plans=JSON.parse(localStorage.getItem('nexfit-offline-programs:'+u.id)||'[]')}catch(_){plans=[]}
+   if(!plans.length){$('programList').textContent='Não foi possível carregar os programas. Conecte-se à internet e tente novamente.';return}
+   $('programList').innerHTML='<p class="muted">Modo offline · programas salvos neste aparelho.</p>';
+   $('exerciseEvolution').hidden=true;$('programSearch').parentElement.hidden=false;$('programList').hidden=false;
+   await renderProgramList();
+   return;
+  }
+  plans=q.data||[];
+  try{localStorage.setItem('nexfit-offline-programs:'+u.id,JSON.stringify(plans))}catch(error){console.warn('Não foi possível guardar os programas offline',error)}
+  showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();
   const evolutionView=activeTrainingTab==='evolution';
   $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
   if(evolutionView){
@@ -708,47 +749,100 @@
  let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null;
  const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
  function persistWorkoutState(){
-  if(!session||!userRef()?.id)return;
+  if(!session||!userRef()?.id)return false;
   try{const rest=activeRest?{deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex}:null;
-   localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,draftReps:$('sessionReps')?.value??null,draftLoad:$('sessionLoad')?.value??null,updatedAt:Date.now()}));
-  }catch(e){console.warn('Não foi possível guardar a sessão localmente',e)}
+   localStorage.setItem(sessionStorageKey(),JSON.stringify({userId:userRef().id,sessionId:session.id,programId:current?.id,versionId:version?.id,subworkoutId:session.subworkout_id,sessionIndex,sessionLoads,skippedSetKeys:[...skippedSetKeys],skippedExerciseIndices:[...skippedExerciseIndices],view:sessionView,rest,draftReps:$('sessionReps')?.value??null,draftLoad:$('sessionLoad')?.value??null,session,sessionSetLogs,sessionExerciseRows,current,version,subworkouts,localOnly:!!session.localOnly,updatedAt:Date.now()}));
+   return true;
+  }catch(e){console.warn('Não foi possível guardar a sessão localmente',e);return false}
  }
  function clearPersistedWorkout(){try{if(userRef()?.id)localStorage.removeItem(sessionStorageKey())}catch(_){}}
  async function restoreWorkoutState(){
   if(session)return true;const u=userRef(),db=dbRef();if(!u||!db)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
-  const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
-  if(sq.error||!sq.data||sq.data.status==='completed'){clearPersistedWorkout();return false}
-  const [pq,vq,wq,eq,lq]=await Promise.all([
-   db.from('training_programs').select('*').eq('id',saved.programId).maybeSingle(),
-   db.from('training_program_versions').select('*').eq('id',saved.versionId).maybeSingle(),
-   db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
-   db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position'),
-   db.from('training_set_logs').select('*').eq('session_id',saved.sessionId)
-  ]);
-  if(pq.error||vq.error||wq.error||eq.error||lq.error||!pq.data||!vq.data||!eq.data?.length)return false;
-  session=sq.data;current=pq.data;version=vq.data;subworkouts=wq.data||[];sessionExerciseRows=eq.data;sessionPlan=[];
+  if(saved.session?.status==='completed'||saved.session?.finished_at){await syncPendingWorkout();return false}
+  let remoteSession=null,remoteLogs=null;
+  if(navigator.onLine&&!saved.localOnly){
+   const sq=await db.from('training_sessions').select('*').eq('id',saved.sessionId).eq('athlete_id',u.id).maybeSingle();
+   if(!sq.error&&sq.data)remoteSession=sq.data;
+   if(remoteSession){const lq=await db.from('training_set_logs').select('*').eq('session_id',saved.sessionId);if(!lq.error)remoteLogs=lq.data||[]}
+  }
+  const localFallback=!!(saved.session&&saved.current&&saved.version&&saved.sessionExerciseRows?.length);
+  if(!remoteSession&&!localFallback)return false;
+  if(remoteSession&&!localFallback){
+   const [pq,vq,wq,eq]=await Promise.all([
+    db.from('training_programs').select('*').eq('id',saved.programId).maybeSingle(),
+    db.from('training_program_versions').select('*').eq('id',saved.versionId).maybeSingle(),
+    db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
+    db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position')
+   ]);
+   if(pq.error||vq.error||wq.error||eq.error||!pq.data||!vq.data||!eq.data?.length)return false;
+   saved.current=pq.data;saved.version=vq.data;saved.subworkouts=wq.data||[];saved.sessionExerciseRows=eq.data;saved.session=remoteSession;
+  }
+  if(remoteSession?.status==='completed'){clearPersistedWorkout();return false}
+  session=remoteSession||saved.session;current=saved.current;version=saved.version;subworkouts=saved.subworkouts||[];
+  sessionExerciseRows=saved.sessionExerciseRows||[];sessionPlan=[];
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionSetLogs=lq.data||[];await preloadPreviousLoads(eq.data);sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
+  sessionSetLogs=remoteLogs||saved.sessionSetLogs||[];sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;
   if(sessionView==='exercise'){
    shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();
-   if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true';}
+   if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true'}
    if(saved.draftReps!==null&&$('sessionReps'))$('sessionReps').value=saved.draftReps;
    if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
     const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
     activeRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
     const panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
     if(panel){panel.hidden=false;$('nextStepText').textContent=rest.nextText}if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
-    if(activeRest.paused){const b=$('pauseRest');if(b){b.setAttribute('aria-label','Continuar descanso');b.title='Continuar descanso';b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
+    if(activeRest.paused){const button=$('pauseRest');if(button){button.setAttribute('aria-label','Continuar descanso');button.title='Continuar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}}
     else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
    }
   }else renderExercisePicker();
-  persistWorkoutState();return true;
+  persistWorkoutState();
+  if(navigator.onLine)syncPendingWorkout();
+  return true;
  }
+ async function syncPendingWorkout(){
+  if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
+  let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
+  if(!saved||saved.userId!==userRef().id||!saved.session)return false;
+  try{
+  const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
+  const sessionPayload={id:pendingSession.id,athlete_id:userRef().id,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
+  const created=await dbRef().from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
+  if(created.error)return false;
+  if(logs.length){
+   const rows=logs.map(row=>({session_id:pendingSession.id,exercise_id:row.exercise_id,set_number:row.set_number,reps_completed:row.reps_completed,load_kg:row.load_kg??null,duration_seconds:row.duration_seconds??null,distance_m:row.distance_m??null,notes:row.notes??null,completed_at:row.completed_at||new Date().toISOString()}));
+   const savedLogs=await dbRef().from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
+   if(savedLogs.error)return false;
+  }
+  if(pendingSession.status==='completed'||pendingSession.finished_at){
+   const finishedAt=pendingSession.finished_at||new Date().toISOString();
+   const updated=await dbRef().from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',userRef().id);
+   if(updated.error)return false;
+   const started=new Date(pendingSession.started_at||Date.now()),finished=new Date(finishedAt);
+   const minutes=Math.max(1,Math.round((finished.getTime()-started.getTime())/60000));
+   const sub=(saved.subworkouts||[]).find(x=>x.id===saved.subworkoutId)||{title:'Treino'};
+   const title=saved.current?.title||'Treino';
+   const notes=title+' · '+(sub.title||'Treino')+' [NEXFIT_SESSION:'+pendingSession.id+']';
+   const now=new Date(finishedAt),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+   const existing=await dbRef().from('activities').select('id').eq('user_id',userRef().id).eq('notes',notes).maybeSingle();
+   if(existing.error)return false;
+   let activityId=existing.data?.id;
+   if(!existing.data){const activity=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();if(activity.error)return false;activityId=activity.data.id}
+   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
+   clearPersistedWorkout();
+   if(typeof window.render==='function')window.render();
+   return true;
+  }
+  saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(sessionStorageKey(),JSON.stringify(saved))}catch(_){}
+  if(session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
+  return true;
+  }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
+ }
+ window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
  window.addEventListener('pagehide',persistWorkoutState);window.addEventListener('beforeunload',persistWorkoutState);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistWorkoutState();else if(navigator.onLine)syncPendingWorkout()});
 
  function renderSessionStep(){
   sessionView='exercise';
@@ -819,11 +913,14 @@
   if(!session){setExecutionFeedback('A sessão de treino não está ativa.','error');return}
   const item=sessionPlan[sessionIndex];if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
-  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta'};
-  setExecutionFeedback('Registrando série como não realizada…');
-  let savedRow;try{savedRow=await saveSetLogOnce(row)}
-  catch(error){setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');return alert('Não foi possível registrar a série como não realizada: '+(error?.message||'erro inesperado.'))}
-  if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:0,notes:'Série pulada pelo atleta',completed_at:new Date().toISOString()};
+  setExecutionFeedback('Salvando série neste aparelho…');
+  if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
+  if(!persistWorkoutState()){sessionSetLogs=sessionSetLogs.filter(x=>!(x.exercise_id===row.exercise_id&&Number(x.set_number)===Number(row.set_number)));return alert('Não há espaço disponível para guardar a série neste aparelho. Libere espaço antes de continuar.')}
+  if(navigator.onLine&&!session.localOnly){
+   try{const savedRow=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===savedRow.exercise_id&&Number(x.set_number)===Number(savedRow.set_number)?savedRow:x);setExecutionFeedback('Série sincronizada com sucesso.','success')}
+   catch(_){setExecutionFeedback('Série guardada neste aparelho; sincronização pendente.','success')}
+  }else setExecutionFeedback('Série guardada neste aparelho; será sincronizada quando a conexão voltar.','success');skippedSetKeys.add(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
  function skipCurrentExercise(){
   if(!session)return;
@@ -831,7 +928,7 @@
   if(!confirm('Marcar "'+item.exercise.name+'" como não executado e voltar à lista de exercícios?'))return;
   skippedExerciseIndices.add(item.exerciseIndex);
   for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
-  renderExercisePicker();
+  persistWorkoutState();renderExercisePicker();
  }
  function hasSetLog(exerciseId,setNumber){
   return sessionSetLogs.some(x=>x.exercise_id===exerciseId&&Number(x.set_number)===Number(setNumber));
@@ -854,7 +951,8 @@
    const summary=(e.sets||[]).map(x=>x.reps==='MR'?'MR':x.reps+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ');
    return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button type="button" class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><span class="exercise-status-actions"><button type="button" class="exercise-status-icon" data-mark-done="'+index+'" aria-label="Marcar como feito" title="Marcar como feito"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></button><button type="button" class="exercise-status-icon skipped" data-mark-skipped="'+index+'" aria-label="Marcar como não executado" title="Marcar como não executado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8m0-8-8 8"/></svg></button></span>':'')+'</div>';
   }).join('');
-  shell('Escolha o próximo exercício','<div class="panel"><h3>'+esc(normalizeHumanText(current.title))+' · '+esc(normalizeHumanText(sub?.title||'Treino'))+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
+  const offlineNotice=(!navigator.onLine||session.localOnly)?'<p class="muted" style="border:1px solid #526b32;border-radius:10px;padding:9px">Modo offline: o treino e as séries ficam guardados neste aparelho e serão sincronizados quando a conexão voltar.</p>':'';
+  shell('Escolha o próximo exercício','<div class="panel">'+offlineNotice+'<h3>'+esc(normalizeHumanText(current.title))+' · '+esc(normalizeHumanText(sub?.title||'Treino'))+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
   section.querySelectorAll('[data-begin-ex]').forEach(b=>b.onclick=()=>beginExercise(Number(b.dataset.beginEx)));
   section.querySelectorAll('[data-mark-done]').forEach(b=>b.onclick=()=>markExerciseDone(Number(b.dataset.markDone)));
   section.querySelectorAll('[data-mark-skipped]').forEach(b=>b.onclick=()=>markExerciseNotDone(Number(b.dataset.markSkipped)));
@@ -865,6 +963,8 @@
   if(!session)return;
   if(!confirm('Quer encerrar este treino agora? Se escolher sair, as séries já registradas nesta sessão também serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar.'))return;
   const db=dbRef(),sessionId=session.id;
+  if(!navigator.onLine&&!session.localOnly)return alert('Sem conexão: reconecte-se para cancelar e apagar as séries sincronizadas. O treino ficará salvo para você retomar.');
+  if(session.localOnly){clearPersistedWorkout();restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();home();return}
   const {error:logsError}=await db.from('training_set_logs').delete().eq('session_id',sessionId);
   if(logsError)return alert('Não foi possível cancelar o treino e apagar as séries registradas: '+logsError.message);
   const {error:sessionError}=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userRef().id);
@@ -896,18 +996,22 @@
    if(reps==='MR'){const value=prompt('Quantas repetições você realizou na série '+(item.setIndex+1)+' de '+exercise.name+'?');if(value===null)return;if(!Number(value)||Number(value)<1)return alert('Informe um número de repetições válido.');reps=Number(value)}
    rows.push({session_id:session.id,exercise_id:exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:item.set.load_kg??null});
   }
-  try{for(const row of rows){const saved=await saveSetLogOnce(row);if(!hasSetLog(saved.exercise_id,saved.set_number))sessionSetLogs.push(saved)}}
-  catch(error){return alert('Não foi possível confirmar todas as séries do exercício: '+error.message+'. Você pode tentar novamente sem duplicar as séries já salvas.')}
+  for(const row of rows)row.completed_at=new Date().toISOString();
+  for(const row of rows)if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
   skippedExerciseIndices.delete(index);
   for(const row of rows)skippedSetKeys.delete(row.exercise_id+':'+row.set_number);
-  renderExercisePicker();
+  persistWorkoutState();
+  if(navigator.onLine&&!session.localOnly){
+   for(const row of rows){try{const saved=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===saved.exercise_id&&Number(x.set_number)===Number(saved.set_number)?saved:x)}catch(_){setExecutionFeedback('Séries guardadas neste aparelho; sincronização pendente.','success')}}
+  }
+  persistWorkoutState();renderExercisePicker();
  }
  function markExerciseNotDone(index){
   const exercise=sessionExerciseRows[index];if(!exercise)return;
   if(!confirm('Marcar "'+exercise.name+'" como não executado?'))return;
   skippedExerciseIndices.add(index);
   for(let i=0;i<(exercise.sets||[]).length;i++)if(!hasSetLog(exercise.id,i+1))skippedSetKeys.add(exercise.id+':'+(i+1));
-  renderExercisePicker();
+  persistWorkoutState();renderExercisePicker();
  }
  function advanceAfterSet(item){
   sessionIndex++;restSnapshot=null;persistWorkoutState();
@@ -944,46 +1048,54 @@
   if(!reps||reps==='MR'||Number(reps)<1){setExecutionFeedback('Informe as repetições realizadas.','error');return alert('Informe as repetições realizadas.')}
   if(load!==''&&!Number.isFinite(Number(load))){setExecutionFeedback('Informe uma carga válida.','error');return alert('Informe uma carga válida.')}
   if(load!=='')sessionLoads[item.exercise.id+':'+item.setIndex]=load;
-  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load)};
-  savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Dados válidos. Enviando série ao Supabase…');
+  const row={session_id:session.id,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:load===''?(item.set.load_kg??null):Number(load),completed_at:new Date().toISOString()};
+  savingSet=true;if(button)button.disabled=true;setExecutionFeedback('Salvando série neste aparelho…');
   try{
-   const savedRow=await saveSetLogOnce(row);
-   if(!hasSetLog(savedRow.exercise_id,savedRow.set_number))sessionSetLogs.push(savedRow);
-   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));persistWorkoutState();setExecutionFeedback('Série registrada com sucesso. Preparando o descanso…','success');
+   if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
+   skippedSetKeys.delete(item.exercise.id+':'+(item.setIndex+1));if(!persistWorkoutState())throw new Error('Não há espaço disponível para guardar o treino neste aparelho.');
+   if(navigator.onLine&&!session.localOnly){
+    try{
+     const savedRow=await saveSetLogOnce(row);
+     sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===savedRow.exercise_id&&Number(x.set_number)===Number(savedRow.set_number)?savedRow:x);
+     setExecutionFeedback('Série registrada e sincronizada. Preparando o descanso…','success');
+    }catch(_){setExecutionFeedback('Série guardada neste aparelho; sincronização pendente.','success')}
+   }else setExecutionFeedback('Série guardada neste aparelho; será sincronizada quando a conexão voltar.','success');
+   persistWorkoutState();
   }catch(error){
    if(button)button.disabled=false;
-   setExecutionFeedback('Falha ao salvar no Supabase: '+(error?.message||'verifique a conexão.'),'error');alert('Não foi possível registrar a série. '+(error?.message||'Verifique sua conexão e tente novamente.'));
+   setExecutionFeedback('Não foi possível guardar a série neste aparelho: '+(error?.message||'verifique o armazenamento disponível.'),'error');
+   alert('Não foi possível guardar a série. '+(error?.message||'Verifique o armazenamento do aparelho.'));
    return;
   }finally{savingSet=false}
   continueAfterRecordedSet(item);
  }
- async function startSession(subId){
-  const db=dbRef(),sub=subworkouts.find(s=>s.id===subId);
-  const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');
-  if(ex.error)return alert(ex.error.message);
-  if(!ex.data?.length)return alert('Este treino ainda não possui exercícios.');
+ async function startSession(subId,cachedExercises=null){
+  const db=dbRef(),user=userRef();let exercises=cachedExercises;
+  if(navigator.onLine){
+   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.')}catch(error){if(!exercises?.length)return alert('Sem conexão e sem cópia offline deste treino. Abra-o com internet antes de iniciar.')}
+  }
+  if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
   await enableWorkoutNotifications();
-  const {data,error}=await db.from('training_sessions').insert({athlete_id:userRef().id,program_id:current.id,version_id:version.id,subworkout_id:subId}).select().single();
-  if(error)return alert(error.message);
-  session=data;sessionExerciseRows=ex.data;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
-  await preloadPreviousLoads(ex.data);
-  ex.data.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionIndex=0;sessionLoads={};persistWorkoutState();renderExercisePicker();
+  try{if(navigator.storage?.persist)await navigator.storage.persist()}catch(_){}
+  const startedAt=new Date().toISOString();
+  const sessionId=window.crypto?.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+  const payload={id:sessionId,athlete_id:user.id,program_id:current.id,version_id:version.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
+  let created=null,localOnly=true;
+  if(navigator.onLine){
+   try{const result=await db.from('training_sessions').insert(payload).select().single();if(!result.error){created=result.data;localOnly=false}else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message)}catch(error){console.warn('Iniciando sessão local por falha de conexão',error)}
+  }
+  session={...(created||payload),localOnly};sessionExerciseRows=exercises;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
+  try{await preloadPreviousLoads(exercises)}catch(_){}
+  exercises.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
+  sessionIndex=0;sessionLoads={};if(!persistWorkoutState()){session=null;sessionPlan=[];sessionExerciseRows=[];return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.')}renderExercisePicker();
  }
  async function finishSession(){
   if(!session)return;
-  restSnapshot=null;
-  if(timer)clearInterval(timer);timer=null;activeRest=null;
-  const {error}=await dbRef().from('training_sessions').update({status:'completed',finished_at:new Date().toISOString()}).eq('id',session.id).eq('athlete_id',userRef().id);
-  if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
-  clearPersistedWorkout();
-  const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
-  const sub=subworkouts.find(s=>s.id===session.subworkout_id),now=new Date(),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  const notes=current.title+' · '+(sub?.title||'Treino')+' [NEXFIT_SESSION:'+session.id+']';
-  const {data:activity,error:activityError}=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select().single();
-  if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
-  else{if(typeof activities!=='undefined'&&typeof render==='function'){activities.unshift({id:activity.id,sport:activity.sport,date:activity.activity_date,duration:activity.duration_minutes,distance:0,notes:activity.notes||''});render()}alert('Treino concluído! Todas as séries foram salvas e o treino foi registrado no histórico.')}
-  session=null;sessionPlan=[];sessionExerciseRows=[];home();
+  restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;
+  session.status='completed';session.finished_at=new Date().toISOString();if(!persistWorkoutState()){session.status='in_progress';session.finished_at=null;return alert('Não foi possível guardar a conclusão neste aparelho. Libere espaço e tente novamente.')}
+  const synced=await syncPendingWorkout();
+  if(synced){clearPersistedWorkout();alert('Treino concluído e sincronizado com o histórico.')}else{alert('Treino concluído e guardado neste aparelho. Será enviado ao Supabase automaticamente quando a conexão voltar. Não apague os dados do navegador antes da sincronização.')}
+  session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];home();
  }
  window.beginStrengthActivity=async function(){
   const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
