@@ -970,7 +970,7 @@
   if(error)return alert('Não foi possível finalizar a sessão: '+error.message);
   clearPersistedWorkout();
   const started=new Date(session.started_at||Date.now()),minutes=Math.max(1,Math.round((Date.now()-started.getTime())/60000));
-  const sub=subworkouts.find(s=>s.id===session.subworkout_id),date=new Date().toISOString().slice(0,10);
+  const sub=subworkouts.find(s=>s.id===session.subworkout_id),now=new Date(),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   const notes=current.title+' · '+(sub?.title||'Treino')+' [NEXFIT_SESSION:'+session.id+']';
   const {data:activity,error:activityError}=await dbRef().from('activities').insert({user_id:userRef().id,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select().single();
   if(activityError)alert('Treino finalizado, mas não foi possível criar a atividade no histórico: '+activityError.message);
