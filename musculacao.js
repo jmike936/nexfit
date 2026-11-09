@@ -497,7 +497,8 @@
   let catalog;try{catalog=await loadExerciseCatalog()}catch(err){return alert(err.message)}
   const categories=['Peito','Costas','Ombros','Bíceps','Tríceps','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Antebraços','Cardio','Funcional','Corpo inteiro'];
   const categoryOptions='<option value="">Selecione o grupo muscular</option>'+categories.map(x=>'<option>'+esc(x)+'</option>').join('');
-  const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise">'+exerciseCatalogOptions(catalog)+'</select></div>'
+  const fields='<div class="field"><label for="searchCatalogExercise">Pesquisar exercício</label><input id="searchCatalogExercise" type="search" placeholder="Digite o nome ou grupo muscular…"></div>'
+   +'<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise">'+exerciseCatalogOptions(catalog)+'</select></div>'
    +'<button type="button" class="secondary" id="toggleNewCatalogExercise" style="margin:4px 0 12px">＋ Cadastrar novo exercício</button>'
    +'<div id="newCatalogExerciseFields" style="display:none;border:1px solid #354454;border-radius:10px;padding:12px;margin-bottom:12px">'
    +'<div class="field"><label for="newCatalogExerciseName">Nome do exercício</label><input id="newCatalogExerciseName" type="text" placeholder="Ex.: Supino inclinado com halteres"></div>'
@@ -521,6 +522,13 @@
    if(result.error){alert(result.error.message);return false}
    await refreshWorkoutEditorOrProgram();return true;
   });
+  $('searchCatalogExercise').oninput=()=>{
+   const query=exerciseCatalogKey($('searchCatalogExercise').value);
+   const filtered=query?catalog.filter(item=>exerciseCatalogKey(item.name+' '+(item.category||'')).includes(query)):catalog;
+   const select=$('editorCatalogExercise'),selected=select.value;
+   select.innerHTML=exerciseCatalogOptions(filtered,selected);
+   if(!filtered.length)select.innerHTML='<option value="">Nenhum exercício encontrado</option>';
+  };
   $('toggleNewCatalogExercise').onclick=()=>{
    const panel=$('newCatalogExerciseFields'),opening=panel.style.display==='none';
    panel.style.display=opening?'block':'none';
