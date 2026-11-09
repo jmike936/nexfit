@@ -271,6 +271,7 @@
  async function home(){
   const db=dbRef(),u=userRef();if(!db||!u){shell('Meus Treinos','<div class="panel muted">Faça login para acessar seus programas.</div>');return}
   if(session){if(sessionView==='exercise'){shell('Executando exercício','<div id="sessionExercises"></div>');renderSessionStep();if(activeRest)restoreActiveRestUI()}else renderExercisePicker();return}
+  if(restoreUserId!==u.id){restoreUserId=u.id;restoreAttempted=false;restorePromise=null;restoreGeneration++}
   if(!restoreAttempted){restoreAttempted=true;restorePromise=restoreWorkoutState()}if(restorePromise){const pending=restorePromise;const restored=await pending;if(restorePromise===pending)restorePromise=null;if(restored)return}
   shell('Meus Treinos',`
    <div class="training-tabs" role="tablist" aria-label="Treinos">
@@ -746,7 +747,7 @@
   if(logs.error){console.warn('Não foi possível consultar cargas anteriores',logs.error);return}
   for(const row of logs.data||[]){const identity=nameById.get(row.exercise_id),reps=Number(row.reps_completed),load=Number(row.load_kg);if(!identity||!Number.isFinite(reps)||reps<1||!Number.isFinite(load)||load<0)continue;if(!previousLoadsByExercise[identity])previousLoadsByExercise[identity]={};if(previousLoadsByExercise[identity][reps]===undefined)previousLoadsByExercise[identity][reps]=load}
  }
- let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null;
+ let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null,restoreUserId=null,restoreGeneration=0;
  const sessionStorageKey=()=> 'nexfit-active-workout:'+String(userRef()?.id||'');
  function persistWorkoutState(){
   if(!session||!userRef()?.id)return false;
@@ -783,7 +784,7 @@
   return true;
  }
  async function restoreWorkoutState(){
-  if(session)return true;const u=userRef(),db=dbRef();if(!u||!db)return false;
+  if(session)return true;const u=userRef(),db=dbRef(),generation=restoreGeneration;if(!u||!db)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
   if(saved.session?.status==='completed'||saved.session?.finished_at){await syncPendingWorkout();return false}
@@ -793,6 +794,7 @@
    if(!sq.error&&sq.data)remoteSession=sq.data;
    if(remoteSession){const lq=await db.from('training_set_logs').select('*').eq('session_id',saved.sessionId);if(!lq.error)remoteLogs=lq.data||[]}
   }
+  if(generation!==restoreGeneration||userRef()?.id!==u.id)return false;
   const localFallback=!!(saved.session&&saved.current&&saved.version&&saved.sessionExerciseRows?.length);
   if(!remoteSession&&!localFallback)return false;
   if(remoteSession&&!localFallback){
@@ -802,9 +804,11 @@
     db.from('training_subworkouts').select('*').eq('version_id',saved.versionId).order('position'),
     db.from('training_exercises').select('*').eq('subworkout_id',saved.subworkoutId).order('position')
    ]);
+   if(generation!==restoreGeneration||userRef()?.id!==u.id)return false;
    if(pq.error||vq.error||wq.error||eq.error||!pq.data||!vq.data||!eq.data?.length)return false;
    saved.current=pq.data;saved.version=vq.data;saved.subworkouts=wq.data||[];saved.sessionExerciseRows=eq.data;saved.session=remoteSession;
   }
+  if(generation!==restoreGeneration||userRef()?.id!==u.id)return false;
   if(remoteSession?.status==='completed'){clearPersistedWorkout();return false}
   session=remoteSession||saved.session;current=saved.current;version=saved.version;subworkouts=saved.subworkouts||[];
   sessionExerciseRows=saved.sessionExerciseRows||[];sessionPlan=[];
@@ -831,6 +835,13 @@
   if(navigator.onLine)syncPendingWorkout();
   return true;
  }
+ window.resetStrengthUserState=function(){
+  if(session)persistWorkoutState();
+  restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
+  if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
+  session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
+ };
  async function syncPendingWorkout(){
   if(!navigator.onLine||!dbRef()||!userRef()?.id)return false;
   if(!await syncPendingWorkoutCancellations())return false;
