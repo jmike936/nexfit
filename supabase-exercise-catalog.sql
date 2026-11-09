@@ -14,6 +14,7 @@ create unique index if not exists training_exercise_catalog_normalized_name_uidx
   on public.training_exercise_catalog (normalized_name);
 
 alter table public.training_exercise_catalog enable row level security;
+grant select on public.training_exercise_catalog to authenticated;
 
 drop policy if exists "Authenticated users can read exercise catalog" on public.training_exercise_catalog;
 create policy "Authenticated users can read exercise catalog"
