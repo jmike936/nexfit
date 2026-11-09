@@ -458,15 +458,45 @@
  function exerciseCatalogOptions(items,selectedId=''){
   return '<option value="">Selecione um exercício…</option>'+items.map(item=>'<option value="'+esc(item.id)+'" '+(String(item.id)===String(selectedId)?'selected':'')+'>'+esc(normalizeHumanText(item.name))+(item.category?' · '+esc(normalizeHumanText(item.category)):'')+'</option>').join('');
  }
+ function exerciseCatalogKey(value){
+  return String(value??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
+ }
+ async function saveNewCatalogExercise(name,category){
+  const clean=normalizeHumanText(name),key=exerciseCatalogKey(clean);
+  if(!clean||key.length<2)throw Error('Informe um nome válido para o exercício.');
+  const db=dbRef();
+  const existing=await db.from('training_exercise_catalog').select('id,name,category').eq('normalized_name',key).maybeSingle();
+  if(existing.error)throw Error(existing.error.message);
+  if(existing.data)return {item:existing.data,duplicate:true};
+  const inserted=await db.from('training_exercise_catalog').insert({name:clean,normalized_name:key,category:category||null}).select('id,name,category').single();
+  if(inserted.error){
+   if(inserted.error.code==='23505'){
+    const again=await db.from('training_exercise_catalog').select('id,name,category').eq('normalized_name',key).maybeSingle();
+    if(again.data)return {item:again.data,duplicate:true};
+   }
+   throw Error(inserted.error.message);
+  }
+  return {item:inserted.data,duplicate:false};
+ }
  async function addExercise(subId){
   let catalog;try{catalog=await loadExerciseCatalog()}catch(err){return alert(err.message)}
-  if(!catalog.length)return alert('O banco de exercícios está vazio. Cadastre os exercícios iniciais no catálogo do Supabase.');
-  const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise" required>'+exerciseCatalogOptions(catalog)+'</select></div>'
+  const categories=['Peito','Costas','Ombros','Bíceps','Tríceps','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Antebraços','Cardio','Funcional','Corpo inteiro'];
+  const categoryOptions='<option value="">Selecione o grupo muscular</option>'+categories.map(x=>'<option>'+esc(x)+'</option>').join('');
+  const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise">'+exerciseCatalogOptions(catalog)+'</select></div>'
+   +'<button type="button" class="secondary" id="toggleNewCatalogExercise" style="margin:4px 0 12px">＋ Cadastrar novo exercício</button>'
+   +'<div id="newCatalogExerciseFields" style="display:none;border:1px solid #354454;border-radius:10px;padding:12px;margin-bottom:12px">'
+   +'<div class="field"><label for="newCatalogExerciseName">Nome do exercício</label><input id="newCatalogExerciseName" type="text" placeholder="Ex.: Supino inclinado com halteres"></div>'
+   +'<div class="field"><label for="newCatalogExerciseCategory">Grupo muscular</label><select id="newCatalogExerciseCategory">'+categoryOptions+'</select></div>'
+   +'<p class="muted">O exercício será adicionado ao catálogo compartilhado e ficará disponível para todos os atletas.</p></div>'
    +editorField('editorExerciseReps','Séries e repetições','12, 10, 8','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
    +editorField('editorExerciseRest','Descanso','90','text','Segundos, mm:ss ou minutos');
   showProgramEditor('Adicionar exercício',fields,async()=>{
-   const catalogId=$('editorCatalogExercise').value,item=catalog.find(x=>String(x.id)===String(catalogId));
-   if(!item){alert('Selecione um exercício do banco.');return false}
+   let item=null;
+   if($('newCatalogExerciseFields').style.display!=='none'){
+    try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value);item=saved.item;if(saved.duplicate)alert('Esse exercício já existia no catálogo. Vamos reutilizar o cadastro existente.')}
+    catch(err){alert('Não foi possível cadastrar o exercício: '+err.message);return false}
+   }else item=catalog.find(x=>String(x.id)===String($('editorCatalogExercise').value));
+   if(!item){alert('Selecione um exercício ou cadastre um novo.');return false}
    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
    const sets=reps.map(value=>({reps:value,load_kg:null}));
@@ -476,6 +506,12 @@
    if(result.error){alert(result.error.message);return false}
    await refreshWorkoutEditorOrProgram();return true;
   });
+  $('toggleNewCatalogExercise').onclick=()=>{
+   const panel=$('newCatalogExerciseFields'),opening=panel.style.display==='none';
+   panel.style.display=opening?'block':'none';
+   $('editorCatalogExercise').disabled=opening;
+   if(opening)$('newCatalogExerciseName').focus();
+  };
  }
  function showProgramEditor(title,fields,onSave){
   let overlay=$('programEditorModal');
