@@ -925,7 +925,7 @@
   if(!confirm('Marcar "'+item.exercise.name+'" como não executado e voltar à lista de exercícios?'))return;
   skippedExerciseIndices.add(item.exerciseIndex);
   for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
-  renderExercisePicker();
+  persistWorkoutState();renderExercisePicker();
  }
  function hasSetLog(exerciseId,setNumber){
   return sessionSetLogs.some(x=>x.exercise_id===exerciseId&&Number(x.set_number)===Number(setNumber));
@@ -948,7 +948,8 @@
    const summary=(e.sets||[]).map(x=>x.reps==='MR'?'MR':x.reps+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ');
    return '<div class="item"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:17px">'+(index+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span class="tag" style="color:'+color+'">'+label+'</span></div><p class="muted">'+p.done+'/'+p.total+' séries · '+summary+' · descanso '+(e.rest_seconds||0)+' s</p>'+(p.status!=='done'?'<button type="button" class="btn" data-begin-ex="'+index+'">'+(p.status==='partial'||p.status==='skipped'?'Continuar exercício':'Iniciar exercício')+'</button><span class="exercise-status-actions"><button type="button" class="exercise-status-icon" data-mark-done="'+index+'" aria-label="Marcar como feito" title="Marcar como feito"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></button><button type="button" class="exercise-status-icon skipped" data-mark-skipped="'+index+'" aria-label="Marcar como não executado" title="Marcar como não executado"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8m0-8-8 8"/></svg></button></span>':'')+'</div>';
   }).join('');
-  shell('Escolha o próximo exercício','<div class="panel"><h3>'+esc(normalizeHumanText(current.title))+' · '+esc(normalizeHumanText(sub?.title||'Treino'))+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
+  const offlineNotice=(!navigator.onLine||session.localOnly)?'<p class="muted" style="border:1px solid #526b32;border-radius:10px;padding:9px">Modo offline: o treino e as séries ficam guardados neste aparelho e serão sincronizados quando a conexão voltar.</p>':'';
+  shell('Escolha o próximo exercício','<div class="panel">'+offlineNotice+'<h3>'+esc(normalizeHumanText(current.title))+' · '+esc(normalizeHumanText(sub?.title||'Treino'))+'</h3><p class="muted">Escolha qualquer exercício disponível. Se o aparelho estiver ocupado, marque como não executado e continue com outro.</p>'+cards+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="finishWorkout">Finalizar treino</button><button class="btn alt" id="cancelSession">Sair sem finalizar</button></div></div>');
   section.querySelectorAll('[data-begin-ex]').forEach(b=>b.onclick=()=>beginExercise(Number(b.dataset.beginEx)));
   section.querySelectorAll('[data-mark-done]').forEach(b=>b.onclick=()=>markExerciseDone(Number(b.dataset.markDone)));
   section.querySelectorAll('[data-mark-skipped]').forEach(b=>b.onclick=()=>markExerciseNotDone(Number(b.dataset.markSkipped)));
@@ -959,6 +960,8 @@
   if(!session)return;
   if(!confirm('Quer encerrar este treino agora? Se escolher sair, as séries já registradas nesta sessão também serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar.'))return;
   const db=dbRef(),sessionId=session.id;
+  if(!navigator.onLine&&!session.localOnly)return alert('Sem conexão: reconecte-se para cancelar e apagar as séries sincronizadas. O treino ficará salvo para você retomar.');
+  if(session.localOnly){clearPersistedWorkout();restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();home();return}
   const {error:logsError}=await db.from('training_set_logs').delete().eq('session_id',sessionId);
   if(logsError)return alert('Não foi possível cancelar o treino e apagar as séries registradas: '+logsError.message);
   const {error:sessionError}=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userRef().id);
@@ -990,18 +993,22 @@
    if(reps==='MR'){const value=prompt('Quantas repetições você realizou na série '+(item.setIndex+1)+' de '+exercise.name+'?');if(value===null)return;if(!Number(value)||Number(value)<1)return alert('Informe um número de repetições válido.');reps=Number(value)}
    rows.push({session_id:session.id,exercise_id:exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:item.set.load_kg??null});
   }
-  try{for(const row of rows){const saved=await saveSetLogOnce(row);if(!hasSetLog(saved.exercise_id,saved.set_number))sessionSetLogs.push(saved)}}
-  catch(error){return alert('Não foi possível confirmar todas as séries do exercício: '+error.message+'. Você pode tentar novamente sem duplicar as séries já salvas.')}
+  for(const row of rows)row.completed_at=new Date().toISOString();
+  for(const row of rows)if(!hasSetLog(row.exercise_id,row.set_number))sessionSetLogs.push(row);
   skippedExerciseIndices.delete(index);
   for(const row of rows)skippedSetKeys.delete(row.exercise_id+':'+row.set_number);
-  renderExercisePicker();
+  persistWorkoutState();
+  if(navigator.onLine&&!session.localOnly){
+   for(const row of rows){try{const saved=await saveSetLogOnce(row);sessionSetLogs=sessionSetLogs.map(x=>x.exercise_id===saved.exercise_id&&Number(x.set_number)===Number(saved.set_number)?saved:x)}catch(_){setExecutionFeedback('Séries guardadas neste aparelho; sincronização pendente.','success')}}
+  }
+  persistWorkoutState();renderExercisePicker();
  }
  function markExerciseNotDone(index){
   const exercise=sessionExerciseRows[index];if(!exercise)return;
   if(!confirm('Marcar "'+exercise.name+'" como não executado?'))return;
   skippedExerciseIndices.add(index);
   for(let i=0;i<(exercise.sets||[]).length;i++)if(!hasSetLog(exercise.id,i+1))skippedSetKeys.add(exercise.id+':'+(i+1));
-  renderExercisePicker();
+  persistWorkoutState();renderExercisePicker();
  }
  function advanceAfterSet(item){
   sessionIndex++;restSnapshot=null;persistWorkoutState();
@@ -1066,6 +1073,7 @@
   }
   if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
   await enableWorkoutNotifications();
+  try{if(navigator.storage?.persist)await navigator.storage.persist()}catch(_){}
   const startedAt=new Date().toISOString();
   const sessionId=window.crypto?.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
   const payload={id:sessionId,athlete_id:user.id,program_id:current.id,version_id:version.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
