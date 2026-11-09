@@ -137,7 +137,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,finishingSession=false;
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -1177,12 +1177,18 @@
   sessionIndex=0;sessionLoads={};if(!persistWorkoutState()){session=null;sessionPlan=[];sessionExerciseRows=[];return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.')}renderExercisePicker();
  }
  async function finishSession(){
-  if(!session)return;
+  if(!session||finishingSession)return;
+  finishingSession=true;
+  const finishButton=$('finishWorkout');if(finishButton)finishButton.disabled=true;
   restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;
-  session.status='completed';session.finished_at=new Date().toISOString();if(!persistWorkoutState()){session.status='in_progress';session.finished_at=null;return alert('Não foi possível guardar a conclusão neste aparelho. Libere espaço e tente novamente.')}
+  session.status='completed';session.finished_at=new Date().toISOString();if(!persistWorkoutState()){
+   session.status='in_progress';session.finished_at=null;finishingSession=false;
+   if(finishButton)finishButton.disabled=false;
+   return alert('Não foi possível guardar a conclusão neste aparelho. Libere espaço e tente novamente.')
+  }
   const synced=await syncPendingWorkout();
   if(synced){clearPersistedWorkout();alert('Treino concluído e sincronizado com o histórico.')}else{alert('Treino concluído e guardado neste aparelho. Será enviado ao Supabase automaticamente quando a conexão voltar. Não apague os dados do navegador antes da sincronização.')}
-  session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];home();
+  session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];finishingSession=false;home();
  }
  window.beginStrengthActivity=async function(){
   const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
