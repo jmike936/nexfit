@@ -517,49 +517,53 @@
   renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
  async function newVersion(){
-  const db=dbRef(),program=current,previous=version,userId=userRef()?.id;
-  if(!db||!program||!previous||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
-  const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
-  if(!isCurrentEditor())return false;
-  if(q.error)return alert(q.error.message);
-  const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
-  if(!isCurrentEditor())return false;
-  const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
-  if(!isCurrentEditor())return false;
-  if(error)return alert(error.message);
-  const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
-  if(!isCurrentEditor())return false;
-  if(oldSubs.error)return alert('A versão foi criada, mas não foi possível copiar os treinos: '+oldSubs.error.message);
-  for(const oldSub of (oldSubs.data||[])){
-   const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
+  return withProgramActionLock('newVersion',async()=>{
+   const db=dbRef(),program=current,previous=version,userId=userRef()?.id;
+   if(!db||!program||!previous||!userId)return false;
+   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
+   const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
-   if(subErr)return alert('A versão foi criada, mas houve erro ao copiar um treino: '+subErr.message);
-   const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
+   if(q.error)return alert(q.error.message);
+   const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
    if(!isCurrentEditor())return false;
-   if(oldExercises.error)return alert(oldExercises.error.message);
-   if(oldExercises.data?.length){
-    const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
-    const {error:exErr}=await db.from('training_exercises').insert(copied);
+   const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
+   if(!isCurrentEditor())return false;
+   if(error)return alert(error.message);
+   const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
+   if(!isCurrentEditor())return false;
+   if(oldSubs.error)return alert('A versão foi criada, mas não foi possível copiar os treinos: '+oldSubs.error.message);
+   for(const oldSub of (oldSubs.data||[])){
+    const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
     if(!isCurrentEditor())return false;
-    if(exErr)return alert('A versão foi criada, mas houve erro ao copiar exercícios: '+exErr.message);
+    if(subErr)return alert('A versão foi criada, mas houve erro ao copiar um treino: '+subErr.message);
+    const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
+    if(!isCurrentEditor())return false;
+    if(oldExercises.error)return alert(oldExercises.error.message);
+    if(oldExercises.data?.length){
+     const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
+     const {error:exErr}=await db.from('training_exercises').insert(copied);
+     if(!isCurrentEditor())return false;
+     if(exErr)return alert('A versão foi criada, mas houve erro ao copiar exercícios: '+exErr.message);
+    }
    }
-  }
-  if(!isCurrentEditor())return false;
-  await db.from('app_notifications').insert({user_id:program.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:program.id});
-  if(!isCurrentEditor())return false;
-  openProgram(program.id,userId,db);
+   if(!isCurrentEditor())return false;
+   await db.from('app_notifications').insert({user_id:program.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:program.id});
+   if(!isCurrentEditor())return false;
+   openProgram(program.id,userId,db);
+  });
  }
  async function addSubworkout(){
-  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id;
-  if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
-  const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
-  if(!isCurrentEditor())return false;
-  const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
-  if(!isCurrentEditor())return false;
-  if(error)return alert(error.message);
-  await openWorkoutEditor(data.id,userId,db);
+  return withProgramActionLock('newSub',async()=>{
+   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id;
+   if(!db||!program||!programVersion||!userId)return false;
+   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
+   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
+   if(!isCurrentEditor())return false;
+   const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
+   if(!isCurrentEditor())return false;
+   if(error)return alert(error.message);
+   await openWorkoutEditor(data.id,userId,db);
+  });
  }
  async function refreshWorkoutEditorOrProgram(){
   if(editorSubworkoutId){await openWorkoutEditor(editorSubworkoutId);return}
