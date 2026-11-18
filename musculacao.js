@@ -381,9 +381,9 @@
   const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
   host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
   host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram,renderUserId,renderDb));
-  host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
-  host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic));
-  host.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram));
+  host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram,renderUserId,renderDb));
+  host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic,renderUserId,renderDb));
+  host.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram,renderUserId,renderDb));
  }
  async function renderTrainingManagement(){
   const host=$('trainingManagement');if(!host)return;
@@ -468,7 +468,7 @@
   subworkouts=sq.data||[];
   const isAthlete=program.athlete_id===userId;
   shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
-  $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion()};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id)};
+  $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion(userId,db,program)};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id,userId,db)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id,userId,db)};
   if($('confirmVersion'))$('confirmVersion').onclick=async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return;if(result.error)alert(result.error.message);else openProgram(id,userId,db)};
   renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
@@ -543,7 +543,7 @@
    <button class="btn" type="button" id="addExerciseFocused">＋ Adicionar exercício</button>
   </div>`);
   $('backToProgram').onclick=()=>{if(!isCurrentEditor())return;editorSubworkoutId=null;openProgram(program.id,userId,db)};
-  $('editFocusedWorkoutDetails').onclick=()=>{if(isCurrentEditor())editSubworkout(sub.id)};
+  $('editFocusedWorkoutDetails').onclick=()=>{if(isCurrentEditor())editSubworkout(sub.id,userId,db)};
   $('addExerciseFocused').onclick=()=>{if(isCurrentEditor())addExercise(sub.id)};
   section.querySelectorAll('[data-edit-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())editExercise(b.dataset.editFocusedEx)});
   section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())deleteExercise(b.dataset.deleteFocusedEx)});
@@ -573,7 +573,7 @@
   const host=$('subList');if(!host)return;
   host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
   host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())addSubworkout()});
-  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())editSubworkout(b.dataset.editSub)});
+  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())editSubworkout(b.dataset.editSub,expectedUserId,db)});
   host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteSubworkout(b.dataset.deleteSub)});
   host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())editExercise(b.dataset.editEx)});
   host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteExercise(b.dataset.deleteEx)});
