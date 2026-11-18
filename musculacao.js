@@ -450,7 +450,7 @@
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
   if(!db||!userId||userRef()?.id!==userId||!program)return false;
-  const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id;
+  const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id&&editorSubworkoutId===null;
   editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
   if(!isCurrentProgram())return false;
@@ -471,7 +471,7 @@
  async function newVersion(){
   const db=dbRef(),program=current,previous=version,userId=userRef()?.id;
   if(!db||!program||!previous||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
   const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
   if(!isCurrentEditor())return false;
   if(q.error)return alert(q.error.message);
@@ -505,7 +505,7 @@
  async function addSubworkout(){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id;
   if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
   if(!isCurrentEditor())return false;
   const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
@@ -520,15 +520,15 @@
  async function openWorkoutEditor(subId,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=current,programVersion=version;
   if(!db||!userId||userRef()?.id!==userId||!program||!programVersion)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  editorSubworkoutId=subId;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===subId;
   const subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
   if(!isCurrentEditor())return false;
-  if(subQuery.error||!subQuery.data)return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));
+  if(subQuery.error||!subQuery.data){if(isCurrentEditor())editorSubworkoutId=null;return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));}
   const sub=subQuery.data;
   const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
   if(!isCurrentEditor())return false;
-  if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
-  editorSubworkoutId=sub.id;
+  if(exercises.error){if(isCurrentEditor())editorSubworkoutId=null;return alert('Não foi possível carregar os exercícios: '+exercises.error.message)}
   const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
   shell('Editar treino',`<div class="panel">
    <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
@@ -545,7 +545,7 @@
   section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())deleteExercise(b.dataset.deleteFocusedEx)});
  }
  async function renderSubworkouts(expectedUserId=userRef()?.id,expectedDb=dbRef(),programId=current?.id,versionId=version?.id,workoutRows=subworkouts.slice()){
-  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId;
+  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId&&editorSubworkoutId===null;
   if(!db||!expectedUserId||!isCurrent())return;
   let html='';
   for(const s of workoutRows){
@@ -575,8 +575,8 @@
   host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteExercise(b.dataset.deleteEx)});
   host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
  }
- async function loadExerciseCatalog(){
-  const {data,error}=await dbRef().from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
+ async function loadExerciseCatalog(expectedDb=dbRef()){
+  const {data,error}=await expectedDb.from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
   if(error)throw Error('Não foi possível carregar o banco de exercícios. Verifique se a atualização do catálogo foi aplicada no Supabase. '+error.message);
   return data||[];
  }
@@ -604,10 +604,10 @@
   const aliases={leg45:'legpress45',legpress45grau:'legpress45',legpress45graus:'legpress45',agachamento:'agachamentolivre'};
   return aliases[key]||key;
  }
- async function saveNewCatalogExercise(name,category){
+ async function saveNewCatalogExercise(name,category,expectedDb=dbRef()){
   const clean=normalizeHumanText(name),key=exerciseCatalogKey(clean);
   if(!clean||key.length<2)throw Error('Informe um nome válido para o exercício.');
-  const db=dbRef();
+  const db=expectedDb;
   const existing=await db.from('training_exercise_catalog').select('id,name,category').eq('normalized_name',key).maybeSingle();
   if(existing.error)throw Error(existing.error.message);
   if(existing.data)return {item:existing.data,duplicate:true};
@@ -622,7 +622,12 @@
   return {item:inserted.data,duplicate:false};
  }
  async function addExercise(subId){
-  let catalog;try{catalog=await loadExerciseCatalog()}catch(err){return alert(err.message)}
+  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
+  if(!db||!program||!programVersion||!userId)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
+  const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
+  let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())alert(err.message);return false}
+  if(!isCurrentEditor())return false;
   const categories=['Peito','Costas','Ombros','Bíceps','Tríceps','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Antebraços','Cardio','Funcional','Corpo inteiro'];
   const categoryOptions='<option value="">Selecione o grupo muscular</option>'+categories.map(x=>'<option>'+esc(x)+'</option>').join('');
   const fields='<div class="field"><label>Exercício</label><div class="catalog-picker" style="position:relative">'
@@ -638,20 +643,24 @@
    +editorField('editorExerciseReps','Séries e repetições','12, 10, 8','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
    +editorField('editorExerciseRest','Descanso','90','text','Segundos, mm:ss ou minutos');
   showProgramEditor('Adicionar exercício',fields,async()=>{
+   if(!isCurrentEditor())return false;
    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
    let item=null;
    if($('newCatalogExerciseFields').style.display!=='none'){
-    try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value);item=saved.item;if(saved.duplicate)alert('Esse exercício já existia no catálogo. Vamos reutilizar o cadastro existente.')}
-    catch(err){alert('Não foi possível cadastrar o exercício: '+err.message);return false}
+    try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value,db);if(!isCurrentEditor())return false;item=saved.item;if(saved.duplicate)alert('Esse exercício já existia no catálogo. Vamos reutilizar o cadastro existente.')}
+    catch(err){if(isCurrentEditor())alert('Não foi possível cadastrar o exercício: '+err.message);return false}
    }else item=catalog.find(x=>String(x.id)===String($('editorCatalogExercise').value));
+   if(!isCurrentEditor())return false;
    if(!item){alert('Selecione um exercício ou cadastre um novo.');return false}
    const sets=reps.map(value=>({reps:value,load_kg:null}));
-   const {data,error}=await dbRef().from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
+   const {data,error}=await db.from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
+   if(!isCurrentEditor())return false;
    if(error){alert(error.message);return false}
-   const result=await dbRef().from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
+   const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
+   if(!isCurrentEditor())return false;
    if(result.error){alert(result.error.message);return false}
-   await refreshWorkoutEditorOrProgram();return true;
+   await refresh();return true;
   });
   const pickerPanel=$('catalogPickerPanel'),pickerToggle=$('catalogPickerToggle'),pickerSelect=$('editorCatalogExercise');
   const renderCatalogPicker=(query='')=>{
@@ -739,7 +748,7 @@
  async function deleteSubworkout(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
   if(!db||!program||!programVersion||!userId||!item)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
   if(!confirm('Excluir o treino "'+item.title+'"?'))return;
   if(!isCurrentEditor())return false;
   const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
@@ -776,9 +785,15 @@
   return out;
  }
  async function editExercise(id){
-  const db=dbRef(),q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
+  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
+  if(!db||!program||!programVersion||!userId)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
+  const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
+  const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
+  if(!isCurrentEditor())return false;
   if(q.error||!q.data)return alert('Não foi possível abrir o exercício para edição: '+(q.error?.message||'registro não encontrado'));
-  let catalog;try{catalog=await loadExerciseCatalog()}catch(err){return alert(err.message)}
+  let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())alert(err.message);return false}
+  if(!isCurrentEditor())return false;
   const e=q.data,initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
   const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise" required>'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
    +editorField('editorExerciseReps','Séries e repetições',initialReps,'text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
@@ -786,6 +801,7 @@
    +'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p>'
    +editorField('editorExerciseRest','Descanso',String(e.rest_seconds??0),'text','Segundos, mm:ss ou minutos');
   showProgramEditor('Editar exercício',fields,async()=>{
+   if(!isCurrentEditor())return false;
    const catalogId=$('editorCatalogExercise').value,item=catalog.find(x=>String(x.id)===String(catalogId));
    if(!item){alert('Selecione um exercício do banco.');return false}
    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
@@ -797,19 +813,29 @@
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){alert(err.message);return false}
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest}).eq('id',id);
+   if(!isCurrentEditor())return false;
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
-   await refreshWorkoutEditorOrProgram();return true;
+   await refresh();return true;
   });
  }
  async function deleteExercise(id){
-  const db=dbRef(),q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
+  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
+  if(!db||!program||!programVersion||!userId)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
+  const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
+  const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
+  if(!isCurrentEditor())return false;
   if(q.error||!q.data)return alert('Não foi possível localizar o exercício.');
   if(!confirm('Excluir o exercício "'+q.data.name+'"?'))return;
+  if(!isCurrentEditor())return false;
   const used=await db.from('training_set_logs').select('id',{count:'exact',head:true}).eq('exercise_id',id);
+  if(!isCurrentEditor())return false;
   if(used.error)return alert('Não foi possível verificar o histórico: '+used.error.message);
   if((used.count||0)>0)return alert('Este exercício tem séries registradas. Para preservar o histórico, ele não pode ser excluído.');
   const {error}=await db.from('training_exercises').delete().eq('id',id);
-  if(error)return alert('Não foi possível excluir o exercício: '+error.message);await refreshWorkoutEditorOrProgram();
+  if(!isCurrentEditor())return false;
+  if(error)return alert('Não foi possível excluir o exercício: '+error.message);
+  await refresh();
  }
  async function requestDeletion(){
   const reason=prompt('Motivo do pedido de arquivamento (opcional):')||null;
@@ -936,7 +962,7 @@
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
