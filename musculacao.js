@@ -164,14 +164,16 @@
    const cards=[];
    for(const p of models){
     const q=await renderDb.from('training_subworkouts').select('id,title,training_exercises(id)').eq('version_id',p.current_version_id).order('position');
+    if(!isSameAccount())return;
     if(q.error)continue;
     const workouts=q.data||[],exerciseCount=workouts.reduce((n,w)=>n+(w.training_exercises||[]).length,0);
     const category=programCategory(p.description);
     const description=(p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,'').trim();
     cards.push('<article class="training-card model-program-card"><div class="training-card-main"><div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(p.title))+'</strong><span>'+esc(category)+(description?' · '+esc(description):'')+'</span><small>'+workouts.length+' '+(workouts.length===1?'treino':'treinos')+' · '+exerciseCount+' '+(exerciseCount===1?'exercício':'exercícios')+'</small></span></div><div class="model-workout-preview">'+workouts.slice(0,4).map((w,i)=>'<span>'+esc(w.title||'Treino '+(i+1))+'</span>').join('')+'</div><button class="btn model-copy-button" data-copy-public="'+esc(p.id)+'">Adicionar ao meu perfil</button></article>');
    }
+   if(!isSameAccount())return;
    host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum modelo público disponível</h3></div>';
-   host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic));
+   host.querySelectorAll('[data-copy-public]').forEach(b=>b.onclick=()=>copyPublicProgram(b.dataset.copyPublic,renderUserId,renderDb));
    return;
   }
   if(!navigator.onLine||window.__nexfitOfflineMode){
@@ -187,8 +189,10 @@
   const workouts=[];
   for(const p of programs){
    const q=await renderDb.from('training_subworkouts').select('id,title,description,position,training_exercises(*)').eq('version_id',p.current_version_id).order('position');
+   if(!isSameAccount())return;
    if(q.error)continue;
-   const versionQuery=await dbRef().from('training_program_versions').select('*').eq('id',p.current_version_id).maybeSingle();
+   const versionQuery=await renderDb.from('training_program_versions').select('*').eq('id',p.current_version_id).maybeSingle();
+   if(!isSameAccount())return;
    if(versionQuery.error||!versionQuery.data)continue;
    for(const workout of q.data||[]){
     const exercises=workout.training_exercises||[];
@@ -202,8 +206,9 @@
     }catch(error){console.warn('Não foi possível atualizar o cache offline do treino',error)}
    }
   }
-  const user=userRef();
-  const activitiesQ=await dbRef().from('activities').select('activity_date,notes').eq('user_id',user.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+  if(!isSameAccount())return;
+  const activitiesQ=await renderDb.from('activities').select('activity_date,notes').eq('user_id',renderUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+  if(!isSameAccount())return;
   if(activitiesQ.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(activitiesQ.error.message)+'</p></div>';return}
   const activityDateBySession=new Map((activitiesQ.data||[]).map(activity=>({
    sessionId:(activity.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],
@@ -211,6 +216,7 @@
   })).filter(item=>item.sessionId&&/^\d{4}-\d{2}-\d{2}$/.test(item.date)).map(item=>[item.sessionId,item.date]));
   const sessionIds=[...activityDateBySession.keys()];
   const history=sessionIds.length?await renderDb.from('training_sessions').select('id,subworkout_id').eq('athlete_id',renderUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds):{data:[],error:null};
+  if(!isSameAccount())return;
   if(history.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(history.error.message)+'</p></div>';return}
   const lastExecution=new Map();
   for(const item of history.data||[]){
@@ -241,9 +247,13 @@
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
   host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout));
  }
- async function copyPublicProgram(id){
+ async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const isSameAccount=()=>userRef()?.id===expectedUserId;
+  if(!expectedUserId||!expectedDb||!isSameAccount())return false;
   if(!confirm('Adicionar uma cópia independente deste programa ao seu perfil? A cópia poderá ser editada sem alterar o programa público original.'))return;
-  const {error}=await dbRef().rpc('nexfit_copy_public_program',{p_program:id});
+  if(!isSameAccount())return false;
+  const {error}=await expectedDb.rpc('nexfit_copy_public_program',{p_program:id});
+  if(!isSameAccount())return false;
   if(error){const message=error.message||String(error);if(/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message))return alert('A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.');return alert(message)}
   activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
  }
@@ -333,7 +343,7 @@
     }
     if(typeof window.renderNexfitExerciseEvolution!=='function')throw new Error('O módulo de evolução não foi inicializado.');
     await window.renderNexfitExerciseEvolution($('exerciseEvolution'));if(!isSameAccount())return;
-   }catch(error){$('exerciseEvolution').textContent=error.message||'Não foi possível abrir a evolução. Tente novamente.'}
+   }catch(error){if(!isSameAccount())return;$('exerciseEvolution').textContent=error.message||'Não foi possível abrir a evolução. Tente novamente.'}
   }else await renderProgramList();
   if(!isSameAccount())return;
   $('programSearch').oninput=()=>{const term=$('programSearch').value.toLocaleLowerCase('pt-BR');section.querySelectorAll('.training-card').forEach(card=>card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none')};
