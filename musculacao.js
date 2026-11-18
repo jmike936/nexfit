@@ -372,9 +372,11 @@
  }
  function renderProgramManagement(){
   const host=$('programManagement');if(!host)return;
+  const renderUserId=userRef()?.id,renderDb=dbRef();
+  if(!renderUserId||!renderDb)return;
   const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
   host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
-  host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram));
+  host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram));
   host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic));
   host.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram));
@@ -392,8 +394,8 @@
   }
   if(!isSameAccount())return;
   host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
-  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining);if(isSameAccount())await openWorkoutEditor(b.dataset.trainingId)});
-  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining);if(isSameAccount())await deleteSubworkout(b.dataset.trainingId)});
+  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.editTraining)await openWorkoutEditor(b.dataset.trainingId,renderUserId,renderDb)});
+  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.deleteTraining)await deleteSubworkout(b.dataset.trainingId)});
  }
 
  async function createWorkout(){
@@ -445,20 +447,26 @@
   const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',u.id);
   if(error)return alert(error.message);home();
  }
- async function openProgram(id){
-  editorSubworkoutId=null;
-  const db=dbRef();current=plans.find(p=>p.id===id);if(!current)return;
+ async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
+  if(!db||!userId||userRef()?.id!==userId||!program)return false;
+  const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id;
+  editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
+  if(!isCurrentProgram())return false;
   if(error)return alert(error.message);
-  const pending=vers.find(v=>v.status==='pending'),active=vers.find(v=>v.status==='active');version=pending||active||vers[0];
-  if(!version){return alert('Este programa ainda não possui versão.')}
-  const sq=await db.from('training_subworkouts').select('*').eq('version_id',version.id).order('position');
-  if(sq.error)return alert(sq.error.message);subworkouts=sq.data||[];
-  const isAthlete=current.athlete_id===userRef().id;
-  shell(current.title,`<div class="panel"><p class="muted">${esc(current.description||'')} · Versão ${version.version_number} · ${version.status==='pending'?'Aguardando confirmação do atleta':version.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
-  $('newVersion').onclick=newVersion;$('newSub').onclick=addSubworkout;$('deleteRequest').onclick=requestDeletion;$('editCurrentProgram').onclick=()=>editProgram(current.id);$('archiveCurrentProgram').onclick=()=>archiveProgram(current.id);
-  if($('confirmVersion'))$('confirmVersion').onclick=async()=>{const r=await db.rpc('nexfit_confirm_program_version',{p_version:version.id});if(r.error)alert(r.error.message);else openProgram(id)};
-  renderSubworkouts();
+  const pending=vers.find(v=>v.status==='pending'),active=vers.find(v=>v.status==='active'),selectedVersion=pending||active||vers[0];
+  if(!selectedVersion)return alert('Este programa ainda não possui versão.');
+  version=selectedVersion;
+  const sq=await db.from('training_subworkouts').select('*').eq('version_id',selectedVersion.id).order('position');
+  if(!isCurrentProgram()||version?.id!==selectedVersion.id)return false;
+  if(sq.error)return alert(sq.error.message);
+  subworkouts=sq.data||[];
+  const isAthlete=program.athlete_id===userId;
+  shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
+  $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion()};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id)};
+  if($('confirmVersion'))$('confirmVersion').onclick=async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return;if(result.error)alert(result.error.message);else openProgram(id,userId,db)};
+  renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
  async function newVersion(){
   const db=dbRef(),q=await db.from('training_program_versions').select('version_number').eq('program_id',current.id).order('version_number',{ascending:false}).limit(1);
@@ -489,38 +497,63 @@
   if(editorSubworkoutId){await openWorkoutEditor(editorSubworkoutId);return}
   await openProgram(current.id);
  }
- async function openWorkoutEditor(subId){
-  if(!current||!version)return;
-  const db=dbRef(),subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
+ async function openWorkoutEditor(subId,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const db=expectedDb,userId=expectedUserId,program=current,programVersion=version;
+  if(!db||!userId||userRef()?.id!==userId||!program||!programVersion)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
+  if(!isCurrentEditor())return false;
   if(subQuery.error||!subQuery.data)return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));
-  const sub=subQuery.data;editorSubworkoutId=sub.id;
+  const sub=subQuery.data;
   const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
+  if(!isCurrentEditor())return false;
   if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
+  editorSubworkoutId=sub.id;
   const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
   shell('Editar treino',`<div class="panel">
    <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
-   <p class="muted">${esc(normalizeHumanText(current.title))}</p>
+   <p class="muted">${esc(normalizeHumanText(program.title))}</p>
    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>${esc(normalizeHumanText(sub.title))}</h2><button class="icon-action" type="button" id="editFocusedWorkoutDetails" title="Editar nome e descrição" aria-label="Editar nome e descrição">${editIcon}</button></div>
    <p class="muted">${esc(sub.description||'Sem descrição.')}</p>
    <div class="training-program-management">${rows||'<p class="muted">Nenhum exercício adicionado. Comece adicionando o primeiro exercício.</p>'}</div>
    <button class="btn" type="button" id="addExerciseFocused">＋ Adicionar exercício</button>
   </div>`);
-  $('backToProgram').onclick=()=>{editorSubworkoutId=null;openProgram(current.id)};
-  $('editFocusedWorkoutDetails').onclick=()=>editSubworkout(sub.id);
-  $('addExerciseFocused').onclick=()=>addExercise(sub.id);
-  section.querySelectorAll('[data-edit-focused-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editFocusedEx));
-  section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteFocusedEx));
+  $('backToProgram').onclick=()=>{if(!isCurrentEditor())return;editorSubworkoutId=null;openProgram(program.id,userId,db)};
+  $('editFocusedWorkoutDetails').onclick=()=>{if(isCurrentEditor())editSubworkout(sub.id)};
+  $('addExerciseFocused').onclick=()=>{if(isCurrentEditor())addExercise(sub.id)};
+  section.querySelectorAll('[data-edit-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())editExercise(b.dataset.editFocusedEx)});
+  section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())deleteExercise(b.dataset.deleteFocusedEx)});
  }
- async function renderSubworkouts(){
-  const db=dbRef();let html='';
-  for(const s of subworkouts){const q=await db.from('training_exercises').select('*').eq('subworkout_id',s.id).order('position');const done=await db.from('training_sessions').select('subworkout_id').eq('program_id',current.id).eq('athlete_id',userRef().id).eq('status','completed');let total=0;if(!done.error&&done.data?.length){const ids=[...new Set(done.data.map(x=>x.subworkout_id).filter(Boolean))];if(ids.length){const names=await db.from('training_subworkouts').select('id,title').in('id',ids);const titleIds=(names.data||[]).filter(x=>x.title===s.title).map(x=>x.id);total=done.data.filter(x=>titleIds.includes(x.subworkout_id)).length}}html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`}
-  $('subList').innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
-  section.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>addExercise(b.dataset.addEx));
-  section.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>editSubworkout(b.dataset.editSub));
-  section.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>deleteSubworkout(b.dataset.deleteSub));
-  section.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editEx));
-  section.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteEx));
-  section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start,null,userRef()?.id,dbRef()));
+ async function renderSubworkouts(expectedUserId=userRef()?.id,expectedDb=dbRef(),programId=current?.id,versionId=version?.id,workoutRows=subworkouts.slice()){
+  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId;
+  if(!db||!expectedUserId||!isCurrent())return;
+  let html='';
+  for(const s of workoutRows){
+   const q=await db.from('training_exercises').select('*').eq('subworkout_id',s.id).order('position');
+   if(!isCurrent())return;
+   const done=await db.from('training_sessions').select('subworkout_id').eq('program_id',programId).eq('athlete_id',expectedUserId).eq('status','completed');
+   if(!isCurrent())return;
+   let total=0;
+   if(!done.error&&done.data?.length){
+    const ids=[...new Set(done.data.map(x=>x.subworkout_id).filter(Boolean))];
+    if(ids.length){
+     const names=await db.from('training_subworkouts').select('id,title').in('id',ids);
+     if(!isCurrent())return;
+     const titleIds=(names.data||[]).filter(x=>x.title===s.title).map(x=>x.id);
+     total=done.data.filter(x=>titleIds.includes(x.subworkout_id)).length;
+    }
+   }
+   html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
+  }
+  if(!isCurrent())return;
+  const host=$('subList');if(!host)return;
+  host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
+  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())addSubworkout()});
+  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())editSubworkout(b.dataset.editSub)});
+  host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteSubworkout(b.dataset.deleteSub)});
+  host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())editExercise(b.dataset.editEx)});
+  host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteExercise(b.dataset.deleteEx)});
+  host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
  }
  async function loadExerciseCatalog(){
   const {data,error}=await dbRef().from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
