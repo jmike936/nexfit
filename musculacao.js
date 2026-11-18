@@ -362,11 +362,15 @@
   const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
   select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+normalizeHumanText(p.title))+'</option>').join('');
  }
- async function toggleProgramVisibility(id){
-  const p=plans.find(x=>String(x.id)===String(id));if(!p||!canManageProgramLocally(p))return;
+ async function toggleProgramVisibility(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
+  const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
+  if(!db||!expectedUserId||!isSameAccount())return false;
   const makePublic=!p.is_public;
   if(makePublic&&!confirm('Este programa ficará visível no menu Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original. Tornar público?'))return;
-  const {error}=await dbRef().from('training_programs').update({is_public:makePublic}).eq('id',p.id);
+  if(!isSameAccount())return false;
+  const {error}=await db.from('training_programs').update({is_public:makePublic}).eq('id',p.id);
+  if(!isSameAccount())return false;
   if(error){const message=error.message||String(error);if(/is_public|row.level security|42501/i.test(message))return alert('Não foi possível alterar a visibilidade. Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.');return alert(message)}
   await home();
  }
@@ -711,38 +715,57 @@
  }
  const editorField=(id,label,value,type='text',placeholder='')=>{const cleanValue=/(Title|Name)$/.test(id)?normalizeHumanText(value):value;return '<div class="field"><label for="'+id+'">'+esc(label)+'</label><input id="'+id+'" type="'+type+'" value="'+esc(cleanValue)+'" placeholder="'+esc(placeholder)+'" required></div>'};
  const editorArea=(id,label,value)=>'<div class="field"><label for="'+id+'">'+esc(label)+'</label><textarea id="'+id+'" rows="3">'+esc(value)+'</textarea></div>';
- async function editProgram(id){
-  const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
+ async function editProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
+  const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
+  if(!db||!expectedUserId||!isSameAccount())return false;
   const prefix=(p.description||'').match(/^\[MODALIDADE:\s*[^\]]+\]\s*/i)?.[0]||'';
   const description=(p.description||'').replace(/^\[MODALIDADE:\s*[^\]]+\]\s*/i,'');
   showProgramEditor('Editar programa',editorField('editorProgramTitle','Nome do programa',p.title)+editorArea('editorProgramDescription','Descrição',description),async()=>{
+   if(!isSameAccount())return false;
    const title=normalizeHumanText($('editorProgramTitle').value);if(!title)return alert('Informe um nome para o programa.');
-   const {error}=await dbRef().from('training_programs').update({title,description:prefix+normalizeHumanText($('editorProgramDescription').value)}).eq('id',p.id);
+   const {error}=await db.from('training_programs').update({title,description:prefix+normalizeHumanText($('editorProgramDescription').value)}).eq('id',p.id);
+   if(!isSameAccount())return false;
    if(error){alert('Não foi possível salvar o programa: '+error.message);return false}
    await home();return true;
   });
  }
- async function archiveProgram(id){
-  const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
+ async function archiveProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
+  const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
+  if(!db||!expectedUserId||!isSameAccount())return false;
   if(!confirm('Excluir este programa da lista de treinos? Ele será arquivado para preservar o histórico das sessões.'))return;
-  const {error}=await dbRef().from('training_programs').update({status:'archived'}).eq('id',p.id);
-  if(error)return alert('Não foi possível excluir o programa: '+error.message);current=null;await home();
+  if(!isSameAccount())return false;
+  const {error}=await db.from('training_programs').update({status:'archived'}).eq('id',p.id);
+  if(!isSameAccount())return false;
+  if(error)return alert('Não foi possível excluir o programa: '+error.message);
+  if(current?.id===p.id){current=null;version=null;subworkouts=[];editorSubworkoutId=null}
+  await home();
  }
- async function restoreProgram(id){
-  const p=plans.find(x=>String(x.id)===String(id));if(!p)return;
-  try{await assertUniqueActiveCategory(programCategory(p.description),p.id)}catch(err){return alert(err.message)}
-  const {error}=await dbRef().from('training_programs').update({status:'active'}).eq('id',p.id);
+ async function restoreProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
+  const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
+  if(!db||!expectedUserId||!isSameAccount())return false;
+  try{await assertUniqueActiveCategory(programCategory(p.description),p.id)}catch(err){if(isSameAccount())alert(err.message);return false}
+  if(!isSameAccount())return false;
+  const {error}=await db.from('training_programs').update({status:'active'}).eq('id',p.id);
+  if(!isSameAccount())return false;
   if(error)return alert('Não foi possível restaurar o programa: '+error.message);
   showArchivedPlans=false;await home();
  }
 
- async function editSubworkout(id){
-  const item=subworkouts.find(x=>String(x.id)===String(id));if(!item)return;
+ async function editSubworkout(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const db=expectedDb,program=current,programVersion=version,userId=expectedUserId,focusedSubworkoutId=editorSubworkoutId,item=subworkouts.find(x=>String(x.id)===String(id));
+  const isCurrentEditor=()=>!!db&&!!userId&&!!program&&!!programVersion&&userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId&&!!item;
+  if(!isCurrentEditor())return false;
+  const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
   showProgramEditor('Editar treino',editorField('editorSubTitle','Nome do treino',item.title)+editorArea('editorSubDescription','Descrição',item.description||''),async()=>{
+   if(!isCurrentEditor())return false;
    const title=normalizeHumanText($('editorSubTitle').value);if(!title)return alert('Informe um nome para o treino.');
-   const {error}=await dbRef().from('training_subworkouts').update({title,description:normalizeHumanText($('editorSubDescription').value)||null}).eq('id',item.id);
+   const {error}=await db.from('training_subworkouts').update({title,description:normalizeHumanText($('editorSubDescription').value)||null}).eq('id',item.id);
+   if(!isCurrentEditor())return false;
    if(error){alert('Não foi possível salvar o treino: '+error.message);return false}
-   await refreshWorkoutEditorOrProgram();return true;
+   await refresh();return true;
   });
  }
  async function deleteSubworkout(id){
@@ -837,12 +860,20 @@
   if(error)return alert('Não foi possível excluir o exercício: '+error.message);
   await refresh();
  }
- async function requestDeletion(){
+ async function requestDeletion(expectedUserId=userRef()?.id,expectedDb=dbRef(),expectedProgram=current){
+  const db=expectedDb,program=expectedProgram,userId=expectedUserId;
+  const isCurrentProgram=()=>!!db&&!!userId&&userRef()?.id===userId&&current?.id===program?.id;
+  if(!isCurrentProgram())return false;
   const reason=prompt('Motivo do pedido de arquivamento (opcional):')||null;
-  const {error}=await dbRef().from('training_program_deletion_requests').insert({program_id:current.id,requested_by:userRef().id,reason});
+  if(!isCurrentProgram())return false;
+  const {error}=await db.from('training_program_deletion_requests').insert({program_id:program.id,requested_by:userId,reason});
+  if(!isCurrentProgram())return false;
   if(error)return alert(error.message);
-  await dbRef().from('training_programs').update({status:'deletion_pending'}).eq('id',current.id);
-  await dbRef().from('app_notifications').insert({user_id:current.athlete_id,type:'deletion_request',title:'Pedido de arquivamento',body:'Um profissional solicitou arquivar um programa. Aprove ou rejeite o pedido.',entity_id:current.id});
+  const updated=await db.from('training_programs').update({status:'deletion_pending'}).eq('id',program.id);
+  if(!isCurrentProgram())return false;
+  if(updated.error)return alert(updated.error.message);
+  await db.from('app_notifications').insert({user_id:program.athlete_id,type:'deletion_request',title:'Pedido de arquivamento',body:'Um profissional solicitou arquivar um programa. Aprove ou rejeite o pedido.',entity_id:program.id});
+  if(!isCurrentProgram())return false;
   alert('Pedido enviado ao atleta para aprovação.');
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
