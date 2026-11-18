@@ -47,7 +47,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const activityDateBySession=new Map((activitiesQ.data||[]).map(a=>({id:(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],date:a.activity_date})).filter(a=>a.id&&a.date).map(a=>[a.id,a.date]));
  const sessionIds=[...activityDateBySession.keys()];
  if(!sessionIds.length)return [];
- const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
+ const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',expectedUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
  if(!isCurrent())return null;
  if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
@@ -91,8 +91,9 @@ async function render(host){
  cachedUserId=uid;cache=null;
  host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas…</div>';
  try{
-  cache=await load(uid,client,isCurrent);
+  const loaded=await load(uid,client,isCurrent);
   if(!isCurrent())return;
+  cache=loaded;
   if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre as repetições e a carga das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
   host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe como suas cargas evoluem em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
