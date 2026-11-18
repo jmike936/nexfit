@@ -394,8 +394,8 @@
   }
   if(!isSameAccount())return;
   host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
-  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining);if(isSameAccount())await openWorkoutEditor(b.dataset.trainingId)});
-  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining);if(isSameAccount())await deleteSubworkout(b.dataset.trainingId)});
+  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining,renderUserId,renderDb);if(isSameAccount())await openWorkoutEditor(b.dataset.trainingId,renderUserId,renderDb)});
+  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount())await deleteSubworkout(b.dataset.trainingId)});
  }
 
  async function createWorkout(){
@@ -548,7 +548,7 @@
   if(!isCurrent())return;
   const host=$('subList');if(!host)return;
   host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
-  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())addSubworkoutFor(s.id)});
+  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())addSubworkout()});
   host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())editSubworkout(b.dataset.editSub)});
   host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteSubworkout(b.dataset.deleteSub)});
   host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())editExercise(b.dataset.editEx)});
