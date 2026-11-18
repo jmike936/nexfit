@@ -34,28 +34,32 @@ const css=`
 @media(max-width:420px){#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat strong{font-size:16px}}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
-let cache=null,cachedUserId=null;
+let cache=null,cachedUserId=null,renderGeneration=0;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
 function dateLabel(value){if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)){const [y,m,d]=value.split('-');return d+'/'+m+'/'+y}const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
-async function load(){
- const client=getClient(),u=user();if(!client||!u?.id)throw Error('Faça login para consultar sua evolução.');
+async function load(expectedUserId,expectedClient,isCurrent){
+ const client=expectedClient;if(!client||!expectedUserId||!isCurrent())throw Error('Faça login para consultar sua evolução.');
  // A Evolução só inclui sessões que ainda possuem atividade correspondente no histórico do atleta.
  // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
- const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',u.id).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+ const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',expectedUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+ if(!isCurrent())return null;
  if(activitiesQ.error)throw activitiesQ.error;
  const activityDateBySession=new Map((activitiesQ.data||[]).map(a=>({id:(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],date:a.activity_date})).filter(a=>a.id&&a.date).map(a=>[a.id,a.date]));
  const sessionIds=[...activityDateBySession.keys()];
  if(!sessionIds.length)return [];
- const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',u.id).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
+ const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',expectedUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
+ if(!isCurrent())return null;
  if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
  const sessionMap=new Map(sessions.map(s=>[s.id,s]));
  const ids=sessions.map(s=>s.id);
  const logsQ=await client.from('training_set_logs').select('session_id,exercise_id,set_number,reps_completed,load_kg,completed_at').in('session_id',ids).gt('reps_completed',0).not('load_kg','is',null).order('completed_at',{ascending:true}).limit(10000);
+ if(!isCurrent())return null;
  if(logsQ.error)throw logsQ.error;
  const logs=logsQ.data||[];if(!logs.length)return [];
  const exerciseIds=[...new Set(logs.map(x=>x.exercise_id).filter(Boolean))];
  const exercisesQ=await client.from('training_exercises').select('id,name').in('id',exerciseIds);
+ if(!isCurrent())return null;
  if(exercisesQ.error)throw exercisesQ.error;
  const exerciseMap=new Map((exercisesQ.data||[]).map(x=>[x.id,x.name]));
  const grouped=new Map();
@@ -81,15 +85,21 @@ function chart(points){
  return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
 }
 async function render(host){
- const uid=user()?.id||null;if(cachedUserId!==uid){cachedUserId=uid}cache=null;
+ const uid=user()?.id||null,client=getClient(),generation=++renderGeneration;
+ const isCurrent=()=>!!uid&&!!client&&user()?.id===uid&&renderGeneration===generation&&host?.isConnected!==false;
+ if(!isCurrent())return;
+ cachedUserId=uid;cache=null;
  host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas…</div>';
  try{
-  if(!cache)cache=await load();
-  if(!cache.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre as repetições e a carga das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
+  const loaded=await load(uid,client,isCurrent);
+  if(!isCurrent())return;
+  cache=loaded;
+  if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre as repetições e a carga das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
   host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe como suas cargas evoluem em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
+   if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
    const points=item.points;
    const sessionMap=new Map();
@@ -107,8 +117,9 @@ async function render(host){
    details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Maior carga na última sessão</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+kg(delta))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent=delta===null?'Ainda não há sessões anteriores para comparação.':'Comparação entre as maiores cargas de duas sessões consecutivas: '+(delta>0?'+':'')+kg(delta)+(deltaPercent!==null?' ('+(deltaPercent>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+kg(overallDelta)+'.';details.querySelector('.evolution-stats').after(note)}
   };
-  select.addEventListener('change',paint);paint();
- }catch(error){host.innerHTML='<div class="evolution-empty"><strong>Não foi possível carregar a evolução</strong><p>'+esc(error?.message||'Verifique sua conexão e tente novamente.')+'</p><button type="button" class="btn alt" id="retryExerciseEvolution">Tentar novamente</button></div>';host.querySelector('#retryExerciseEvolution')?.addEventListener('click',()=>{cache=null;render(host)})}
+  select.addEventListener('change',()=>{if(isCurrent())paint()});paint();
+ }catch(error){if(!isCurrent())return;host.innerHTML='<div class="evolution-empty"><strong>Não foi possível carregar a evolução</strong><p>'+esc(error?.message||'Verifique sua conexão e tente novamente.')+'</p><button type="button" class="btn alt" id="retryExerciseEvolution">Tentar novamente</button></div>';host.querySelector('#retryExerciseEvolution')?.addEventListener('click',()=>{if(isCurrent()){cache=null;render(host)}})}
 }
+window.resetNexfitExerciseEvolutionUserState=function(){renderGeneration++;cache=null;cachedUserId=null};
 window.renderNexfitExerciseEvolution=render;
 })();
