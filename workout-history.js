@@ -2,20 +2,26 @@
 const normalizeHumanText=s=>{const text=String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim();if(!text)return '';const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC']);let first=true;return text.toLocaleLowerCase('pt-BR').replace(/[\p{L}\p{M}]+/gu,word=>{const upper=word.toLocaleUpperCase('pt-BR');if(acronyms.has(upper))return upper;if(first){first=false;return word.charAt(0).toLocaleUpperCase('pt-BR')+word.slice(1)}return word})};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const client=()=>window.db||db,user=()=>window.currentUser||currentUser;
-let activeActivity=null,activeSession=null,activeEntries=[];
+let activeActivity=null,activeSession=null,activeEntries=[],showGeneration=0;
 function activityDateLabel(value){const raw=String(value||'');const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:'—'}
 function saoPauloDateKey(value){if(!value)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(value))return value;const d=new Date(value);if(Number.isNaN(d.getTime()))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);const get=k=>parts.find(x=>x.type===k)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')}
-function modal(){let m=document.getElementById('workoutHistoryModal');if(m)return m;m=document.createElement('div');m.id='workoutHistoryModal';m.style.cssText='position:fixed;inset:0;z-index:40;background:#05080ddd;display:none;align-items:center;justify-content:center;padding:16px';m.innerHTML='<div style="width:min(760px,100%);max-height:90vh;overflow:auto;background:#1a232e;border:1px solid #354454;border-radius:18px;padding:20px"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="color:#b7f34a;font-size:11px;letter-spacing:2px">HISTÓRICO DE MUSCULAÇÃO</div><h2 id="whTitle"></h2></div><button class="secondary" id="whClose">Fechar</button></header><div id="whBody"></div><footer style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="secondary wh-icon-action" id="whEdit" title="Editar séries" aria-label="Editar séries"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="primary" id="whSave" style="display:none">Salvar alterações</button></footer></div>';document.body.append(m);m.onclick=e=>{if(e.target===m)m.style.display='none'};m.querySelector('#whClose').onclick=()=>m.style.display='none';const iconStyle=document.createElement('style');iconStyle.textContent='.wh-icon-action{width:42px;height:42px;padding:10px;display:grid;place-items:center}.wh-icon-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}';document.head.append(iconStyle);return m}
-async function findSession(activity){
- const dbx=client(),u=user(),tag=(activity.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i);
- if(tag){const direct=await dbx.from('training_sessions').select('*').eq('id',tag[1]).maybeSingle();if(direct.data)return direct.data}
- const q=await dbx.from('training_sessions').select('*').eq('athlete_id',u.id).eq('status','completed').order('started_at',{ascending:false}).limit(300);
- if(q.error||!q.data?.length)return null;
+function modal(){let m=document.getElementById('workoutHistoryModal');if(m)return m;m=document.createElement('div');m.id='workoutHistoryModal';m.style.cssText='position:fixed;inset:0;z-index:40;background:#05080ddd;display:none;align-items:center;justify-content:center;padding:16px';m.innerHTML='<div style="width:min(760px,100%);max-height:90vh;overflow:auto;background:#1a232e;border:1px solid #354454;border-radius:18px;padding:20px"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div style="color:#b7f34a;font-size:11px;letter-spacing:2px">HISTÓRICO DE MUSCULAÇÃO</div><h2 id="whTitle"></h2></div><button class="secondary" id="whClose">Fechar</button></header><div id="whBody"></div><footer style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="secondary wh-icon-action" id="whEdit" title="Editar séries" aria-label="Editar séries"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="primary" id="whSave" style="display:none">Salvar alterações</button></footer></div>';document.body.append(m);m.onclick=e=>{if(e.target===m){showGeneration++;m.style.display='none'}};m.querySelector('#whClose').onclick=()=>{showGeneration++;m.style.display='none'};const iconStyle=document.createElement('style');iconStyle.textContent='.wh-icon-action{width:42px;height:42px;padding:10px;display:grid;place-items:center}.wh-icon-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}';document.head.append(iconStyle);return m}
+async function findSession(activity,expectedUserId,expectedDb,isCurrent){
+ const dbx=expectedDb,tag=(activity.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i);
+ if(!dbx||!expectedUserId||!isCurrent())return null;
+ if(tag){
+  const direct=await dbx.from('training_sessions').select('*').eq('id',tag[1]).eq('athlete_id',expectedUserId).maybeSingle();
+  if(!isCurrent())return null;
+  if(direct.data?.athlete_id===expectedUserId)return direct.data;
+ }
+ const q=await dbx.from('training_sessions').select('*').eq('athlete_id',expectedUserId).eq('status','completed').order('started_at',{ascending:false}).limit(300);
+ if(!isCurrent()||q.error||!q.data?.length)return null;
  const sessions=q.data,programIds=[...new Set(sessions.map(x=>x.program_id).filter(Boolean))],subIds=[...new Set(sessions.map(x=>x.subworkout_id).filter(Boolean))];
  const [programs,subs]=await Promise.all([
   dbx.from('training_programs').select('id,title').in('id',programIds),
   dbx.from('training_subworkouts').select('id,title').in('id',subIds)
  ]);
+ if(!isCurrent())return null;
  const pMap=new Map((programs.data||[]).map(x=>[x.id,x.title])),sMap=new Map((subs.data||[]).map(x=>[x.id,x.title]));
  const note=(activity.notes||'').replace(/\s*\[NEXFIT_SESSION:[^\]]+\]/,'').toLocaleLowerCase('pt-BR');
  const sameDay=sessions.filter(x=>saoPauloDateKey(x.started_at)===activity.date);
@@ -31,15 +37,61 @@ async function findSession(activity){
  const dated=candidates.filter(x=>sameDay.some(s=>s.id===x.session.id)).sort((a,b)=>a.score-b.score);
  return dated[0]?.session||null;
 }
-async function show(id,editing=false){activeActivity=(typeof activities!=='undefined'?activities:[]).find(x=>String(x.id)===String(id));if(!activeActivity)return;const m=modal(),dbx=client();m.style.display='flex';m.querySelector('#whTitle').textContent='Carregando…';m.querySelector('#whBody').textContent='Buscando séries e cargas.';m.querySelector('#whEdit').style.display='none';m.querySelector('#whSave').style.display='none';
-activeSession=await findSession(activeActivity);if(!activeSession){m.querySelector('#whTitle').textContent='Detalhes do treino';m.querySelector('#whBody').innerHTML='<p>Não encontrei uma sessão vinculada a esta atividade.</p>';return}
-const [p,s,ex,logs]=await Promise.all([dbx.from('training_programs').select('title').eq('id',activeSession.program_id).maybeSingle(),dbx.from('training_subworkouts').select('title').eq('id',activeSession.subworkout_id).maybeSingle(),dbx.from('training_exercises').select('*').eq('subworkout_id',activeSession.subworkout_id).order('position'),dbx.from('training_set_logs').select('*').eq('session_id',activeSession.id)]);
-if(ex.error||logs.error){m.querySelector('#whBody').textContent=(ex.error||logs.error).message;return}m.querySelector('#whTitle').textContent=(s.data?.title||'Treino')+' · '+(p.data?.title||'Programa');
-activeEntries=[];const groups=(ex.data||[]).map(e=>{const rows=(e.sets||[]).map((plan,i)=>{const no=i+1,log=(logs.data||[]).find(z=>z.exercise_id===e.id&&Number(z.set_number)===no)||null,key=e.id+'_'+no,entry={exercise:e,plan,index:i,log,key};activeEntries.push(entry);
-if(editing)return '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #354454"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-wh-done="'+key+'" '+(log?'checked':'')+'> Executada</label><input type="number" min="1" data-wh-reps="'+key+'" value="'+(log?.reps_completed??'')+'" placeholder="Repetições"><input type="number" min="0" step="0.25" data-wh-load="'+key+'" value="'+(log?.load_kg??'')+'" placeholder="Carga kg"><small style="grid-column:1/-1;color:#91a0af">Série '+no+' · previsto '+(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':'')+'</small></div>';
-return '<div style="padding:10px 0;border-top:1px solid #354454"><strong>Série '+no+'</strong> · '+(log?'<span style="color:#b7f34a">Executada</span>':'<span style="color:#91a0af">Não executada</span>')+'<div style="color:#91a0af">Previsto: '+(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':'')+' · descanso '+(e.rest_seconds||0)+' s</div>'+(log?'<div>Realizado: '+(log.reps_completed??'—')+' reps'+(log.load_kg!=null?' · '+log.load_kg+' kg':'')+'</div>':'')+'</div>'}).join('');return '<section style="margin:14px 0;padding:14px;background:#202b37;border:1px solid #354454;border-radius:12px"><h3>'+esc(normalizeHumanText(e.name))+'</h3>'+rows+'</section>'}).join('');
-m.querySelector('#whBody').innerHTML='<p style="color:#91a0af">'+esc(activityDateLabel(activeActivity.date))+' · '+activeActivity.duration+' min</p>'+groups;
-m.querySelector('#whEdit').style.display=editing?'none':'inline-block';m.querySelector('#whSave').style.display=editing?'inline-block':'none';m.querySelector('#whEdit').onclick=()=>show(id,true);
-m.querySelector('#whSave').onclick=async()=>{for(const x of activeEntries){const done=m.querySelector('[data-wh-done="'+x.key+'"]').checked;if(done){const reps=Number(m.querySelector('[data-wh-reps="'+x.key+'"]').value),raw=m.querySelector('[data-wh-load="'+x.key+'"]').value;if(!Number.isFinite(reps)||reps<1){alert('Informe as repetições para toda série marcada como executada.');return}const load=raw===''?null:Number(raw);if(load!==null&&(!Number.isFinite(load)||load<0)){alert('Informe uma carga válida.');return}const vals={reps_completed:reps,load_kg:load};let result=x.log?await dbx.from('training_set_logs').update(vals).eq('session_id',activeSession.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1):await dbx.from('training_set_logs').insert({session_id:activeSession.id,exercise_id:x.exercise.id,set_number:x.index+1,...vals});if(result.error){alert(result.error.message);return}}else if(x.log){const result=await dbx.from('training_set_logs').delete().eq('session_id',activeSession.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1);if(result.error){alert(result.error.message);return}}}await show(id,false)}}
+async function show(id,editing=false){
+ const userId=user()?.id,dbx=client(),activity=(typeof activities!=='undefined'?activities:[]).find(x=>String(x.id)===String(id)),generation=++showGeneration;
+ const isCurrent=()=>!!userId&&!!dbx&&user()?.id===userId&&showGeneration===generation;
+ if(!isCurrent()||!activity)return;
+ activeActivity=activity;activeSession=null;activeEntries=[];
+ const m=modal();m.style.display='flex';m.querySelector('#whTitle').textContent='Carregando…';m.querySelector('#whBody').textContent='Buscando séries e cargas.';m.querySelector('#whEdit').style.display='none';m.querySelector('#whSave').style.display='none';
+ const session=await findSession(activity,userId,dbx,isCurrent);
+ if(!isCurrent())return;
+ activeSession=session;
+ if(!session){m.querySelector('#whTitle').textContent='Detalhes do treino';m.querySelector('#whBody').innerHTML='<p>Não encontrei uma sessão vinculada a esta atividade.</p>';return}
+ const [p,s,ex,logs]=await Promise.all([
+  dbx.from('training_programs').select('title').eq('id',session.program_id),
+  dbx.from('training_subworkouts').select('title').eq('id',session.subworkout_id),
+  dbx.from('training_exercises').select('*').eq('subworkout_id',session.subworkout_id).order('position'),
+  dbx.from('training_set_logs').select('*').eq('session_id',session.id)
+ ]);
+ if(!isCurrent())return;
+ if(ex.error||logs.error){m.querySelector('#whBody').textContent=(ex.error||logs.error).message;return}
+ m.querySelector('#whTitle').textContent=(s.data?.[0]?.title||'Treino')+' · '+(p.data?.[0]?.title||'Programa');
+ const entries=[];const groups=(ex.data||[]).map(e=>{const rows=(e.sets||[]).map((plan,i)=>{const no=i+1,log=(logs.data||[]).find(z=>z.exercise_id===e.id&&Number(z.set_number)===no)||null,key=e.id+'_'+no,entry={exercise:e,plan,index:i,log,key};entries.push(entry);
+ if(editing)return '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #354454"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-wh-done="'+key+'" '+(log?'checked':'')+'> Executada</label><input type="number" min="1" data-wh-reps="'+key+'" value="'+(log?.reps_completed??'')+'" placeholder="Repetições"><input type="number" min="0" step="0.25" data-wh-load="'+key+'" value="'+(log?.load_kg??'')+'" placeholder="Carga kg"><small style="grid-column:1/-1;color:#91a0af">Série '+no+' · previsto '+(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':'')+'</small></div>';
+ return '<div style="padding:10px 0;border-top:1px solid #354454"><strong>Série '+no+'</strong> · '+(log?'<span style="color:#b7f34a">Executada</span>':'<span style="color:#91a0af">Não executada</span>')+'<div style="color:#91a0af">Previsto: '+(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':'')+' · descanso '+(e.rest_seconds||0)+' s</div>'+(log?'<div>Realizado: '+(log.reps_completed??'—')+' reps'+(log.load_kg!=null?' · '+log.load_kg+' kg':'')+'</div>':'')+'</div>'}).join('');return '<section style="margin:14px 0;padding:14px;background:#202b37;border:1px solid #354454;border-radius:12px"><h3>'+esc(normalizeHumanText(e.name))+'</h3>'+rows+'</section>'}).join('');
+ activeEntries=entries;
+ m.querySelector('#whBody').innerHTML='<p style="color:#91a0af">'+esc(activityDateLabel(activity.date))+' · '+activity.duration+' min</p>'+groups;
+ m.querySelector('#whEdit').style.display=editing?'none':'inline-block';m.querySelector('#whSave').style.display=editing?'inline-block':'none';m.querySelector('#whEdit').onclick=()=>{if(isCurrent())show(id,true)};
+ const saveButton=m.querySelector('#whSave');
+ saveButton.onclick=async()=>{
+  if(!isCurrent()||activeActivity?.id!==activity.id||activeSession?.id!==session.id||saveButton.disabled)return;
+  saveButton.disabled=true;
+  try{
+   for(const x of entries){
+    if(!isCurrent()||activeSession?.id!==session.id)return;
+    const done=m.querySelector('[data-wh-done="'+x.key+'"]')?.checked;
+    if(done===undefined){alert('O formulário de edição não está mais disponível.');return}
+    if(done){
+     const reps=Number(m.querySelector('[data-wh-reps="'+x.key+'"]').value),raw=m.querySelector('[data-wh-load="'+x.key+'"]').value;
+     if(!Number.isFinite(reps)||reps<1){alert('Informe as repetições para toda série marcada como executada.');return}
+     const load=raw===''?null:Number(raw);if(load!==null&&(!Number.isFinite(load)||load<0)){alert('Informe uma carga válida.');return}
+     const vals={reps_completed:reps,load_kg:load};
+     const result=x.log?await dbx.from('training_set_logs').update(vals).eq('session_id',session.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1):await dbx.from('training_set_logs').insert({session_id:session.id,exercise_id:x.exercise.id,set_number:x.index+1,...vals});
+     if(!isCurrent())return;
+     if(result.error){alert(result.error.message);return}
+    }else if(x.log){
+     const result=await dbx.from('training_set_logs').delete().eq('session_id',session.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1);
+     if(!isCurrent())return;
+     if(result.error){alert(result.error.message);return}
+    }
+   }
+   if(isCurrent())await show(id,false);
+  }finally{if(isCurrent())saveButton.disabled=false}
+ };
+}
+window.resetWorkoutHistoryUserState=function(){
+ showGeneration++;activeActivity=null;activeSession=null;activeEntries=[];
+ const m=document.getElementById('workoutHistoryModal');if(m){m.style.display='none';m.querySelector('#whTitle').textContent='';m.querySelector('#whBody').replaceChildren();m.querySelector('#whEdit').style.display='none';m.querySelector('#whSave').style.display='none'}
+};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-view-workout]');if(b){e.preventDefault();show(b.dataset.viewWorkout,false)}});
 })();
