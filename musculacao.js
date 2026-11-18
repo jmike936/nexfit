@@ -757,14 +757,13 @@
    return true;
   }catch(e){console.warn('Não foi possível guardar a sessão localmente',e);return false}
  }
- function clearPersistedWorkout(){try{if(userRef()?.id)localStorage.removeItem(sessionStorageKey())}catch(_){}}
- const pendingWorkoutCancellationsKey=()=> 'nexfit-pending-workout-cancellations:'+String(userRef()?.id||'');
- function queueWorkoutCancellation(sessionId){
-  if(!sessionId||!userRef()?.id)return false;
+ function clearPersistedWorkout(userId=userRef()?.id){try{if(userId)localStorage.removeItem(sessionStorageKeyFor(userId))}catch(_){}}
+ function queueWorkoutCancellation(sessionId,userId=userRef()?.id){
+  if(!sessionId||!userId)return false;
   try{
-   const key=pendingWorkoutCancellationsKey(),pending=JSON.parse(localStorage.getItem(key)||'[]');
+   const key='nexfit-pending-workout-cancellations:'+String(userId),pending=JSON.parse(localStorage.getItem(key)||'[]');
    const queue=Array.isArray(pending)?pending:[];
-   if(!queue.some(item=>item.sessionId===sessionId))queue.push({userId:userRef().id,sessionId,queuedAt:new Date().toISOString()});
+   if(!queue.some(item=>item.sessionId===sessionId))queue.push({userId,sessionId,queuedAt:new Date().toISOString()});
    localStorage.setItem(key,JSON.stringify(queue));return true;
   }catch(error){console.warn('Não foi possível guardar o cancelamento pendente',error);return false}
  }
@@ -1065,20 +1064,36 @@
  async function exitSessionToHome(){
   if(!session)return;
   if(!confirm('Quer encerrar este treino agora? Se escolher sair, as séries já registradas nesta sessão também serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar.'))return;
-  const db=dbRef(),sessionId=session.id;
+  const cancelUserId=userRef()?.id,cancelDb=dbRef(),sessionId=session.id,localOnly=!!session.localOnly;
+  if(!cancelUserId||!cancelDb)return alert('Não foi possível identificar a conta desta sessão. O treino permanece salvo.');
+  const isSameAccount=()=>userRef()?.id===cancelUserId;
+  const queueAndClearCapturedSession=()=>{
+   if(!queueWorkoutCancellation(sessionId,cancelUserId))return false;
+   clearPersistedWorkout(cancelUserId);return true;
+  };
+  const resetCancelledSession=()=>{
+   if(!isSameAccount()||session?.id!==sessionId)return false;
+   clearPersistedWorkout(cancelUserId);restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();return true;
+  };
   if(!navigator.onLine){
-   if(!queueWorkoutCancellation(sessionId))return alert('Não foi possível guardar o cancelamento neste aparelho. O treino permanece salvo; libere espaço e tente novamente.');
-   clearPersistedWorkout();restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();home();
+   if(!queueAndClearCapturedSession())return alert('Não foi possível guardar o cancelamento neste aparelho. O treino permanece salvo; libere espaço e tente novamente.');
+   if(isSameAccount()&&resetCancelledSession())home();
    alert('Treino cancelado neste aparelho. A exclusão das séries e da sessão no servidor será concluída quando a conexão voltar.');return;
   }
-  if(session.localOnly){clearPersistedWorkout();restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();home();return}
-  const {error:logsError}=await db.from('training_set_logs').delete().eq('session_id',sessionId);
+  if(localOnly){if(resetCancelledSession())home();return}
+  const {error:logsError}=await cancelDb.from('training_set_logs').delete().eq('session_id',sessionId);
+  if(!isSameAccount()){
+   if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
+   return;
+  }
   if(logsError)return alert('Não foi possível cancelar o treino e apagar as séries registradas: '+logsError.message);
-  const {error:sessionError}=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userRef().id);
+  const {error:sessionError}=await cancelDb.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',cancelUserId);
+  if(!isSameAccount()){
+   if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
+   return;
+  }
   if(sessionError)return alert('As séries foram apagadas, mas não foi possível remover a sessão. Tente novamente ou contate o suporte: '+sessionError.message);
-  clearPersistedWorkout();restSnapshot=null;
-  if(timer)clearInterval(timer);
-  timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();
+  if(!resetCancelledSession())return;
   const homeButton=document.querySelector('.nav button[data-page="home"]');
   if(homeButton){homeButton.click();return}
   document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id==='home'));
