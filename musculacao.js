@@ -1010,6 +1010,8 @@
  window.resetStrengthUserState=function(){
   $('programEditorModal')?.classList.remove('show');
   if(session)persistWorkoutState();
+  plans=[];activeTrainingTab='mine';showArchivedPlans=false;window.__nexfitOfflineMode=false;
+  ['programList','programManagement','trainingManagement','exerciseEvolution','accessList','notifications'].forEach(id=>{const node=$(id);if(node)node.replaceChildren()});
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
