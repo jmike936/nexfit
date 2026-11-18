@@ -499,7 +499,7 @@
   section.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>deleteSubworkout(b.dataset.deleteSub));
   section.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editEx));
   section.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteEx));
-  section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start));
+  section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start,null,userRef()?.id,dbRef()));
  }
  async function loadExerciseCatalog(){
   const {data,error}=await dbRef().from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
@@ -744,6 +744,7 @@
  async function preloadPreviousLoads(exercises,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const u=userRef(),db=expectedDb;if(!u||!db||!exercises?.length||u.id!==expectedUserId)return;
   const isSameAccount=()=>userRef()?.id===expectedUserId;
+  previousLoadsByExercise={};
   const wanted=new Set(exercises.map(e=>exerciseIdentity(e.name)).filter(Boolean));if(!wanted.size)return;
   const activeSessionId=session?.id||'00000000-0000-0000-0000-000000000000';
   const [sessions,allExercises]=await Promise.all([
@@ -854,7 +855,7 @@
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];previousLoadsByExercise={};
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
