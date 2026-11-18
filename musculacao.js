@@ -1408,7 +1408,9 @@
   if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
   panel.hidden=false;const deadline=Date.now()+rest*1000;
   const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
-  const nextLoad=next?.set.load_kg??(sameExercise?(sessionLoads[next.exercise.id+':'+item.setIndex]??null):null);
+  const nextIdentity=sameExercise?exerciseIdentity(next.exercise.name):null,nextReps=sameExercise&&next.set.reps!=='MR'?Number(next.set.reps):null;
+  const suggestedNextLoad=nextReps!==null&&Number.isFinite(nextReps)?previousLoadsByExercise[nextIdentity]?.[nextReps]:undefined;
+  const nextLoad=sameExercise?(suggestedNextLoad??next.set.load_kg??sessionLoads[next.exercise.id+':'+next.setIndex]??null):null;
   const nextText=sameExercise?'Próxima: série '+(next.setIndex+1)+' de '+next.exercise.name+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):next?'Exercício concluído. Após o descanso, escolha qual exercício iniciar.':'Último descanso do treino.';
   $('nextStepText').textContent=nextText;
   const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;advanceAfterSet(item)};
