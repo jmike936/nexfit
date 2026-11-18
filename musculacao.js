@@ -137,7 +137,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,finishingSession=false,workoutSyncPromise=null;
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,finishingSession=false,workoutSyncPromises=new Map();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -843,8 +843,9 @@
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
   skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
  };
- async function syncPendingWorkout(){  if(workoutSyncPromise)return workoutSyncPromise;
+ async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
+  const existingSync=workoutSyncPromises.get(syncUserId);if(existingSync)return existingSync;
   const isSameAccount=()=>userRef()?.id===syncUserId;
   const runSync=async()=>{
   if(!navigator.onLine||!isSameAccount())return false;
@@ -896,7 +897,7 @@
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
   };
-  workoutSyncPromise=(async()=>{
+  const syncPromise=(async()=>{
    if(navigator.locks?.request){
     return navigator.locks.request('nexfit-workout-sync:'+syncUserId,async()=>{
      if(!isSameAccount())return false;
@@ -905,7 +906,8 @@
    }
    return runSync();
   })();
-  try{return await workoutSyncPromise}finally{workoutSyncPromise=null}
+  workoutSyncPromises.set(syncUserId,syncPromise);
+  try{return await syncPromise}finally{if(workoutSyncPromises.get(syncUserId)===syncPromise)workoutSyncPromises.delete(syncUserId)}
  }
 
  window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
