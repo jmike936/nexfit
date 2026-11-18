@@ -1,11 +1,11 @@
-const CACHE_NAME = 'nexfit-app-shell-v12';
+const CACHE_NAME = 'nexfit-app-shell-v13';
 const APP_FILES = [
   './',
   './index.html',
   './manifest.json',
-  './musculacao.js?v=20261118.58',
-  './workout-history.js?v=20261118.58',
-  './exercise-evolution.js?v=20261118.58',
+  './musculacao.js?v=20261118.59',
+  './workout-history.js?v=20261118.59',
+  './exercise-evolution.js?v=20261118.59',
   './version.json',
   './favicon.ico',
   './assets/nexfit-pwa.svg',
