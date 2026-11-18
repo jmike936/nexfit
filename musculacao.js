@@ -540,8 +540,8 @@
     }
     const removedSubs=await db.from('training_subworkouts').delete().eq('version_id',data.id);
     if(removedSubs.error||!isSameAccount())return false;
-    const removedVersion=await db.from('training_program_versions').delete().eq('id',data.id).eq('program_id',program.id);
-    if(removedVersion.error){console.warn('Não foi possível remover a versão incompleta',removedVersion.error);return false}
+    const discardedVersion=await db.from('training_program_versions').update({status:'archived',change_note:'Versão descartada automaticamente após falha ao copiar os treinos.'}).eq('id',data.id).eq('program_id',program.id);
+    if(discardedVersion.error){console.warn('Não foi possível arquivar a versão incompleta',discardedVersion.error);return false}
     return true;
    };
    const abortStaleVersion=async()=>{
@@ -555,19 +555,19 @@
    if(await abortStaleVersion())return false;
    const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
    if(await abortStaleVersion())return false;
-   if(oldSubs.error){await cleanupIncompleteVersion();return alert('Não foi possível copiar os treinos. A versão incompleta foi descartada: '+oldSubs.error.message)}
+   if(oldSubs.error){await cleanupIncompleteVersion();return alert('Falha ao copiar os treinos. '+oldSubs.error.message)}
    for(const oldSub of (oldSubs.data||[])){
     const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
     if(await abortStaleVersion())return false;
-    if(subErr){await cleanupIncompleteVersion();return alert('Não foi possível copiar um treino. A versão incompleta foi descartada: '+subErr.message)}
+    if(subErr){await cleanupIncompleteVersion();return alert('Falha ao copiar um treino. '+subErr.message)}
     const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
     if(await abortStaleVersion())return false;
-    if(oldExercises.error){await cleanupIncompleteVersion();return alert('Não foi possível carregar os exercícios. A versão incompleta foi descartada: '+oldExercises.error.message)}
+    if(oldExercises.error){await cleanupIncompleteVersion();return alert('Falha ao carregar os exercícios. '+oldExercises.error.message)}
     if(oldExercises.data?.length){
      const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
      const {error:exErr}=await db.from('training_exercises').insert(copied);
      if(await abortStaleVersion())return false;
-     if(exErr){await cleanupIncompleteVersion();return alert('Não foi possível copiar os exercícios. A versão incompleta foi descartada: '+exErr.message)}
+     if(exErr){await cleanupIncompleteVersion();return alert('Falha ao copiar os exercícios. '+exErr.message)}
     }
    }
    if(await abortStaleVersion())return false;
