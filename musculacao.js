@@ -555,19 +555,19 @@
    if(await abortStaleVersion())return false;
    const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
    if(await abortStaleVersion())return false;
-   if(oldSubs.error){await cleanupIncompleteVersion();return alert('Falha ao copiar os treinos. '+oldSubs.error.message)}
+   if(oldSubs.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldSubs.error.message)}
    for(const oldSub of (oldSubs.data||[])){
     const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
     if(await abortStaleVersion())return false;
-    if(subErr){await cleanupIncompleteVersion();return alert('Falha ao copiar um treino. '+subErr.message)}
+    if(subErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+subErr.message)}
     const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
     if(await abortStaleVersion())return false;
-    if(oldExercises.error){await cleanupIncompleteVersion();return alert('Falha ao carregar os exercícios. '+oldExercises.error.message)}
+    if(oldExercises.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldExercises.error.message)}
     if(oldExercises.data?.length){
      const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
      const {error:exErr}=await db.from('training_exercises').insert(copied);
      if(await abortStaleVersion())return false;
-     if(exErr){await cleanupIncompleteVersion();return alert('Falha ao copiar os exercícios. '+exErr.message)}
+     if(exErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+exErr.message)}
     }
    }
    if(await abortStaleVersion())return false;
