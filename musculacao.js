@@ -403,53 +403,72 @@
  }
 
  async function createWorkout(){
-  const program=plans.find(p=>String(p.id)===String($('workoutProgram').value)&&p.status==='active');
+  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+  if(!db||!userId)return alert('Faça login para criar um treino.');
+  const program=plans.find(p=>String(p.id)===String($('workoutProgram').value)&&p.status==='active'&&canManageProgramLocally(p));
   const title=normalizeHumanText($('workoutTitle').value);
   if(!program)return alert('Selecione um programa vigente.');
   if(!title)return alert('Informe o nome do treino.');
-  const {data:versionRow,error:versionError}=await dbRef().from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
+  const {data:versionRow,error:versionError}=await db.from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
+  if(!isSameAccount())return false;
   if(versionError||!versionRow)return alert('Não foi possível carregar a versão vigente do programa.');
-  const {data:existing,error:existingError}=await dbRef().from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
+  const {data:existing,error:existingError}=await db.from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
+  if(!isSameAccount())return false;
   if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
-  const {data,error}=await dbRef().from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
+  const {data,error}=await db.from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
+  if(!isSameAccount())return false;
   if(error)return alert('Não foi possível criar o treino: '+error.message);
   $('workoutTitle').value='';$('workoutDescription').value='';
   current=program;version=versionRow;
-  await openWorkoutEditor(data.id);
+  await openWorkoutEditor(data.id,userId,db);
  }
  async function createProgram(){
+  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+  if(!db||!userId)return alert('Faça login para criar um programa.');
   const title=normalizeHumanText($('programTitle').value);
   if(!title)return alert('Informe o nome do programa.');
   const category=$('programCategory').value,description=normalizeHumanText($('programDesc').value)||null;
-  const {data,error}=await dbRef().rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
+  const {data,error}=await db.rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
+  if(!isSameAccount())return false;
   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
   await home();
  }
  async function createProgramForAthlete(){
+  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+  if(!db||!userId)return alert('Faça login para enviar um programa.');
   const email=$('athleteEmail').value.trim().toLowerCase(),title=normalizeHumanText($('programTitle').value);
   if(!email)return alert('Informe o e-mail do atleta.');
   if(!title)return alert('Informe o nome do programa.');
   const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+normalizeHumanText($('programDesc').value);
-  const {error}=await dbRef().rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
+  const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
+  if(!isSameAccount())return false;
   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação do programa para outro atleta. Execute o arquivo supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.');return alert(message)}
   alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
-  home();
+  await home();
  }
  async function requestAccess(){
+  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+  if(!db||!userId)return alert('Faça login para solicitar acesso.');
   const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do atleta.');
-  const {error}=await dbRef().rpc('nexfit_request_access_by_email',{p_email:email});
-  if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');home();
+  const {error}=await db.rpc('nexfit_request_access_by_email',{p_email:email});
+  if(!isSameAccount())return false;
+  if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');await home();
  }
  async function decideAccess(id,approve){
-  const db=dbRef(),u=userRef();
+  const db=dbRef(),u=userRef(),userId=u?.id,isSameAccount=()=>userRef()?.id===userId;
+  if(!db||!userId)return false;
   let permissions={can_view_history:false,can_manage_programs:false};
   if(approve){
    permissions.can_view_history=confirm('Permitir que este profissional visualize seu histórico de treinos?');
+   if(!isSameAccount())return false;
    permissions.can_manage_programs=confirm('Permitir que este profissional crie e gerencie os programas que ele próprio criar para você?');
+   if(!isSameAccount())return false;
    if(!permissions.can_view_history&&!permissions.can_manage_programs&&!confirm('Nenhuma permissão foi concedida. Deseja aprovar mesmo assim?'))return;
   }
-  const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',u.id);
-  if(error)return alert(error.message);home();
+  if(!isSameAccount())return false;
+  const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',userId);
+  if(!isSameAccount())return false;
+  if(error)return alert(error.message);await home();
  }
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
