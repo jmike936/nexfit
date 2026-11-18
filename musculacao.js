@@ -989,6 +989,7 @@
   return true;
  }
  window.resetStrengthUserState=function(){
+  $('programEditorModal')?.classList.remove('show');
   if(session)persistWorkoutState();
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
