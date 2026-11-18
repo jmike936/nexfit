@@ -471,7 +471,7 @@
  async function newVersion(){
   const db=dbRef(),program=current,previous=version,userId=userRef()?.id;
   if(!db||!program||!previous||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
   const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
   if(!isCurrentEditor())return false;
   if(q.error)return alert(q.error.message);
@@ -505,7 +505,7 @@
  async function addSubworkout(){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id;
   if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
   if(!isCurrentEditor())return false;
   const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
@@ -520,7 +520,8 @@
  async function openWorkoutEditor(subId,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=current,programVersion=version;
   if(!db||!userId||userRef()?.id!==userId||!program||!programVersion)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  editorSubworkoutId=subId;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===subId;
   const subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
   if(!isCurrentEditor())return false;
   if(subQuery.error||!subQuery.data)return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));
@@ -528,7 +529,6 @@
   const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
   if(!isCurrentEditor())return false;
   if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
-  editorSubworkoutId=sub.id;
   const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
   shell('Editar treino',`<div class="panel">
    <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
@@ -624,7 +624,7 @@
  async function addExercise(subId){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
   if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
   const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
   let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())alert(err.message);return false}
   if(!isCurrentEditor())return false;
@@ -748,7 +748,7 @@
  async function deleteSubworkout(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
   if(!db||!program||!programVersion||!userId||!item)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
   if(!confirm('Excluir o treino "'+item.title+'"?'))return;
   if(!isCurrentEditor())return false;
   const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
@@ -787,7 +787,7 @@
  async function editExercise(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
   if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
   const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
   const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
   if(!isCurrentEditor())return false;
@@ -821,7 +821,7 @@
  async function deleteExercise(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
   if(!db||!program||!programVersion||!userId)return false;
-  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
   const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
   const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
   if(!isCurrentEditor())return false;
