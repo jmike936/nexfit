@@ -394,8 +394,8 @@
   }
   if(!isSameAccount())return;
   host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
-  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining,renderUserId,renderDb);if(isSameAccount())await openWorkoutEditor(b.dataset.trainingId,renderUserId,renderDb)});
-  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount())await deleteSubworkout(b.dataset.trainingId)});
+  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.editTraining)await openWorkoutEditor(b.dataset.trainingId,renderUserId,renderDb)});
+  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.deleteTraining)await deleteSubworkout(b.dataset.trainingId)});
  }
 
  async function createWorkout(){
@@ -464,7 +464,7 @@
   subworkouts=sq.data||[];
   const isAthlete=program.athlete_id===userId;
   shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
-  $('newVersion').onclick=newVersion;$('newSub').onclick=addSubworkout;$('deleteRequest').onclick=requestDeletion;$('editCurrentProgram').onclick=()=>editProgram(program.id);$('archiveCurrentProgram').onclick=()=>archiveProgram(program.id);
+  $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion()};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id)};
   if($('confirmVersion'))$('confirmVersion').onclick=async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return;if(result.error)alert(result.error.message);else openProgram(id,userId,db)};
   renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
