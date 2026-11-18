@@ -1040,6 +1040,7 @@
  }
  window.resetStrengthUserState=function(){
    window.resetWorkoutHistoryUserState?.();
+   window.resetNexfitExerciseEvolutionUserState?.();
   $('programEditorModal')?.classList.remove('show');
   if(session)persistWorkoutState();
   plans=[];activeTrainingTab='mine';showArchivedPlans=false;window.__nexfitOfflineMode=false;
