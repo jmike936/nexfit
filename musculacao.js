@@ -520,35 +520,59 @@
   return withProgramActionLock('newVersion',async()=>{
    const db=dbRef(),program=current,previous=version,userId=userRef()?.id;
    if(!db||!program||!previous||!userId)return false;
-   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
+   const isSameAccount=()=>userRef()?.id===userId;
+   const isCurrentEditor=()=>isSameAccount()&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
    const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(q.error)return alert(q.error.message);
    const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
-   if(!isCurrentEditor())return false;
    if(error)return alert(error.message);
+   const cleanupIncompleteVersion=async()=>{
+    if(!isSameAccount())return false;
+    const subs=await db.from('training_subworkouts').select('id').eq('version_id',data.id);
+    if(subs.error||!isSameAccount())return false;
+    const ids=(subs.data||[]).map(row=>row.id);
+    if(ids.length){
+     const removedExercises=await db.from('training_exercises').delete().in('subworkout_id',ids);
+     if(removedExercises.error||!isSameAccount())return false;
+    }
+    const removedSubs=await db.from('training_subworkouts').delete().eq('version_id',data.id);
+    if(removedSubs.error||!isSameAccount())return false;
+    const discardedVersion=await db.from('training_program_versions').update({status:'archived',change_note:'Versão descartada automaticamente após falha ao copiar os treinos.'}).eq('id',data.id).eq('program_id',program.id);
+    if(discardedVersion.error){console.warn('Não foi possível arquivar a versão incompleta',discardedVersion.error);return false}
+    return true;
+   };
+   const abortStaleVersion=async()=>{
+    if(isCurrentEditor())return false;
+    if(isSameAccount()){
+     const cleaned=await cleanupIncompleteVersion();
+     if(!cleaned)console.warn('A versão incompleta permaneceu no banco e precisa de limpeza manual.');
+    }
+    return true;
+   };
+   if(await abortStaleVersion())return false;
    const oldSubs=await db.from('training_subworkouts').select('*').eq('version_id',previous.id).order('position');
-   if(!isCurrentEditor())return false;
-   if(oldSubs.error)return alert('A versão foi criada, mas não foi possível copiar os treinos: '+oldSubs.error.message);
+   if(await abortStaleVersion())return false;
+   if(oldSubs.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldSubs.error.message)}
    for(const oldSub of (oldSubs.data||[])){
     const {data:newSub,error:subErr}=await db.from('training_subworkouts').insert({version_id:data.id,title:oldSub.title,description:oldSub.description,position:oldSub.position}).select().single();
-    if(!isCurrentEditor())return false;
-    if(subErr)return alert('A versão foi criada, mas houve erro ao copiar um treino: '+subErr.message);
+    if(await abortStaleVersion())return false;
+    if(subErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+subErr.message)}
     const oldExercises=await db.from('training_exercises').select('*').eq('subworkout_id',oldSub.id).order('position');
-    if(!isCurrentEditor())return false;
-    if(oldExercises.error)return alert(oldExercises.error.message);
+    if(await abortStaleVersion())return false;
+    if(oldExercises.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldExercises.error.message)}
     if(oldExercises.data?.length){
      const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
      const {error:exErr}=await db.from('training_exercises').insert(copied);
-     if(!isCurrentEditor())return false;
-     if(exErr)return alert('A versão foi criada, mas houve erro ao copiar exercícios: '+exErr.message);
+     if(await abortStaleVersion())return false;
+     if(exErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+exErr.message)}
     }
    }
-   if(!isCurrentEditor())return false;
+   if(await abortStaleVersion())return false;
    await db.from('app_notifications').insert({user_id:program.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:program.id});
-   if(!isCurrentEditor())return false;
+   if(await abortStaleVersion())return false;
    openProgram(program.id,userId,db);
   });
  }
