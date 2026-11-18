@@ -450,7 +450,7 @@
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
   if(!db||!userId||userRef()?.id!==userId||!program)return false;
-  const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id;
+  const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id&&editorSubworkoutId===null;
   editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
   if(!isCurrentProgram())return false;
@@ -524,11 +524,11 @@
   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===subId;
   const subQuery=await db.from('training_subworkouts').select('*').eq('id',subId).maybeSingle();
   if(!isCurrentEditor())return false;
-  if(subQuery.error||!subQuery.data)return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));
+  if(subQuery.error||!subQuery.data){if(isCurrentEditor())editorSubworkoutId=null;return alert('Não foi possível abrir o treino: '+(subQuery.error?.message||'treino não encontrado'));}
   const sub=subQuery.data;
   const exercises=await db.from('training_exercises').select('*').eq('subworkout_id',sub.id).order('position');
   if(!isCurrentEditor())return false;
-  if(exercises.error)return alert('Não foi possível carregar os exercícios: '+exercises.error.message);
+  if(exercises.error){if(isCurrentEditor())editorSubworkoutId=null;return alert('Não foi possível carregar os exercícios: '+exercises.error.message)}
   const rows=(exercises.data||[]).map((e,i)=>'<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>'+(i+1)+'. '+esc(normalizeHumanText(e.name))+'</strong><span><button class="icon-action" data-edit-focused-ex="'+esc(e.id)+'" title="Editar exercício" aria-label="Editar exercício">'+editIcon+'</button><button class="icon-action danger" data-delete-focused-ex="'+esc(e.id)+'" title="Excluir exercício" aria-label="Excluir exercício">'+trashIcon+'</button></span></div><div class="muted">'+(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')+' · descanso '+e.rest_seconds+'s</div></div>').join('');
   shell('Editar treino',`<div class="panel">
    <button class="btn alt" type="button" id="backToProgram">← Voltar ao programa</button>
@@ -545,7 +545,7 @@
   section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())deleteExercise(b.dataset.deleteFocusedEx)});
  }
  async function renderSubworkouts(expectedUserId=userRef()?.id,expectedDb=dbRef(),programId=current?.id,versionId=version?.id,workoutRows=subworkouts.slice()){
-  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId;
+  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId&&editorSubworkoutId===null;
   if(!db||!expectedUserId||!isCurrent())return;
   let html='';
   for(const s of workoutRows){
@@ -962,7 +962,7 @@
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
