@@ -433,37 +433,51 @@
    if(button)button.disabled=false;
   }
  }
+ const pendingProgramActions=new Set();
+ async function withProgramActionLock(actionId,callback){
+  if(pendingProgramActions.has(actionId))return false;
+  pendingProgramActions.add(actionId);
+  const button=$(actionId);if(button)button.disabled=true;
+  try{return await callback()}
+  finally{pendingProgramActions.delete(actionId);if(button)button.disabled=false}
+ }
  async function createProgram(){
-  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-  if(!db||!userId)return alert('Faça login para criar um programa.');
-  const title=normalizeHumanText($('programTitle').value);
-  if(!title)return alert('Informe o nome do programa.');
-  const category=$('programCategory').value,description=normalizeHumanText($('programDesc').value)||null;
-  const {data,error}=await db.rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
-  if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
-  await home();
+  return withProgramActionLock('createProgram',async()=>{
+   const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+   if(!db||!userId)return alert('Faça login para criar um programa.');
+   const title=normalizeHumanText($('programTitle').value);
+   if(!title)return alert('Informe o nome do programa.');
+   const category=$('programCategory').value,description=normalizeHumanText($('programDesc').value)||null;
+   const {data,error}=await db.rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
+   if(!isSameAccount())return false;
+   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
+   await home();
+  });
  }
  async function createProgramForAthlete(){
-  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-  if(!db||!userId)return alert('Faça login para enviar um programa.');
-  const email=$('athleteEmail').value.trim().toLowerCase(),title=normalizeHumanText($('programTitle').value);
-  if(!email)return alert('Informe o e-mail do atleta.');
-  if(!title)return alert('Informe o nome do programa.');
-  const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+normalizeHumanText($('programDesc').value);
-  const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
-  if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação do programa para outro atleta. Execute o arquivo supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.');return alert(message)}
-  alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
-  await home();
+  return withProgramActionLock('createForAthlete',async()=>{
+   const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+   if(!db||!userId)return alert('Faça login para enviar um programa.');
+   const email=$('athleteEmail').value.trim().toLowerCase(),title=normalizeHumanText($('programTitle').value);
+   if(!email)return alert('Informe o e-mail do atleta.');
+   if(!title)return alert('Informe o nome do programa.');
+   const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+normalizeHumanText($('programDesc').value);
+   const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
+   if(!isSameAccount())return false;
+   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação do programa para outro atleta. Execute o arquivo supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.');return alert(message)}
+   alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
+   await home();
+  });
  }
  async function requestAccess(){
-  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-  if(!db||!userId)return alert('Faça login para solicitar acesso.');
-  const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do atleta.');
-  const {error}=await db.rpc('nexfit_request_access_by_email',{p_email:email});
-  if(!isSameAccount())return false;
-  if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');await home();
+  return withProgramActionLock('requestAccess',async()=>{
+   const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+   if(!db||!userId)return alert('Faça login para solicitar acesso.');
+   const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do atleta.');
+   const {error}=await db.rpc('nexfit_request_access_by_email',{p_email:email});
+   if(!isSameAccount())return false;
+   if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');await home();
+  });
  }
  async function decideAccess(id,approve){
   const db=dbRef(),u=userRef(),userId=u?.id,isSameAccount=()=>userRef()?.id===userId;
