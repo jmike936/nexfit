@@ -1039,6 +1039,7 @@
   return true;
  }
  window.resetStrengthUserState=function(){
+   window.resetWorkoutHistoryUserState?.();
   $('programEditorModal')?.classList.remove('show');
   if(session)persistWorkoutState();
   plans=[];activeTrainingTab='mine';showArchivedPlans=false;window.__nexfitOfflineMode=false;
