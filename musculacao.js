@@ -246,26 +246,35 @@
   activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
  }
 
- async function startOfflineWorkout(workoutId){
-  const user=userRef();let cached=[];
-  try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(user?.id||''))||'[]')}catch(_){}
+ async function startOfflineWorkout(workoutId,expectedUserId=userRef()?.id){
+  const user=userRef();if(!user||user.id!==expectedUserId)return false;let cached=[];
+  try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(expectedUserId))||'[]')}catch(_){}
   const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
   if(!snapshot||!snapshot.exercises?.length)return alert('Este treino não está disponível offline. Abra-o com internet antes de iniciar.');
   current=snapshot.program;version=snapshot.version;subworkouts=snapshot.subworkouts||[snapshot.subworkout];
-  await startSession(workoutId,snapshot.exercises);
+  await startSession(workoutId,snapshot.exercises,expectedUserId,dbRef());
  }
 
  async function startListedWorkout(programId,versionId,workoutId){
+  const db=dbRef(),user=userRef(),userId=user?.id,isSameAccount=()=>userRef()?.id===userId;
   const program=plans.find(p=>String(p.id)===String(programId)&&canManageProgramLocally(p)&&p.status==='active');
-  if(!program)return alert('Este programa não está ativo.');
-  if(!navigator.onLine||window.__nexfitOfflineMode)return startOfflineWorkout(workoutId);
-  const key='nexfit-offline-workouts:'+String(userRef()?.id||'');let cached=[];
+  if(!db||!userId||!program)return alert('Este programa não está ativo.');
+  if(!navigator.onLine||window.__nexfitOfflineMode)return startOfflineWorkout(workoutId,userId);
+  const key='nexfit-offline-workouts:'+String(userId);let cached=[];
   try{cached=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){}
   const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
   let vq,sq;
-  try{vq=await dbRef().from('training_program_versions').select('*').eq('id',versionId).maybeSingle();if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId);return alert('Não foi possível carregar a versão deste programa.')}sq=await dbRef().from('training_subworkouts').select('*').eq('version_id',versionId).order('position');if(sq.error){if(snapshot)return startOfflineWorkout(workoutId);return alert(sq.error.message)}}catch(error){if(snapshot)return startOfflineWorkout(workoutId);return alert('Sem conexão e sem cópia offline deste treino.')}
+  try{
+   vq=await db.from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
+   if(!isSameAccount())return false;
+   if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId,userId);return alert('Não foi possível carregar a versão deste programa.')}
+   sq=await db.from('training_subworkouts').select('*').eq('version_id',versionId).order('position');
+   if(!isSameAccount())return false;
+   if(sq.error){if(snapshot)return startOfflineWorkout(workoutId,userId);return alert(sq.error.message)}
+  }catch(error){if(!isSameAccount())return false;if(snapshot)return startOfflineWorkout(workoutId,userId);return alert('Sem conexão e sem cópia offline deste treino.')}
+  if(!isSameAccount())return false;
   current=program;version=vq.data;subworkouts=sq.data||[];
-  await startSession(workoutId,snapshot?.exercises||null);
+  await startSession(workoutId,snapshot?.exercises||null,userId,db);
  }
 
  async function home(){
@@ -490,7 +499,7 @@
   section.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>deleteSubworkout(b.dataset.deleteSub));
   section.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>editExercise(b.dataset.editEx));
   section.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>deleteExercise(b.dataset.deleteEx));
-  section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start));
+  section.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(b.dataset.start,null,userRef()?.id,dbRef()));
  }
  async function loadExerciseCatalog(){
   const {data,error}=await dbRef().from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
@@ -732,20 +741,26 @@
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
  let previousLoadsByExercise={};
  function exerciseIdentity(name){return String(name??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR')}
- async function preloadPreviousLoads(exercises){
-  previousLoadsByExercise={};const u=userRef(),db=dbRef();if(!u||!db||!exercises?.length)return;
+ async function preloadPreviousLoads(exercises,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const u=userRef(),db=expectedDb;if(!u||!db||!exercises?.length||u.id!==expectedUserId)return;
+  const isSameAccount=()=>userRef()?.id===expectedUserId;
+  previousLoadsByExercise={};
   const wanted=new Set(exercises.map(e=>exerciseIdentity(e.name)).filter(Boolean));if(!wanted.size)return;
+  const activeSessionId=session?.id||'00000000-0000-0000-0000-000000000000';
   const [sessions,allExercises]=await Promise.all([
-   db.from('training_sessions').select('id').eq('athlete_id',u.id).neq('id',session?.id||'00000000-0000-0000-0000-000000000000').order('started_at',{ascending:false}).limit(500),
+   db.from('training_sessions').select('id').eq('athlete_id',expectedUserId).neq('id',activeSessionId).order('started_at',{ascending:false}).limit(500),
    db.from('training_exercises').select('id,name')
   ]);
+  if(!isSameAccount())return;
   if(sessions.error||allExercises.error){console.warn('Não foi possível consultar cargas anteriores',sessions.error||allExercises.error);return}
   const matching=(allExercises.data||[]).filter(e=>wanted.has(exerciseIdentity(e.name)));
-  if(!matching.length||!sessions.data?.length)return;
-  const sessionIds=sessions.data.map(x=>x.id),exerciseIds=matching.map(x=>x.id),nameById=new Map(matching.map(x=>[x.id,exerciseIdentity(x.name)]));
+  if(!matching.length||!sessions.data?.length){previousLoadsByExercise={};return}
+  const sessionIds=sessions.data.map(x=>x.id),exerciseIds=matching.map(x=>x.id),nameById=new Map(matching.map(x=>[x.id,exerciseIdentity(x.name)])),nextLoads={};
   const logs=await db.from('training_set_logs').select('exercise_id,reps_completed,load_kg,completed_at,session_id').in('session_id',sessionIds).in('exercise_id',exerciseIds).not('load_kg','is',null).not('reps_completed','is',null).order('completed_at',{ascending:false}).limit(5000);
+  if(!isSameAccount())return;
   if(logs.error){console.warn('Não foi possível consultar cargas anteriores',logs.error);return}
-  for(const row of logs.data||[]){const identity=nameById.get(row.exercise_id),reps=Number(row.reps_completed),load=Number(row.load_kg);if(!identity||!Number.isFinite(reps)||reps<1||!Number.isFinite(load)||load<0)continue;if(!previousLoadsByExercise[identity])previousLoadsByExercise[identity]={};if(previousLoadsByExercise[identity][reps]===undefined)previousLoadsByExercise[identity][reps]=load}
+  for(const row of logs.data||[]){const identity=nameById.get(row.exercise_id),reps=Number(row.reps_completed),load=Number(row.load_kg);if(!identity||!Number.isFinite(reps)||reps<1||!Number.isFinite(load)||load<0)continue;if(!nextLoads[identity])nextLoads[identity]={};if(nextLoads[identity][reps]===undefined)nextLoads[identity][reps]=load}
+  if(isSameAccount())previousLoadsByExercise=nextLoads;
  }
  let sessionView='picker',restSnapshot=null,restoreAttempted=false,restorePromise=null,restoreUserId=null,restoreGeneration=0;
  const sessionStorageKeyFor=userId=>'nexfit-active-workout:'+String(userId||'');
@@ -840,7 +855,7 @@
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];previousLoadsByExercise={};
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
@@ -1200,25 +1215,49 @@
   }finally{savingSet=false}
   continueAfterRecordedSet(item);
  }
- async function startSession(subId,cachedExercises=null){
-  const db=dbRef(),user=userRef();let exercises=cachedExercises;
+ async function startSession(subId,cachedExercises=null,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const db=expectedDb,user=userRef(),userId=expectedUserId,program=current,programVersion=version;let exercises=cachedExercises;
+  if(!db||!user||!userId||user.id!==userId||!program||!programVersion)return false;
+  const isSameAccount=()=>userRef()?.id===userId;
   if(navigator.onLine){
-   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.')}catch(error){if(!exercises?.length)return alert('Sem conexão e sem cópia offline deste treino. Abra-o com internet antes de iniciar.')}
+   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!isSameAccount())return false;if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.')}catch(error){if(!isSameAccount())return false;if(!exercises?.length)return alert('Sem conexão e sem cópia offline deste treino. Abra-o com internet antes de iniciar.')}
   }
+  if(!isSameAccount())return false;
   if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
   await enableWorkoutNotifications();
+  if(!isSameAccount())return false;
   try{if(navigator.storage?.persist)await navigator.storage.persist()}catch(_){}
+  if(!isSameAccount())return false;
   const startedAt=new Date().toISOString();
   const sessionId=window.crypto?.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
-  const payload={id:sessionId,athlete_id:user.id,program_id:current.id,version_id:version.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
+  const payload={id:sessionId,athlete_id:userId,program_id:program.id,version_id:programVersion.id,subworkout_id:subId,started_at:startedAt,status:'in_progress'};
   let created=null,localOnly=true;
   if(navigator.onLine){
-   try{const result=await db.from('training_sessions').insert(payload).select().single();if(!result.error){created=result.data;localOnly=false}else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message)}catch(error){console.warn('Iniciando sessão local por falha de conexão',error)}
+   try{
+    const result=await db.from('training_sessions').insert(payload).select().single();
+    if(!isSameAccount()){
+     if(!result.error){if(!queueWorkoutCancellation(sessionId,userId)){const cleanup=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userId);if(cleanup.error)console.warn('Não foi possível limpar uma sessão iniciada antes da troca de conta',cleanup.error)}}
+     return false;
+    }
+    if(!result.error){created=result.data;localOnly=false}
+    else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message);
+   }catch(error){if(!isSameAccount())return false;console.warn('Iniciando sessão local por falha de conexão',error)}
+  }
+  if(!isSameAccount()){
+   if(created&&!queueWorkoutCancellation(sessionId,userId)){const cleanup=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userId);if(cleanup.error)console.warn('Não foi possível limpar uma sessão iniciada antes da troca de conta',cleanup.error)}
+   return false;
   }
   session={...(created||payload),localOnly};sessionExerciseRows=exercises;sessionView='picker';sessionPlan=[];sessionSetLogs=[];skippedSetKeys=new Set();skippedExerciseIndices=new Set();
-  try{await preloadPreviousLoads(exercises)}catch(_){}
+  try{await preloadPreviousLoads(exercises,userId,db)}catch(_){}
+  if(!isSameAccount()||session?.id!==sessionId)return false;
   exercises.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
-  sessionIndex=0;sessionLoads={};if(!persistWorkoutState()){session=null;sessionPlan=[];sessionExerciseRows=[];return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.')}renderExercisePicker();
+  sessionIndex=0;sessionLoads={};
+  if(!persistWorkoutState()){
+   session=null;sessionPlan=[];sessionExerciseRows=[];
+   if(created){const cleanup=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userId);if(cleanup.error&&!queueWorkoutCancellation(sessionId,userId))console.warn('Não foi possível remover a sessão que não pôde ser salva localmente',cleanup.error)}
+   return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.');
+  }
+  renderExercisePicker();
  }
  async function finishSession(){
   if(!session||finishingSession)return;
@@ -1235,26 +1274,32 @@
   session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];finishingSession=false;home();
  }
  window.beginStrengthActivity=async function(){
-  const db=dbRef(),u=userRef();if(!db||!u)return alert('Faça login para iniciar um treino.');
-  const q=await db.from('training_programs').select('*').eq('athlete_id',u.id).eq('status','active').order('updated_at',{ascending:false});
+  const db=dbRef(),u=userRef(),userId=u?.id;if(!db||!userId)return alert('Faça login para iniciar um treino.');
+  const isSameAccount=()=>userRef()?.id===userId;
+  const q=await db.from('training_programs').select('*').eq('athlete_id',userId).eq('status','active').order('updated_at',{ascending:false});
+  if(!isSameAccount())return false;
   if(q.error)return alert(q.error.message);
   const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
   if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar seu programa.');
   if(typeof window.go==='function')window.go('strengthPage');else{document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section))}
   const showPrograms=()=>{
+   if(!isSameAccount())return;
    shell('Escolha seu programa','<div class="panel"><p class="muted">Selecione o programa que você vai executar agora.</p>'+available.map((p,i)=>'<div class="item"><strong>'+esc(normalizeHumanText(p.title))+'</strong><p class="muted">'+esc((p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,''))+'</p><button class="btn" data-select-program="'+p.id+'">Escolher programa</button></div>').join('')+'</div>');
    section.querySelectorAll('[data-select-program]').forEach(button=>button.onclick=()=>chooseProgram(button.dataset.selectProgram));
   };
   const chooseProgram=async id=>{
+   if(!isSameAccount())return false;
    const program=available.find(p=>String(p.id)===String(id));if(!program)return;
    const vq=await db.from('training_program_versions').select('*').eq('id',program.current_version_id).maybeSingle();
+   if(!isSameAccount())return false;
    if(vq.error||!vq.data)return alert('Não foi possível localizar a versão vigente deste programa.');
    const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
+   if(!isSameAccount())return false;
    if(sq.error)return alert(sq.error.message);
    if(!sq.data?.length)return alert('Este programa ainda não possui treinos. Adicione A, B, C… na aba Musculação.');
    current=program;version=vq.data;subworkouts=sq.data;
    shell('Qual treino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(normalizeHumanText(s.title))+'</strong><p class="muted">'+esc(s.description||'Treino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
-   section.querySelectorAll('[data-start-selected]').forEach(button=>button.onclick=()=>startSession(button.dataset.startSelected));
+   section.querySelectorAll('[data-start-selected]').forEach(button=>button.onclick=()=>startSession(button.dataset.startSelected,null,userId,db));
    $('backPrograms').onclick=showPrograms;
   };
   if(available.length===1)chooseProgram(available[0].id);else showPrograms();
