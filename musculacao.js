@@ -402,25 +402,36 @@
   host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.deleteTraining)await deleteSubworkout(b.dataset.trainingId)});
  }
 
+ let creatingWorkout=false;
  async function createWorkout(){
-  const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-  if(!db||!userId)return alert('Faça login para criar um treino.');
-  const program=plans.find(p=>String(p.id)===String($('workoutProgram').value)&&p.status==='active'&&canManageProgramLocally(p));
-  const title=normalizeHumanText($('workoutTitle').value);
-  if(!program)return alert('Selecione um programa vigente.');
-  if(!title)return alert('Informe o nome do treino.');
-  const {data:versionRow,error:versionError}=await db.from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
-  if(!isSameAccount())return false;
-  if(versionError||!versionRow)return alert('Não foi possível carregar a versão vigente do programa.');
-  const {data:existing,error:existingError}=await db.from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
-  if(!isSameAccount())return false;
-  if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
-  const {data,error}=await db.from('training_subworkouts').insert({version_id:versionRow.id,title,description:normalizeHumanText($('workoutDescription').value)||null,position:(existing?.[0]?.position||0)+1}).select().single();
-  if(!isSameAccount())return false;
-  if(error)return alert('Não foi possível criar o treino: '+error.message);
-  $('workoutTitle').value='';$('workoutDescription').value='';
-  current=program;version=versionRow;
-  await openWorkoutEditor(data.id,userId,db);
+  if(creatingWorkout)return false;
+  creatingWorkout=true;
+  const button=$('createWorkout');if(button)button.disabled=true;
+  try{
+   const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
+   if(!db||!userId)return alert('Faça login para criar um treino.');
+   const selectedProgramId=String($('workoutProgram').value||'');
+   const program=plans.find(p=>String(p.id)===selectedProgramId&&p.status==='active'&&canManageProgramLocally(p));
+   const title=normalizeHumanText($('workoutTitle').value),description=normalizeHumanText($('workoutDescription').value)||null;
+   if(!program)return alert('Selecione um programa vigente.');
+   if(!title)return alert('Informe o nome do treino.');
+   const isCurrentForm=()=>isSameAccount()&&String($('workoutProgram').value||'')===selectedProgramId&&plans.some(p=>String(p.id)===selectedProgramId&&p.status==='active'&&p.current_version_id===program.current_version_id&&canManageProgramLocally(p));
+   const {data:versionRow,error:versionError}=await db.from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
+   if(!isCurrentForm())return false;
+   if(versionError||!versionRow)return alert('Não foi possível carregar a versão vigente do programa.');
+   const {data:existing,error:existingError}=await db.from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
+   if(!isCurrentForm())return false;
+   if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
+   const {data,error}=await db.from('training_subworkouts').insert({version_id:versionRow.id,title,description,position:(existing?.[0]?.position||0)+1}).select().single();
+   if(!isCurrentForm())return false;
+   if(error)return alert('Não foi possível criar o treino: '+error.message);
+   $('workoutTitle').value='';$('workoutDescription').value='';
+   current=program;version=versionRow;
+   await openWorkoutEditor(data.id,userId,db);
+  }finally{
+   creatingWorkout=false;
+   if(button)button.disabled=false;
+  }
  }
  async function createProgram(){
   const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
