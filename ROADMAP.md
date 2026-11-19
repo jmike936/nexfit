@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 # Roadmap NEXFIT
 
 Atualizado em 19/11/2026.
