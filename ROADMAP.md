@@ -13,9 +13,9 @@ Atualizado em 19/11/2026.
 
 ## Prioridade 2 — Exercícios por tempo
 
-- [ ] Adicionar modalidade de exercício por tempo, separada de peso/repetições.
-- [ ] Permitir duração-alvo com contagem regressiva automática (ex.: prancha por 40 segundos).
-- [ ] Permitir cronômetro livre, iniciado pelo atleta e encerrado ao concluir o exercício.
+- [x] Adicionar modalidade de exercício por tempo, separada de peso/repetições.
+- [x] Permitir duração-alvo com contagem regressiva automática (ex.: prancha por 40 segundos).
+- [x] Permitir cronômetro livre, iniciado pelo atleta e encerrado ao concluir o exercício.
 - [ ] Registrar duração realizada em segundos, com suporte offline, sincronização e histórico.
 - [ ] Preservar compatibilidade com séries tradicionais de repetições e carga.
 
