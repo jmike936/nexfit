@@ -1499,7 +1499,10 @@
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
  function continueAfterRecordedSet(item){
-  activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
+  activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
+  const nextItem=sessionPlan[sessionIndex+1];
+  if(!nextItem||nextItem.exerciseIndex!==item.exerciseIndex){advanceAfterSet(item);return}
+  let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
   const panel=$('restPanel'),complete=$('completeSet');
   if(complete)complete.disabled=true;
   const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
