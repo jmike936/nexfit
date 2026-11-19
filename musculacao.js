@@ -528,7 +528,14 @@
    const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
-   if(error)return alert(error.message);
+   if(error){
+    if(error.code==='23505'&&isCurrentEditor()){
+     alert('Outra aba criou uma nova versão deste programa ao mesmo tempo. Atualizamos a ficha para mostrar a versão mais recente.');
+     await openProgram(program.id,userId,db);
+     return false;
+    }
+    return alert(error.message);
+   }
    const cleanupIncompleteVersion=async()=>{
     if(!isSameAccount())return false;
     const subs=await db.from('training_subworkouts').select('id').eq('version_id',data.id);
