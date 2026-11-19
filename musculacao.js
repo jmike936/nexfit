@@ -1443,11 +1443,11 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   $('cancelSession').onclick=exitSessionToHome;
  }
  async function exitSessionToHome(){
-  if(savingSet||finishingSession)return alert('Aguarde a gravação ou conclusão do treino terminar antes de sair.');
+  if(savingSet||finishingSession){await showWorkoutDialog({title:'Só um instante',message:'A gravação ou conclusão do treino ainda está em andamento. Aguarde alguns segundos antes de sair.',confirmLabel:'Entendi',cancelLabel:'Fechar'});return;}
   if(!session)return;
-  if(!confirm('Quer encerrar este treino agora? Se escolher sair, as séries já registradas nesta sessão também serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar.'))return;
+  if(!await showWorkoutDialog({title:'Sair sem finalizar?',message:'As séries registradas nesta sessão e a sessão atual serão apagadas. Se preferir continuar, seu treino ficará salvo para você retomar depois.',confirmLabel:'Sim, sair e apagar',danger:true}))return;
   const cancelUserId=userRef()?.id,cancelDb=dbRef(),sessionId=session.id,localOnly=!!session.localOnly;
-  if(!cancelUserId||!cancelDb)return alert('Não foi possível identificar a conta desta sessão. O treino permanece salvo.');
+  if(!cancelUserId||!cancelDb){await showWorkoutDialog({title:'Não foi possível sair',message:'Não identificamos a conta desta sessão. Seu treino permanece salvo e nenhum registro foi apagado.',confirmLabel:'Entendi'});return;}
   const isSameAccount=()=>userRef()?.id===cancelUserId;
   const queueAndClearCapturedSession=()=>{
    if(!queueWorkoutCancellation(sessionId,cancelUserId))return false;
@@ -1458,9 +1458,9 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    clearPersistedWorkout(cancelUserId);restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];skippedSetKeys.clear();skippedExerciseIndices.clear();return true;
   };
   if(!navigator.onLine){
-   if(!queueAndClearCapturedSession())return alert('Não foi possível guardar o cancelamento neste aparelho. O treino permanece salvo; libere espaço e tente novamente.');
+   if(!queueAndClearCapturedSession()){await showWorkoutDialog({title:'Treino preservado',message:'Não foi possível guardar o cancelamento neste aparelho. Seu treino continua salvo. Libere espaço e tente novamente.',confirmLabel:'Entendi',danger:true});return;}
    if(isSameAccount()&&resetCancelledSession())home();
-   alert('Treino cancelado neste aparelho. A exclusão das séries e da sessão no servidor será concluída quando a conexão voltar.');return;
+   await showWorkoutDialog({title:'Treino cancelado',message:'A sessão foi removida deste aparelho. A exclusão no servidor será concluída quando a conexão voltar.',confirmLabel:'Entendi'});return;
   }
   if(localOnly){if(resetCancelledSession())home();return}
   const {error:logsError}=await cancelDb.from('training_set_logs').delete().eq('session_id',sessionId);
@@ -1468,13 +1468,13 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
    return;
   }
-  if(logsError)return alert('Não foi possível cancelar o treino e apagar as séries registradas: '+logsError.message);
+  if(logsError){await showWorkoutDialog({title:'Não foi possível cancelar',message:'Não conseguimos apagar as séries registradas: '+logsError.message,confirmLabel:'Entendi',danger:true});return;}
   const {error:sessionError}=await cancelDb.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',cancelUserId);
   if(!isSameAccount()){
    if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
    return;
   }
-  if(sessionError)return alert('As séries foram apagadas, mas não foi possível remover a sessão. Tente novamente ou contate o suporte: '+sessionError.message);
+  if(sessionError){await showWorkoutDialog({title:'Cancelamento incompleto',message:'As séries foram apagadas, mas não foi possível remover a sessão. Tente novamente ou contate o suporte: '+sessionError.message,confirmLabel:'Entendi',danger:true});return;}
   if(!resetCancelledSession())return;
   const homeButton=document.querySelector('.nav button[data-page="home"]');
   if(homeButton){homeButton.click();return}
