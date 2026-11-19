@@ -5,6 +5,7 @@ Atualizado em 19/11/2026.
 ## Prioridade 1 — Integridade dos programas e histórico
 
 - [x] Impedir que versões concorrentes sejam criadas com o mesmo número.
+- [x] Impedir múltiplas versões pendentes simultâneas do mesmo programa.
 - [x] Evitar abrir uma versão enquanto sua cópia de treinos e exercícios ainda está em andamento.
 - [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (fluxo de versão isolada em implementação).
 - [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões (incluindo compatibilidade com registros anteriores à identidade estável).

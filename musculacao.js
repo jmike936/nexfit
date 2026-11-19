@@ -589,6 +589,12 @@
    if(!db||!program||!previous||!userId)return false;
    const isSameAccount=()=>userRef()?.id===userId;
    const isCurrentEditor=()=>isSameAccount()&&current?.id===program.id&&version?.id===previous.id&&editorSubworkoutId===null;
+   if(previous.status==='pending'){alert('Já existe uma versão aguardando confirmação. Continue editando essa versão ou aguarde a confirmação do atleta antes de criar outra.');return false}
+   if(previous.status!=='active'){alert('Só é possível criar uma nova versão a partir de um programa vigente.');return false}
+   const pendingCheck=await db.from('training_program_versions').select('id,version_number').eq('program_id',program.id).eq('status','pending').order('version_number',{ascending:false}).limit(1);
+   if(!isCurrentEditor())return false;
+   if(pendingCheck.error)return alert('Não foi possível verificar versões pendentes: '+pendingCheck.error.message);
+   if(pendingCheck.data?.length){alert('Já existe uma versão aguardando confirmação. Ela será aberta para continuar a edição.');return openProgram(program.id,userId,db)}
    const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(q.error)return alert(q.error.message);
