@@ -700,45 +700,48 @@
   section.querySelectorAll('[data-delete-focused-ex]').forEach(b=>b.onclick=()=>{if(isCurrentEditor())deleteExercise(b.dataset.deleteFocusedEx)});
  }
  async function renderSubworkouts(expectedUserId=userRef()?.id,expectedDb=dbRef(),programId=current?.id,versionId=version?.id,workoutRows=subworkouts.slice()){
-  const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId&&editorSubworkoutId===null;
-  if(!db||!expectedUserId||!isCurrent())return;
-  let html='';
-  for(const s of workoutRows){
-   const q=await db.from('training_exercises').select('*').eq('subworkout_id',s.id).order('position');
-   if(!isCurrent())return;
-   const done=await db.from('training_sessions').select('subworkout_id').eq('program_id',programId).eq('athlete_id',expectedUserId).eq('status','completed');
-   if(!isCurrent())return;
-   let total=0;
-   if(!done.error&&done.data?.length){
-    const ids=[...new Set(done.data.map(x=>x.subworkout_id).filter(Boolean))];
-    if(ids.length){
-     const names=await db.from('training_subworkouts').select('id,title,identity_id').in('id',ids);
+   const db=expectedDb,isCurrent=()=>userRef()?.id===expectedUserId&&current?.id===programId&&version?.id===versionId&&editorSubworkoutId===null;
+   if(!db||!expectedUserId||!isCurrent())return;
+   const workoutIds=workoutRows.map(item=>item.id),exercisesByWorkout=new Map(),sessionCountsByWorkout=new Map(),sessionsByIdentity=new Map(),sessionsByTitle=new Map();
+   if(workoutIds.length){
+    const [exerciseQuery,doneQuery]=await Promise.all([
+     db.from('training_exercises').select('*').in('subworkout_id',workoutIds).order('position'),
+     db.from('training_sessions').select('subworkout_id').eq('program_id',programId).eq('athlete_id',expectedUserId).eq('status','completed')
+    ]);
+    if(!isCurrent())return;
+    for(const exercise of exerciseQuery.data||[]){const key=String(exercise.subworkout_id);if(!exercisesByWorkout.has(key))exercisesByWorkout.set(key,[]);exercisesByWorkout.get(key).push(exercise)}
+    for(const row of doneQuery.data||[]){const key=String(row.subworkout_id||'');if(key)sessionCountsByWorkout.set(key,(sessionCountsByWorkout.get(key)||0)+1)}
+    const historicalIds=[...sessionCountsByWorkout.keys()];
+    if(historicalIds.length){
+     const names=await db.from('training_subworkouts').select('id,title,identity_id').in('id',historicalIds);
      if(!isCurrent())return;
-     const currentIdentityIds=(names.data||[]).filter(x=>x.identity_id===s.identity_id).map(x=>x.id);
-     const currentIdentityCount=done.data.filter(x=>currentIdentityIds.includes(x.subworkout_id)).length;
-     if(currentIdentityCount){
-      total=currentIdentityCount;
-     }else{
-      // Fallback para sessões antigas: a migração inicial atribuiu UUIDs próprios aos registros já existentes.
-      const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');
-      const legacyIds=(names.data||[]).filter(x=>String(x.title||'').trim().toLocaleLowerCase('pt-BR')===legacyTitle).map(x=>x.id);
-      total=done.data.filter(x=>legacyIds.includes(x.subworkout_id)).length;
+     for(const item of names.data||[]){
+      const count=sessionCountsByWorkout.get(String(item.id))||0;
+      if(item.identity_id)sessionsByIdentity.set(String(item.identity_id),(sessionsByIdentity.get(String(item.identity_id))||0)+count);
+      const title=String(item.title||'').trim().toLocaleLowerCase('pt-BR');
+      if(title)sessionsByTitle.set(title,(sessionsByTitle.get(title)||0)+count);
      }
     }
    }
-   html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
+   let html='';
+   for(const s of workoutRows){
+    if(!isCurrent())return;
+    let total=sessionsByIdentity.get(String(s.identity_id||''))||0;
+    if(!total){const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');total=legacyTitle?sessionsByTitle.get(legacyTitle)||0:0}
+    const exercises=exercisesByWorkout.get(String(s.id))||[];
+    html+=\`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>\${esc(normalizeHumanText(s.title))}</h3><span class="tag">\${total} \${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="\${s.id}" data-workout-identity="\${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">\${editIcon}</button><button class="icon-action danger" data-delete-sub="\${s.id}" data-workout-identity="\${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">\${trashIcon}</button></div><p class="muted">\${esc(s.description||'')}</p>\${exercises.map((e,i)=>\`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>\${i+1}. \${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="\${e.id}" data-workout-identity="\${esc(s.identity_id)}" data-exercise-identity="\${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">\${editIcon}</button><button class="icon-action danger" data-delete-ex="\${e.id}" data-workout-identity="\${esc(s.identity_id)}" data-exercise-identity="\${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">\${trashIcon}</button></span></div><div class="muted">\${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso \${e.rest_seconds}s</div></div>\`).join('')}<button class="btn alt" data-add-ex="\${s.id}" data-workout-identity="\${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="\${s.id}">Iniciar treino</button></div>\`;
+   }
+   if(!isCurrent())return;
+   const host=$('subList');if(!host)return;
+   host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
+   host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,null,expectedUserId,db,'add')});
+   host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'edit')});
+   host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'delete')});
+   host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'edit')});
+   host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'delete')});
+   host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
   }
-  if(!isCurrent())return;
-  const host=$('subList');if(!host)return;
-  host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
-  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,null,expectedUserId,db,'add')});
-  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'edit')});
-  host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'delete')});
-  host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'edit')});
-  host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'delete')});
-  host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
- }
- async function loadExerciseCatalog(expectedDb=dbRef()){
+async function loadExerciseCatalog(expectedDb=dbRef()){
   const {data,error}=await expectedDb.from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
   if(error)throw Error('Não foi possível carregar o banco de exercícios. Verifique se a atualização do catálogo foi aplicada no Supabase. '+error.message);
   return data||[];
