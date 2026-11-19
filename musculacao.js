@@ -1,6 +1,6 @@
 /* NEXFIT | Musculação — programas versionados */
 (()=>{
- if(window.__nexfitStrengthLoaded)return;window.__nexfitStrengthLoaded=true;
+ if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
  const css=`
  #strengthPage .panel{background:linear-gradient(145deg,#202b37,#18212b);border:1px solid #2b3948;border-radius:18px;padding:18px;margin:14px 0}
  #strengthPage input,#strengthPage textarea,#strengthPage select{background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:11px;width:100%;min-width:0}
@@ -104,8 +104,8 @@
  @media(max-width:600px){#strengthPage .execution-screen{padding:6px 0 12px}#strengthPage .execution-media{height:clamp(175px,52vw,270px)}#strengthPage .execution-stat{min-height:70px}#strengthPage .execution-stat>strong{font-size:21px}#strengthPage .execution-exercise-heading h2{font-size:20px}}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
- const nav=document.querySelector('.nav');if(!nav)return;
- const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab)return;
+ const nav=document.querySelector('.nav');if(!nav){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Navegação principal não encontrada.';console.error('[NEXFIT] Módulo de musculação: navegação principal não encontrada.');return;}
+ const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Botão Treinos não encontrado na navegação.';console.error('[NEXFIT] Módulo de musculação: botão Treinos não encontrado.');return;}
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  let executionFeedbackTimer=null,handlingSetAction=false;
  function setExecutionFeedback(message,state='info'){
@@ -737,7 +737,7 @@
     // Um treino novo, com identity_id próprio, nunca herda a contagem de outro treino homônimo.
     if(!s.identity_id){const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');total=legacyTitle?sessionsByTitle.get(legacyTitle)||0:0}
     const exercises=exercisesByWorkout.get(String(s.id))||[];
-    html+=\`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>\${esc(normalizeHumanText(s.title))}</h3><span class="tag">\${total} \${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="\${s.id}" data-workout-identity="\${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">\${editIcon}</button><button class="icon-action danger" data-delete-sub="\${s.id}" data-workout-identity="\${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">\${trashIcon}</button></div><p class="muted">\${esc(s.description||'')}</p>\${exercises.map((e,i)=>\`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>\${i+1}. \${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="\${e.id}" data-workout-identity="\${esc(s.identity_id)}" data-exercise-identity="\${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">\${editIcon}</button><button class="icon-action danger" data-delete-ex="\${e.id}" data-workout-identity="\${esc(s.identity_id)}" data-exercise-identity="\${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">\${trashIcon}</button></span></div><div class="muted">\${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso \${e.rest_seconds}s</div></div>\`).join('')}<button class="btn alt" data-add-ex="\${s.id}" data-workout-identity="\${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="\${s.id}">Iniciar treino</button></div>\`;
+    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${exercises.map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
    }
    if(!isCurrent())return;
    const host=$('subList');if(!host)return;
@@ -1670,5 +1670,6 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   };
   if(available.length===1)chooseProgram(available[0].id);else showPrograms();
  };
- home();
+ window.__nexfitStrengthLoaded=true;window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=null;
+ home().catch(error=>{window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha ao abrir a tela inicial de musculação:',error)});
 })();
