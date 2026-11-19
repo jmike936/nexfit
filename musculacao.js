@@ -794,9 +794,13 @@
    host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
   }
 async function loadExerciseCatalog(expectedDb=dbRef()){
-  const {data,error}=await expectedDb.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles').eq('is_active',true).order('name');
-  if(error)throw Error('Não foi possível carregar o banco de exercícios. Verifique se a atualização do catálogo foi aplicada no Supabase. '+error.message);
-  return data||[];
+  let query=await expectedDb.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles').eq('is_active',true).order('name');
+  if(query.error&&/column .* does not exist|could not find .* column|schema cache/i.test(query.error.message||'')){
+   query=await expectedDb.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,execution_instructions,primary_muscles').eq('is_active',true).order('name');
+   if(!query.error)return (query.data||[]).map(item=>({...item,demonstration_end_image_url:null,secondary_muscles:null,__visualFieldsAvailable:false}));
+  }
+  if(query.error)throw Error('Não foi possível carregar o banco de exercícios. '+query.error.message);
+  return (query.data||[]).map(item=>({...item,__visualFieldsAvailable:true}));
  }
  function exerciseCatalogOptions(items,selectedId=''){
   const grouped=new Map();
@@ -878,7 +882,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const {data,error}=await db.from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(error){alert(error.message);return false}
-   const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600)),media_url:item.demonstration_image_url||null,media_end_url:item.demonstration_end_image_url||null,execution_instructions:item.execution_instructions||null,primary_muscles:item.primary_muscles||null,secondary_muscles:item.secondary_muscles||null});
+   const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600)),media_url:item.demonstration_image_url||null,execution_instructions:item.execution_instructions||null,primary_muscles:item.primary_muscles||null,...(item.__visualFieldsAvailable?{media_end_url:item.demonstration_end_image_url||null,secondary_muscles:item.secondary_muscles||null}:{})});
    if(!isCurrentEditor())return false;
    if(result.error){alert(result.error.message);return false}
    await refresh();return true;
@@ -1053,7 +1057,10 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){alert('Informe uma carga ou um valor por série.');return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){alert('Há uma carga inválida.');return false}}
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){alert(err.message);return false}
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
-   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest,media_url:item.demonstration_image_url||null,media_end_url:item.demonstration_end_image_url||null,execution_instructions:item.execution_instructions||null,primary_muscles:item.primary_muscles||null,secondary_muscles:item.secondary_muscles||null}).eq('id',id);
+   const sameCatalog=String(item.id)===String(e.catalog_exercise_id);
+   const visualUpdate={media_url:item.demonstration_image_url||(sameCatalog?e.media_url:null),execution_instructions:item.execution_instructions||(sameCatalog?e.execution_instructions:null),primary_muscles:item.primary_muscles||(sameCatalog?e.primary_muscles:null)};
+   if(item.__visualFieldsAvailable){visualUpdate.media_end_url=item.demonstration_end_image_url||(sameCatalog?e.media_end_url:null);visualUpdate.secondary_muscles=item.secondary_muscles||(sameCatalog?e.secondary_muscles:null)}
+   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest,...visualUpdate}).eq('id',id);
    if(!isCurrentEditor())return false;
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
    await refresh();return true;
@@ -1326,7 +1333,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    ['chest','<ellipse cx="75" cy="62" rx="11" ry="8"/><ellipse cx="95" cy="62" rx="11" ry="8"/>'],
    ['shoulders','<circle cx="54" cy="43" r="8"/><circle cx="116" cy="43" r="8"/>'],
    ['biceps','<ellipse cx="50" cy="67" rx="5" ry="12"/><ellipse cx="120" cy="67" rx="5" ry="12"/>'],
-   ['triceps','<ellipse cx="50" cy="70" rx="5" ry="12"/><ellipse cx="120" cy="70" rx="5" ry="12"/>'],
+   ['triceps','<ellipse cx="218" cy="70" rx="5" ry="12"/><ellipse cx="278" cy="70" rx="5" ry="12"/>'],
    ['forearms','<path d="M45 82 Q40 94 42 105 L49 107 Q52 95 53 83Z"/><path d="M125 82 Q130 94 128 105 L121 107 Q118 95 117 83Z"/>'],
    ['core','<rect x="74" y="73" width="22" height="31" rx="8"/>'],
    ['obliques','<path d="M68 73 Q62 84 68 101 L74 99 L74 76Z"/><path d="M102 73 Q108 84 102 101 L96 99 L96 76Z"/>'],
