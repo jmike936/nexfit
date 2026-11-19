@@ -215,15 +215,21 @@
    date:String(activity.activity_date||'').slice(0,10)
   })).filter(item=>item.sessionId&&/^\d{4}-\d{2}-\d{2}$/.test(item.date)).map(item=>[item.sessionId,item.date]));
   const sessionIds=[...activityDateBySession.keys()];
-  const history=sessionIds.length?await renderDb.from('training_sessions').select('id,subworkout_id').eq('athlete_id',renderUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds):{data:[],error:null};
+  const history=sessionIds.length?await renderDb.from('training_sessions').select('id,program_id,subworkout_id').eq('athlete_id',renderUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds):{data:[],error:null};
   if(!isSameAccount())return;
   if(history.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(history.error.message)+'</p></div>';return}
+  const historicalSubworkoutIds=[...new Set((history.data||[]).map(item=>item.subworkout_id).filter(Boolean))];
+  const historicalSubworkouts=historicalSubworkoutIds.length?await renderDb.from('training_subworkouts').select('id,title').in('id',historicalSubworkoutIds):{data:[],error:null};
+  if(!isSameAccount())return;
+  if(historicalSubworkouts.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível relacionar as execuções anteriores</h3><p class="muted">'+esc(historicalSubworkouts.error.message)+'</p></div>';return}
+  const historicalTitleById=new Map((historicalSubworkouts.data||[]).map(item=>[String(item.id),String(item.title||'').trim().toLocaleLowerCase('pt-BR')]));
+  const workoutHistoryKey=(programId,title)=>String(programId)+'|'+String(title||'').trim().toLocaleLowerCase('pt-BR');
   const lastExecution=new Map();
   for(const item of history.data||[]){
-   const date=activityDateBySession.get(item.id);
-   if(!item.subworkout_id||!date)continue;
-   const previous=lastExecution.get(String(item.subworkout_id));
-   if(!previous||date>previous)lastExecution.set(String(item.subworkout_id),date);
+   const date=activityDateBySession.get(item.id),title=historicalTitleById.get(String(item.subworkout_id));
+   if(!item.subworkout_id||!title||!date)continue;
+   const key=workoutHistoryKey(item.program_id,title),previous=lastExecution.get(key);
+   if(!previous||date>previous)lastExecution.set(key,date);
   }
   const dateLabel=value=>{
    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
@@ -231,7 +237,7 @@
    return day+'/'+month+'/'+year;
   };
   workouts.sort((a,b)=>{
-   const da=lastExecution.get(String(a.workout.id))||null,db=lastExecution.get(String(b.workout.id))||null;
+   const da=lastExecution.get(workoutHistoryKey(a.program.id,a.workout.title))||null,db=lastExecution.get(workoutHistoryKey(b.program.id,b.workout.title))||null;
    if(!da&&db)return -1;if(da&&!db)return 1;
    if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
@@ -239,7 +245,7 @@
   const cards=workouts.map(({program:p,workout,exercises})=>{
    const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
    const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
-   const category=programCategory(p.description),last=lastExecution.get(String(workout.id))||null;
+   const category=programCategory(p.description),last=lastExecution.get(workoutHistoryKey(p.id,workout.title))||null;
    const lastDate=dateLabel(last);
    const executionInfo=lastDate?' <span style="font-size:10px;font-weight:500;color:#a0a99c">· Última execução registrada</span> <span style="font-size:11px;font-weight:600;color:#B7F34A">'+esc(lastDate)+'</span>':'';
    return '<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+executionInfo+'</strong><small>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+' · '+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>';
