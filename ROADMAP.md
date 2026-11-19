@@ -9,6 +9,7 @@ Atualizado em 19/11/2026.
 - [x] Evitar abrir uma versão enquanto sua cópia de treinos e exercícios ainda está em andamento.
 - [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (fluxo de versão isolada em implementação).
 - [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões (incluindo compatibilidade com registros anteriores à identidade estável).
+- [x] Limitar o fallback de contagem por título a treinos legados sem identidade estável, evitando herdar histórico em treinos novos homônimos.
 - [x] Definir identidade estável entre treinos/exercícios copiados entre versões, independente de renomeação.
 - [ ] Permitir substituição isolada de um treino sem zerar o histórico dos demais.
 
