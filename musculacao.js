@@ -137,7 +137,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,finishingSession=false,finishingSessionOwner=null,workoutSyncPromises=new Map();
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,finishingSession=false,finishingSessionOwner=null,workoutSyncPromises=new Map();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -1240,7 +1240,7 @@
  function exerciseTimerElapsed(){if(!activeExerciseTimer)return 0;return Math.max(0,(Number(activeExerciseTimer.elapsedSeconds)||0)+(activeExerciseTimer.running?Math.floor((Date.now()-activeExerciseTimer.startedAt)/1000):0))}
  function startExerciseTimer(){const item=sessionPlan[sessionIndex];if(!item||!item.set?.mode||item.set.mode==='reps')return;if(!activeExerciseTimer)activeExerciseTimer={mode:item.set.mode,targetSeconds:Number(item.set.target_seconds)||0,elapsedSeconds:0,running:false,startedAt:null};if(activeExerciseTimer.running)return;activeExerciseTimer.startedAt=Date.now();activeExerciseTimer.running=true;persistWorkoutState();if(timer)clearInterval(timer);timer=setInterval(tickExerciseTimer,200);tickExerciseTimer()}
  function pauseExerciseTimer(){if(!activeExerciseTimer?.running)return;activeExerciseTimer.elapsedSeconds=exerciseTimerElapsed();activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null;if(timer)clearInterval(timer);timer=null;persistWorkoutState();tickExerciseTimer()}
- function tickExerciseTimer(){if(!activeExerciseTimer)return;const elapsed=exerciseTimerElapsed(),target=activeExerciseTimer.targetSeconds,remaining=Math.max(0,target-elapsed),clock=$('exerciseClock'),button=$('completeSet');if(clock)clock.textContent=formatWorkoutTime(activeExerciseTimer.mode==='countdown'?remaining:elapsed);const toggle=$('toggleExerciseTimer');if(toggle)toggle.textContent=activeExerciseTimer.running?'Pausar':'Continuar';if(activeExerciseTimer.mode==='countdown'&&target>0&&remaining===0&&activeExerciseTimer.running){activeExerciseTimer.elapsedSeconds=target;activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null;if(timer)clearInterval(timer);timer=null;if(button)button.textContent='Registrando…';completeCurrentSet();return}if(button)button.textContent=activeExerciseTimer.mode==='countdown'?'Concluir série':'Registrar tempo';persistWorkoutState()}
+ function tickExerciseTimer(){if(!activeExerciseTimer)return;const elapsed=exerciseTimerElapsed(),target=activeExerciseTimer.targetSeconds,remaining=Math.max(0,target-elapsed),clock=$('exerciseClock'),button=$('completeSet');if(clock)clock.textContent=formatWorkoutTime(activeExerciseTimer.mode==='countdown'?remaining:elapsed);const toggle=$('toggleExerciseTimer');if(toggle)toggle.textContent=activeExerciseTimer.running?'Pausar':'Continuar';if(activeExerciseTimer.mode==='countdown'&&target>0&&remaining===0&&activeExerciseTimer.running){activeExerciseTimer.elapsedSeconds=target;activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null;if(timer)clearInterval(timer);timer=null;if(button)button.textContent='Registrando…';completeCurrentSet();return}if(button)button.textContent=activeExerciseTimer.mode==='countdown'?'Concluir série':'Registrar tempo';const second=Math.floor(elapsed);if(second!==lastExerciseTimerPersistedSecond){lastExerciseTimerPersistedSecond=second;persistWorkoutState()}}
  function renderSessionStep(){
   sessionView='exercise';
   const host=$('sessionExercises');if(!host)return;
@@ -1337,7 +1337,7 @@
   if(!isCurrent())return;
   const isTimed=!!item.set?.mode&&item.set.mode!=='reps';
   const row={session_id:sessionId,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:isTimed?null:0,duration_seconds:null,notes:'Série pulada pelo atleta',completed_at:new Date().toISOString()};
-  if(isTimed){activeExerciseTimer=null;if(timer)clearInterval(timer);timer=null}
+  if(isTimed){activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;if(timer)clearInterval(timer);timer=null}
   const button=$('skipSet'),completeButton=$('completeSet');
   savingSet=true;savingSetOwner=sessionId;if(button)button.disabled=true;if(completeButton)completeButton.disabled=true;
   try{
@@ -1449,6 +1449,7 @@
   const exercise=sessionExerciseRows[index];if(!exercise||!session)return;
   const sessionId=session.id,userId=userRef()?.id,db=dbRef(),isCurrent=()=>userRef()?.id===userId&&session?.id===sessionId;
   const pending=sessionPlan.filter(x=>x.exerciseIndex===index&&!hasSetLog(x.exercise.id,x.setIndex+1));
+  if(pending.some(x=>x.set.mode&&x.set.mode!=='reps'))return alert('Para registrar exercícios por tempo, inicie o cronômetro de cada série e conclua o registro ao terminar.');
   if(!pending.length)return renderExercisePicker();
   if(!confirm('Marcar "'+exercise.name+'" como feito usando as repetições e cargas programadas? Você poderá ajustar os valores no histórico.'))return;
   if(!isCurrent())return;
@@ -1493,12 +1494,12 @@
   renderExercisePicker();
  }
  function advanceAfterSet(item){
-  sessionIndex++;restSnapshot=null;activeExerciseTimer=null;persistWorkoutState();
+  sessionIndex++;restSnapshot=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;persistWorkoutState();
   const next=sessionPlan[sessionIndex];
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
  }
  function continueAfterRecordedSet(item){
-  activeExerciseTimer=null;let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
+  activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
   const panel=$('restPanel'),complete=$('completeSet');
   if(complete)complete.disabled=true;
   const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
