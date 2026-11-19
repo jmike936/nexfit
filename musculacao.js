@@ -406,21 +406,66 @@
   host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic,renderUserId,renderDb));
   host.querySelectorAll('[data-archive-program]').forEach(b=>b.onclick=()=>archiveProgram(b.dataset.archiveProgram,renderUserId,renderDb));
  }
+ async function ensurePendingProgramVersion(programId,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const db=expectedDb,userId=expectedUserId;
+  if(!db||!userId||userRef()?.id!==userId)return false;
+  await openProgram(programId,userId,db);
+  if(userRef()?.id!==userId||current?.id!==programId||!version)return false;
+  if(version.status==='pending')return true;
+  if(version.status!=='active'){
+   alert('Não é possível editar um programa sem uma versão vigente.');
+   return false;
+  }
+  await newVersion();
+  if(userRef()?.id!==userId||current?.id!==programId||version?.status!=='pending'){
+   alert('Não foi possível preparar uma nova versão para a alteração. Nenhuma alteração foi aplicada.');
+   return false;
+  }
+  return true;
+ }
+ async function openIsolatedWorkoutEdit(programId,identityId,title,expectedUserId=userRef()?.id,expectedDb=dbRef(),action='edit'){
+  const ready=await ensurePendingProgramVersion(programId,expectedUserId,expectedDb);
+  if(!ready)return false;
+  const workout=subworkouts.find(item=>String(item.identity_id||'')===String(identityId||''));
+  if(!workout){
+   alert('Não foi possível localizar este treino na nova versão. Reabra o gerenciamento e tente novamente.');
+   return false;
+  }
+  if(action==='delete')return deleteSubworkout(workout.id);
+  return openWorkoutEditor(workout.id,expectedUserId,expectedDb);
+ }
+ async function openIsolatedExerciseEdit(programId,subworkoutIdentity,exerciseIdentity,expectedUserId=userRef()?.id,expectedDb=dbRef(),action='edit'){
+  const db=expectedDb,userId=expectedUserId;
+  const ready=await ensurePendingProgramVersion(programId,userId,db);
+  if(!ready)return false;
+  const workout=subworkouts.find(item=>String(item.identity_id||'')===String(subworkoutIdentity||''));
+  if(!workout){alert('Não foi possível localizar o treino na nova versão.');return false}
+  await openWorkoutEditor(workout.id,userId,db);
+  if(userRef()?.id!==userId||current?.id!==programId||editorSubworkoutId!==workout.id)return false;
+  if(action==='add')return addExercise(workout.id);
+  const rows=await db.from('training_exercises').select('id,identity_id').eq('subworkout_id',workout.id);
+  if(userRef()?.id!==userId||current?.id!==programId||editorSubworkoutId!==workout.id)return false;
+  if(rows.error){alert('Não foi possível localizar o exercício na nova versão: '+rows.error.message);return false}
+  const exercise=(rows.data||[]).find(item=>String(item.identity_id||'')===String(exerciseIdentity||''));
+  if(!exercise){alert('O exercício não foi encontrado na nova versão.');return false}
+  if(action==='delete')return deleteExercise(exercise.id);
+  return editExercise(exercise.id);
+ }
  async function renderTrainingManagement(){
   const host=$('trainingManagement');if(!host)return;
   const renderUserId=userRef()?.id,renderDb=dbRef(),isSameAccount=()=>userRef()?.id===renderUserId;
   if(!renderUserId||!renderDb)return;
   const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id);
   for(const p of programs){
-   const q=await renderDb.from('training_subworkouts').select('id,title,description,position').eq('version_id',p.current_version_id).order('position');
+   const q=await renderDb.from('training_subworkouts').select('id,identity_id,title,description,position').eq('version_id',p.current_version_id).order('position');
    if(!isSameAccount())return;
    if(q.error)continue;
-   for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Editar treino" aria-label="Editar treino">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-id="'+esc(w.id)+'" title="Excluir treino" aria-label="Excluir treino">'+trashIcon+'</button></div></div>');
+   for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Editar em uma nova versão" aria-label="Editar em uma nova versão">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Remover em uma nova versão" aria-label="Remover em uma nova versão">'+trashIcon+'</button></div></div>');
   }
   if(!isSameAccount())return;
-  host.innerHTML=rows.length?rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
-  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.editTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.editTraining)await openWorkoutEditor(b.dataset.trainingId,renderUserId,renderDb)});
-  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openProgram(b.dataset.deleteTraining,renderUserId,renderDb);if(isSameAccount()&&current?.id===b.dataset.deleteTraining)await deleteSubworkout(b.dataset.trainingId)});
+  host.innerHTML=rows.length?'<p class="muted">As alterações são preparadas em uma nova versão. O programa vigente só muda após a confirmação do atleta.</p>'+rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
+  host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openIsolatedWorkoutEdit(b.dataset.editTraining,b.dataset.trainingIdentity,'',renderUserId,renderDb,'edit')});
+  host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openIsolatedWorkoutEdit(b.dataset.deleteTraining,b.dataset.trainingIdentity,'',renderUserId,renderDb,'delete')});
  }
 
  let creatingWorkout=false;
@@ -437,9 +482,10 @@
    if(!program)return alert('Selecione um programa vigente.');
    if(!title)return alert('Informe o nome do treino.');
    const isCurrentForm=()=>isSameAccount()&&String($('workoutProgram').value||'')===selectedProgramId&&plans.some(p=>String(p.id)===selectedProgramId&&p.status==='active'&&p.current_version_id===program.current_version_id&&canManageProgramLocally(p));
-   const {data:versionRow,error:versionError}=await db.from('training_program_versions').select('id').eq('id',program.current_version_id).maybeSingle();
-   if(!isCurrentForm())return false;
-   if(versionError||!versionRow)return alert('Não foi possível carregar a versão vigente do programa.');
+   const ready=await ensurePendingProgramVersion(selectedProgramId,userId,db);
+   if(!isCurrentForm()||!ready)return false;
+   const versionRow=version;
+   if(!versionRow?.id||versionRow.status!=='pending')return alert('Não foi possível preparar uma nova versão para adicionar o treino.');
    const {data:existing,error:existingError}=await db.from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
    if(!isCurrentForm())return false;
    if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
@@ -447,7 +493,7 @@
    if(!isCurrentForm())return false;
    if(error)return alert('Não foi possível criar o treino: '+error.message);
    $('workoutTitle').value='';$('workoutDescription').value='';
-   current=program;version=versionRow;
+   current=program;
    await openWorkoutEditor(data.id,userId,db);
   }finally{
    creatingWorkout=false;
@@ -600,13 +646,19 @@
    if(await abortStaleVersion())return false;
    await db.from('app_notifications').insert({user_id:program.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:program.id});
    if(await abortStaleVersion())return false;
-   openProgram(program.id,userId,db);
+   return openProgram(program.id,userId,db);
   });
  }
  async function addSubworkout(){
   return withProgramActionLock('newSub',async()=>{
-   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id;
-   if(!db||!program||!programVersion||!userId)return false;
+   const db=dbRef(),program=current,userId=userRef()?.id;
+   if(!db||!program||!userId)return false;
+   if(version?.status==='active'){
+    const ready=await ensurePendingProgramVersion(program.id,userId,db);
+    if(!ready)return false;
+   }
+   const programVersion=version;
+   if(!programVersion||programVersion.status!=='pending')return alert('Prepare uma nova versão antes de adicionar treinos.');
    const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
    const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
    if(!isCurrentEditor())return false;
@@ -674,16 +726,16 @@
      }
     }
    }
-   html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
+   html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
   }
   if(!isCurrent())return;
   const host=$('subList');if(!host)return;
   host.innerHTML=html||'<div class="panel muted">Nenhum treino nesta versão. Adicione o primeiro treino.</div>';
-  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())addSubworkout()});
-  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())editSubworkout(b.dataset.editSub,expectedUserId,db)});
-  host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteSubworkout(b.dataset.deleteSub)});
-  host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())editExercise(b.dataset.editEx)});
-  host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())deleteExercise(b.dataset.deleteEx)});
+  host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,null,expectedUserId,db,'add')});
+  host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'edit')});
+  host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'delete')});
+  host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'edit')});
+  host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'delete')});
   host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
  }
  async function loadExerciseCatalog(expectedDb=dbRef()){
