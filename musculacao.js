@@ -222,22 +222,37 @@
   const historicalSubworkouts=historicalSubworkoutIds.length?await renderDb.from('training_subworkouts').select('id,title,identity_id').in('id',historicalSubworkoutIds):{data:[],error:null};
   if(!isSameAccount())return;
   if(historicalSubworkouts.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível relacionar as execuções anteriores</h3><p class="muted">'+esc(historicalSubworkouts.error.message)+'</p></div>';return}
-  const historicalIdentityById=new Map((historicalSubworkouts.data||[]).map(item=>[String(item.id),String(item.identity_id||'')]));
-  const workoutHistoryKey=(programId,identityId)=>String(programId)+'|'+String(identityId||'');
+  const historicalById=new Map((historicalSubworkouts.data||[]).map(item=>[String(item.id),{
+   identityId:String(item.identity_id||''),
+   title:String(item.title||'').trim().toLocaleLowerCase('pt-BR')
+  }]));
+  const workoutHistoryKey=(programId,kind,value)=>String(programId)+'|'+kind+'|'+String(value||'');
   const lastExecution=new Map();
   for(const item of history.data||[]){
-   const date=activityDateBySession.get(item.id),identityId=historicalIdentityById.get(String(item.subworkout_id));
-   if(!item.subworkout_id||!identityId||!date)continue;
-   const key=workoutHistoryKey(item.program_id,identityId),previous=lastExecution.get(key);
-   if(!previous||date>previous)lastExecution.set(key,date);
+   const date=activityDateBySession.get(item.id),historical=historicalById.get(String(item.subworkout_id));
+   if(!item.subworkout_id||!historical||!date)continue;
+   const keys=[];
+   if(historical.identityId)keys.push(workoutHistoryKey(item.program_id,'identity',historical.identityId));
+   // Compatibilidade: versões criadas antes da identidade estável receberam UUIDs independentes.
+   if(historical.title)keys.push(workoutHistoryKey(item.program_id,'legacy-title',historical.title));
+   for(const key of keys){
+    const previous=lastExecution.get(key);
+    if(!previous||date>previous)lastExecution.set(key,date);
+   }
   }
+  const lastExecutionForWorkout=(programId,workout)=>{
+   const byIdentity=lastExecution.get(workoutHistoryKey(programId,'identity',workout.identity_id));
+   if(byIdentity)return byIdentity;
+   const legacyTitle=String(workout.title||'').trim().toLocaleLowerCase('pt-BR');
+   return legacyTitle?lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||null:null;
+  };
   const dateLabel=value=>{
    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
    const [year,month,day]=value.split('-');
    return day+'/'+month+'/'+year;
   };
   workouts.sort((a,b)=>{
-   const da=lastExecution.get(workoutHistoryKey(a.program.id,a.workout.identity_id))||null,db=lastExecution.get(workoutHistoryKey(b.program.id,b.workout.identity_id))||null;
+   const da=lastExecutionForWorkout(a.program.id,a.workout),db=lastExecutionForWorkout(b.program.id,b.workout);
    if(!da&&db)return -1;if(da&&!db)return 1;
    if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
@@ -245,7 +260,7 @@
   const cards=workouts.map(({program:p,workout,exercises})=>{
    const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
    const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
-   const category=programCategory(p.description),last=lastExecution.get(workoutHistoryKey(p.id,workout.identity_id))||null;
+   const category=programCategory(p.description),last=lastExecutionForWorkout(p.id,workout);
    const lastDate=dateLabel(last);
    const executionInfo=lastDate?' <span style="font-size:10px;font-weight:500;color:#a0a99c">· Última execução registrada</span> <span style="font-size:11px;font-weight:600;color:#B7F34A">'+esc(lastDate)+'</span>':'';
    return '<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+executionInfo+'</strong><small>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+' · '+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>';
@@ -647,8 +662,16 @@
     if(ids.length){
      const names=await db.from('training_subworkouts').select('id,title,identity_id').in('id',ids);
      if(!isCurrent())return;
-     const identityIds=(names.data||[]).filter(x=>x.identity_id===s.identity_id).map(x=>x.id);
-     total=done.data.filter(x=>identityIds.includes(x.subworkout_id)).length;
+     const currentIdentityIds=(names.data||[]).filter(x=>x.identity_id===s.identity_id).map(x=>x.id);
+     const currentIdentityCount=done.data.filter(x=>currentIdentityIds.includes(x.subworkout_id)).length;
+     if(currentIdentityCount){
+      total=currentIdentityCount;
+     }else{
+      // Fallback para sessões antigas: a migração inicial atribuiu UUIDs próprios aos registros já existentes.
+      const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');
+      const legacyIds=(names.data||[]).filter(x=>String(x.title||'').trim().toLocaleLowerCase('pt-BR')===legacyTitle).map(x=>x.id);
+      total=done.data.filter(x=>legacyIds.includes(x.subworkout_id)).length;
+     }
     }
    }
    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" title="Editar treino" aria-label="Editar treino">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" title="Excluir treino" aria-label="Excluir treino">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${(q.data||[]).map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" title="Editar exercício" aria-label="Editar exercício">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" title="Excluir exercício" aria-label="Excluir exercício">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':'')).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
