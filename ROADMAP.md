@@ -1,3 +1,4 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 # Roadmap NEXFIT
 
 Atualizado em 19/11/2026.
@@ -7,11 +8,11 @@ Atualizado em 19/11/2026.
 - [x] Impedir que versões concorrentes sejam criadas com o mesmo número.
 - [x] Impedir múltiplas versões pendentes simultâneas do mesmo programa.
 - [x] Evitar abrir uma versão enquanto sua cópia de treinos e exercícios ainda está em andamento.
-- [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (fluxo de versão isolada em implementação).
-- [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões (incluindo compatibilidade com registros anteriores à identidade estável).
+- [x] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta; edição, inclusão e remoção ocorrem em uma versão pendente isolada.
+- [x] Preservar a continuidade do histórico e das contagens entre versões por identidade estável, com fallback limitado aos registros legados sem identidade.
 - [x] Limitar o fallback de contagem por título a treinos legados sem identidade estável, evitando herdar histórico em treinos novos homônimos.
 - [x] Definir identidade estável entre treinos/exercícios copiados entre versões, independente de renomeação.
-- [ ] Permitir substituição isolada de um treino sem zerar o histórico dos demais.
+- [x] Permitir substituição isolada de um treino sem zerar o histórico dos demais; a nova ficha mantém a identidade dos treinos preservados.
 
 ## Prioridade 2 — Exercícios por tempo
 
@@ -33,12 +34,18 @@ Atualizado em 19/11/2026.
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [ ] Revisar transições entre séries, exercícios e descansos.
-- [ ] Substituir mensagens e confirmações nativas por telas amigáveis e consistentes, começando pela tela de conclusão do treino (resumo, status de sincronização e próximos passos).
+- [x] Substituir a confirmação da conclusão e a confirmação de saída da sessão por telas amigáveis; continuar a substituição nas demais áreas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
-- [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
+- [x] Agrupar consultas de exercícios e sessões no gerenciador para evitar consultas N+1.
 
 ## Prioridade 5 — Comunicação e orientação visual
 - [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.
-- [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras.
+- [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras. PR #147 implementa a exibição e o cadastro ao adicionar exercícios; a branch local `fix/exercise-guidance-existing-exercises` também habilita preencher esses dados na edição de exercícios existentes e preservá-los ao copiar versões.
 - [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
+
+## Próxima validação
+
+- PR #147: CI e sintaxe JavaScript aprovados. O deployment `dpl_7o4yMczCaTapS6Nogk8QnkqsdeiJ` está `READY`; o HTML e `musculacao.js` retornam HTTP 200. A tela de execução abriu, mas o exercício testado não tinha mídia ou instruções cadastradas; por isso os blocos de orientação não apareceram.
+- A sessão de teste foi cancelada sem registrar séries; o histórico voltou à tela inicial com as mesmas duas atividades. Nenhum treino ou exercício da conta foi alterado.
+- Validar a edição de orientações e a cópia dos campos em nova versão no preview depois de publicar a branch local; testar também um exercício com campos preenchidos e outro sem mídia antes de concluir este item.
