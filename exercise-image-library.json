@@ -741,12 +741,10 @@
       "name": "Barbell Glute Bridge",
       "aliases": [],
       "portugueseAliases": [
-        "elevação pélvica com barra",
         "ponte de glúteos"
       ],
       "keys": [
         "barbellglutebridge",
-        "elevacaopelvicacombarra",
         "pontedegluteos"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/barbell-glute-bridge/start.webp",
@@ -2457,16 +2455,14 @@
       ],
       "portugueseAliases": [
         "crucifixo com halteres",
-        "crucifixo reto com halteres",
-        "crucifixo"
+        "crucifixo reto com halteres"
       ],
       "keys": [
         "dumbbellfly",
         "dumbbellchestfly",
         "dumbbellflyes",
         "crucifixocomhalteres",
-        "crucifixoretocomhalteres",
-        "crucifixo"
+        "crucifixoretocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/end.webp",
@@ -2544,16 +2540,14 @@
       ],
       "portugueseAliases": [
         "afundo com halteres",
-        "passada com halteres",
-        "avanço"
+        "passada com halteres"
       ],
       "keys": [
         "dumbbelllunge",
         "weightedlunge",
         "walkinglunge",
         "afundocomhalteres",
-        "passadacomhalteres",
-        "avanco"
+        "passadacomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-lunge/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-lunge/end.webp",
@@ -3629,13 +3623,15 @@
       ],
       "portugueseAliases": [
         "elevacao pelvica",
-        "elevacao de quadril"
+        "elevacao de quadril",
+        "elevação pélvica com barra"
       ],
       "keys": [
         "hipthrust",
         "barbellhipthrust",
         "elevacaopelvica",
-        "elevacaodequadril"
+        "elevacaodequadril",
+        "elevacaopelvicacombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrusts/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrusts/end.webp",
@@ -4736,14 +4732,11 @@
         "iso-lateral high row",
         "plate-loaded high row"
       ],
-      "portugueseAliases": [
-        "remada articulada"
-      ],
+      "portugueseAliases": [],
       "keys": [
         "machinehighrow",
         "isolateralhighrow",
-        "plateloadedhighrow",
-        "remadaarticulada"
+        "plateloadedhighrow"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-high-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-high-row/end.webp",
@@ -4834,7 +4827,8 @@
         "remada baixa",
         "remada baixa na maquina",
         "remada sentada",
-        "remada baixa com triângulo"
+        "remada baixa com triângulo",
+        "remada articulada"
       ],
       "keys": [
         "seatedmachinerow",
@@ -4842,7 +4836,8 @@
         "remadabaixa",
         "remadabaixanamaquina",
         "remadasentada",
-        "remadabaixacomtriangulo"
+        "remadabaixacomtriangulo",
+        "remadaarticulada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/end.webp",
@@ -7394,12 +7389,9 @@
       "id": "standing-calf-raise-machine",
       "name": "Standing Calf Raise Machine",
       "aliases": [],
-      "portugueseAliases": [
-        "panturrilha sentada ou em pé"
-      ],
+      "portugueseAliases": [],
       "keys": [
-        "standingcalfraisemachine",
-        "panturrilhasentadaouempe"
+        "standingcalfraisemachine"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-calf-raise-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-calf-raise-machine/end.webp",
