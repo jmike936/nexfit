@@ -1646,7 +1646,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   section.classList.remove('training-gallery');
   section.innerHTML='<div class="completion-screen">'+
    '<div class="completion-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></div>'+
-   '<p class="completion-workout">TREINO FINALIZADO</p>'+
+   '<p class="completion-workout">'+esc(summary.workoutTitle)+'</p>'+
    '<h1>'+(summary.allExercisesDone?'Parabéns!':'Boa sessão!')+'</h1>'+
    '<p class="completion-subtitle">'+subtitle+'</p>'+
    '<div class="completion-stats">'+
