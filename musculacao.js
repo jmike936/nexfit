@@ -629,7 +629,7 @@
    if(await abortStaleVersion())return false;
    await db.from('app_notifications').insert({user_id:program.athlete_id,type:'program_version_pending',title:'Nova versão disponível',body:'Analise a nova versão do seu programa. A versão atual permanece vigente até sua confirmação.',entity_id:program.id});
    if(await abortStaleVersion())return false;
-   openProgram(program.id,userId,db);
+   return openProgram(program.id,userId,db);
   });
  }
  async function addSubworkout(){
