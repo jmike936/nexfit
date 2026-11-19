@@ -36,86 +36,85 @@ const css=`
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
 let cache=null,cachedUserId=null,renderGeneration=0;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
+function formatDuration(value){const total=Math.max(0,Math.round(Number(value)||0)),hours=Math.floor(total/3600),minutes=Math.floor(total%3600/60),seconds=total%60;return hours?hours+':'+String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0'):minutes+':'+String(seconds).padStart(2,'0')}
+function formatMetric(value,type){return type==='time'?formatDuration(value):kg(value)}
 function dateLabel(value){if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)){const [y,m,d]=value.split('-');return d+'/'+m+'/'+y}const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
 async function load(expectedUserId,expectedClient,isCurrent){
  const client=expectedClient;if(!client||!expectedUserId||!isCurrent())throw Error('Faça login para consultar sua evolução.');
  // A Evolução só inclui sessões que ainda possuem atividade correspondente no histórico do atleta.
  // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
  const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',expectedUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
- if(!isCurrent())return null;
- if(activitiesQ.error)throw activitiesQ.error;
+ if(!isCurrent())return null;if(activitiesQ.error)throw activitiesQ.error;
  const activityDateBySession=new Map((activitiesQ.data||[]).map(a=>({id:(a.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i)?.[1],date:a.activity_date})).filter(a=>a.id&&a.date).map(a=>[a.id,a.date]));
- const sessionIds=[...activityDateBySession.keys()];
- if(!sessionIds.length)return [];
+ const sessionIds=[...activityDateBySession.keys()];if(!sessionIds.length)return [];
  const sessionsQ=await client.from('training_sessions').select('id,started_at,finished_at').eq('athlete_id',expectedUserId).eq('status','completed').not('finished_at','is',null).in('id',sessionIds).order('started_at',{ascending:false}).limit(500);
- if(!isCurrent())return null;
- if(sessionsQ.error)throw sessionsQ.error;
+ if(!isCurrent())return null;if(sessionsQ.error)throw sessionsQ.error;
  const sessions=sessionsQ.data||[];if(!sessions.length)return [];
- const sessionMap=new Map(sessions.map(s=>[s.id,s]));
- const ids=sessions.map(s=>s.id);
- const logsQ=await client.from('training_set_logs').select('session_id,exercise_id,set_number,reps_completed,load_kg,completed_at').in('session_id',ids).gt('reps_completed',0).not('load_kg','is',null).order('completed_at',{ascending:true}).limit(10000);
- if(!isCurrent())return null;
- if(logsQ.error)throw logsQ.error;
- const logs=logsQ.data||[];if(!logs.length)return [];
+ const sessionMap=new Map(sessions.map(s=>[s.id,s])),ids=sessions.map(s=>s.id);
+ const logsQ=await client.from('training_set_logs').select('session_id,exercise_id,set_number,reps_completed,load_kg,duration_seconds,completed_at').in('session_id',ids).order('completed_at',{ascending:true}).limit(10000);
+ if(!isCurrent())return null;if(logsQ.error)throw logsQ.error;
+ const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||(Number(x.reps_completed)>0&&x.load_kg!==null&&x.load_kg!==undefined));
+ if(!logs.length)return [];
  const exerciseIds=[...new Set(logs.map(x=>x.exercise_id).filter(Boolean))];
  const exercisesQ=await client.from('training_exercises').select('id,name').in('id',exerciseIds);
- if(!isCurrent())return null;
- if(exercisesQ.error)throw exercisesQ.error;
- const exerciseMap=new Map((exercisesQ.data||[]).map(x=>[x.id,x.name]));
- const grouped=new Map();
+ if(!isCurrent())return null;if(exercisesQ.error)throw exercisesQ.error;
+ const exerciseMap=new Map((exercisesQ.data||[]).map(x=>[x.id,x.name])),grouped=new Map();
  for(const log of logs){
   const name=exerciseMap.get(log.exercise_id);if(!name)continue;
-  const key=normalize(name);if(!key)continue;
-  const session=sessionMap.get(log.session_id);if(!session)continue;
-  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name),points:[]});
-  grouped.get(key).points.push({date:activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at,load:Number(log.load_kg),reps:Number(log.reps_completed),set:Number(log.set_number),sessionId:log.session_id});
+  const metricType=Number(log.duration_seconds)>0?'time':'load',normalized=normalize(name);if(!normalized)continue;
+  const key=normalized+'|'+metricType,session=sessionMap.get(log.session_id);if(!session)continue;
+  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[]});
+  grouped.get(key).points.push({date:activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
  }
  return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 }
-function chart(points){
- const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.load>old.load)bySession.set(p.sessionId,p)}
- const series=[...bySession.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));
- if(!series.length)return '<div class="evolution-chart-empty">Ainda não há cargas registradas para este exercício.</div>';
- const width=620,height=240,left=48,right=16,top=18,bottom=42,plotW=width-left-right,plotH=height-top-bottom;
- const vals=series.map(x=>x.load),min=Math.min(0,...vals),max=Math.max(1,...vals),range=max-min||1;
- const x=i=>left+(series.length===1?plotW/2:i/(series.length-1)*plotW),y=v=>top+plotH-(v-min)/range*plotH;
- const pts=series.map((p,i)=>({x:x(i),y:y(p.load),p}));
- const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-8)+'" y="'+(yy+4)+'" text-anchor="end">'+Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1})+'</text>'}).join('');
+function chart(points,metricType){
+ const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.value>old.value)bySession.set(p.sessionId,p)}
+ const series=[...bySession.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));if(!series.length)return '<div class="evolution-chart-empty">Ainda não há registros para este exercício.</div>';
+ const width=620,height=240,left=58,right=16,top=18,bottom=42,plotW=width-left-right,plotH=height-top-bottom,vals=series.map(x=>x.value),min=0,max=Math.max(1,...vals),range=max-min||1;
+ const x=i=>left+(series.length===1?plotW/2:i/(series.length-1)*plotW),y=v=>top+plotH-(v-min)/range*plotH,pts=series.map((p,i)=>({x:x(i),y:y(p.value),p}));
+ const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-8)+'" y="'+(yy+4)+'" text-anchor="end">'+(metricType==='time'?formatDuration(v):Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1}))+'</text>'}).join('');
  const labels=pts.length===1?'<text x="'+pts[0].x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(pts[0].p.date)+'</text>':[pts[0],pts[Math.floor((pts.length-1)/2)],pts[pts.length-1]].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i).map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(p.p.date)+'</text>').join('');
- return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da maior carga registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+kg(p.p.load)+' · '+p.p.reps+' repetições · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a maior carga de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
+ const subject=metricType==='time'?'maior duração':'maior carga';
+ return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
 }
 async function render(host){
  const uid=user()?.id||null,client=getClient(),generation=++renderGeneration;
  const isCurrent=()=>!!uid&&!!client&&user()?.id===uid&&renderGeneration===generation&&host?.isConnected!==false;
  if(!isCurrent())return;
  cachedUserId=uid;cache=null;
- host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas…</div>';
+ host.innerHTML='<div class="evolution-panel">Carregando histórico de cargas e durações…</div>';
  try{
   const loaded=await load(uid,client,isCurrent);
   if(!isCurrent())return;
   cache=loaded;
-  if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre as repetições e a carga das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
+  if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre a carga ou a duração das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
-  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe como suas cargas evoluem em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
+  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
    if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points;
+   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':'carga',metricPlural=isTimed?'durações':'cargas';
    const sessionMap=new Map();
-   for(const point of points){const current=sessionMap.get(point.sessionId);if(!current||point.load>current.load)sessionMap.set(point.sessionId,{...point})}
+   for(const point of points){const current=sessionMap.get(point.sessionId);if(!current||point.value>current.value)sessionMap.set(point.sessionId,{...point})}
    const sessionPoints=[...sessionMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sessionId.localeCompare(b.sessionId));
    const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
-   const delta=previous?latest.load-previous.load:null;
-   const deltaPercent=previous&&previous.load>0?(delta/previous.load)*100:null;
-   const first=sessionPoints[0],overallDelta=first?latest.load-first.load:0;
-   const sessions=sessionPoints.length;
+   const delta=previous?latest.value-previous.value:null,deltaPercent=previous&&previous.value>0?(delta/previous.value)*100:null;
+   const first=sessionPoints[0],overallDelta=first?latest.value-first.value:0,sessions=sessionPoints.length;
    const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
-   const heaviest=points.filter(p=>Number.isFinite(p.load)&&p.load>0).reduce((best,p)=>!best||p.load>best.load?p:best,null);
-   const estimated=points.filter(p=>Number.isFinite(p.load)&&p.load>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.load*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
-   const personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.load+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>Maior carga na última sessão</span><strong>'+kg(latest.load)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+kg(delta))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução</h3>'+chart(points)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+' · '+p.reps+' repetições</small></div><b>'+kg(p.load)+'</b></div>').join('')+'</div>';
-   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent=delta===null?'Ainda não há sessões anteriores para comparação.':'Comparação entre as maiores cargas de duas sessões consecutivas: '+(delta>0?'+':'')+kg(delta)+(deltaPercent!==null?' ('+(deltaPercent>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+kg(overallDelta)+'.';details.querySelector('.evolution-stats').after(note)}
+   let personalRecords;
+   if(isTimed){
+    const best=points.reduce((result,p)=>!result||p.value>result.value?p:result,null),average=points.reduce((sum,p)=>sum+p.value,0)/points.length;
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Maior duração registrada</span><strong>'+formatDuration(best.value)+'</strong><small>'+dateLabel(best.date)+' · Série '+best.set+'</small></div><div class="personal-record"><span>Duração média por série</span><strong>'+formatDuration(average)+'</strong><small>Com base em '+points.length+' séries registradas</small></div></div>';
+   }else{
+    const heaviest=points.filter(p=>Number.isFinite(p.value)&&p.value>0).reduce((best,p)=>!best||p.value>best.value?p:best,null);
+    const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.value*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.value):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
+   }
+   const metricLabel=isTimed?'Maior duração':'Maior carga';
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':' · '+p.reps+' repetições')+'</small></div><b>'+formatMetric(p.value,metricType)+'</b></div>').join('')+'</div>';
+   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Comparação entre as maiores '+metricPlural+' de duas sessões consecutivas: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+formatMetric(Math.abs(overallDelta),metricType)+(overallDelta<0?' a menos':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',()=>{if(isCurrent())paint()});paint();
  }catch(error){if(!isCurrent())return;host.innerHTML='<div class="evolution-empty"><strong>Não foi possível carregar a evolução</strong><p>'+esc(error?.message||'Verifique sua conexão e tente novamente.')+'</p><button type="button" class="btn alt" id="retryExerciseEvolution">Tentar novamente</button></div>';host.querySelector('#retryExerciseEvolution')?.addEventListener('click',()=>{if(isCurrent()){cache=null;render(host)}})}
