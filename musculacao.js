@@ -530,8 +530,7 @@
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
    if(error){
     if(error.code==='23505'&&isCurrentEditor()){
-     alert('Outra aba criou uma nova versão deste programa ao mesmo tempo. Atualizamos a ficha para mostrar a versão mais recente.');
-     await openProgram(program.id,userId,db);
+     alert('Outra aba iniciou a criação de uma nova versão deste programa. Para evitar abrir a cópia enquanto ela ainda está sendo preparada, aguarde a conclusão e reabra a ficha.');
      return false;
     }
     return alert(error.message);
