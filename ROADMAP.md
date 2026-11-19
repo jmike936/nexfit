@@ -30,5 +30,6 @@ Atualizado em 19/11/2026.
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [ ] Revisar transições entre séries, exercícios e descansos.
+- [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
 - [ ] Reduzir consultas e renderizações desnecessárias.
