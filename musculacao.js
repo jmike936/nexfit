@@ -101,6 +101,40 @@
  #strengthPage .execution-pause svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
  #strengthPage .execution-rest p{min-height:20px;margin:10px 0;color:#a0a99c;font-size:13px}
  #strengthPage .execution-skip-rest{min-width:150px}
+
+
+ #strengthPage .workout-dialog-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:#05090dcc;backdrop-filter:blur(5px)}
+ #strengthPage .workout-dialog{width:min(100%,440px);padding:24px 20px 20px;border:1px solid #354454;border-radius:20px;background:linear-gradient(145deg,#202b37,#121a22);box-shadow:0 24px 80px #0009;color:#f4f7fa;text-align:center}
+ #strengthPage .workout-dialog-mark{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid #526b32;border-radius:50%;color:#b7f34a;font-size:24px;font-weight:800}
+ #strengthPage .workout-dialog-mark.danger{border-color:#814747;color:#ff8989}
+ #strengthPage .workout-dialog h2{margin:0;font-size:21px}
+ #strengthPage .workout-dialog p{margin:10px 0 18px;color:#aeb9c5;font-size:14px;line-height:1.55}
+ #strengthPage .workout-dialog-input-label{display:block;margin:0 0 6px;color:#aeb9c5;text-align:left;font-size:12px}
+ #strengthPage .workout-dialog .workout-dialog-input{width:100%;margin-bottom:12px;padding:12px;border:1px solid #526b32;border-radius:11px;background:#111922;color:#fff;font-size:18px}
+ #strengthPage .workout-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
+ #strengthPage .workout-dialog-actions button{min-height:46px;padding:10px;border-radius:11px;font-weight:800;cursor:pointer}
+ #strengthPage .workout-dialog-cancel{border:1px solid #435365;background:transparent;color:#f4f7fa}
+ #strengthPage .workout-dialog-confirm{border:0;background:#b7f34a;color:#141a0d}
+ #strengthPage .workout-dialog-confirm.danger{background:#ff8585;color:#241010}
+
+ #strengthPage .completion-screen{max-width:620px;margin:18px auto;padding:24px 18px 30px;text-align:center;color:#f4f7fa}
+ #strengthPage .completion-mark{width:82px;height:82px;display:grid;place-items:center;margin:8px auto 18px;border:1px solid #526b32;border-radius:50%;background:radial-gradient(circle,#b7f34a24,#b7f34a08);color:#b7f34a;box-shadow:0 0 42px #b7f34a18}
+ #strengthPage .completion-mark svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+ #strengthPage .completion-screen h1{margin:0;font-size:clamp(27px,6vw,36px);line-height:1.15;letter-spacing:-.8px}
+ #strengthPage .completion-subtitle{max-width:430px;margin:10px auto 22px;color:#a0a99c;font-size:14px;line-height:1.6}
+ #strengthPage .completion-workout{margin:0 0 14px;color:#b7f34a;font-size:13px;font-weight:800}
+ #strengthPage .completion-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}
+ #strengthPage .completion-stat{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 8px;border:1px solid #303a30;border-radius:14px;background:linear-gradient(145deg,#1d271f,#151b17)}
+ #strengthPage .completion-stat strong{font-size:24px;line-height:1.1}
+ #strengthPage .completion-stat span{color:#a0a99c;font-size:11px}
+ #strengthPage .completion-sync{display:flex;align-items:flex-start;gap:9px;margin:16px 0;padding:12px;border:1px solid #526b32;border-radius:12px;background:#18221a;color:#d5ff7b;text-align:left;font-size:12px;line-height:1.5}
+ #strengthPage .completion-sync.pending{border-color:#665b32;background:#282418;color:#f2d88a}
+ #strengthPage .completion-actions{display:grid;gap:9px;margin-top:20px}
+ #strengthPage .completion-actions button{width:100%;min-height:48px;border-radius:13px;padding:12px 16px;font-weight:800}
+ #strengthPage .completion-primary{border:0;background:#b7f34a;color:#141a0d}
+ #strengthPage .completion-secondary{border:1px solid #354454;background:transparent;color:#f4f7fa}
+ @media(max-width:420px){#strengthPage .completion-screen{padding:14px 4px 24px}#strengthPage .completion-stat{min-height:80px}}
+
  @media(max-width:600px){#strengthPage .execution-screen{padding:6px 0 12px}#strengthPage .execution-media{height:clamp(175px,52vw,270px)}#strengthPage .execution-stat{min-height:70px}#strengthPage .execution-stat>strong{font-size:21px}#strengthPage .execution-exercise-heading h2{font-size:20px}}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
@@ -1344,7 +1378,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const item=sessionPlan[sessionIndex];
   if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return}
   if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
-  if(!confirm('Não conseguiu realizar esta série? Vamos registrá-la com 0 repetições e 0 kg. As outras séries do exercício continuarão normalmente.')){setExecutionFeedback('Ação cancelada.');return}
+  if(!await showWorkoutDialog({title:'Pular esta série?',message:'Esta série será registrada com 0 repetições e 0 kg. As demais séries deste exercício continuarão normalmente.',confirmLabel:'Sim, pular série',danger:true})){setExecutionFeedback('Tudo certo. A série foi mantida.');return}
   if(!isCurrent())return;
   const isTimed=!!item.set?.mode&&item.set.mode!=='reps';
   const row={session_id:sessionId,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:0,load_kg:isTimed?null:0,duration_seconds:null,notes:'Série pulada pelo atleta',completed_at:new Date().toISOString()};
@@ -1371,10 +1405,10 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!isCurrent())return;
   setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
- function skipCurrentExercise(){
+ async function skipCurrentExercise(){
   if(!session)return;
   const item=sessionPlan[sessionIndex];if(!item)return;
-  if(!confirm('Marcar "'+item.exercise.name+'" como não executado e voltar à lista de exercícios?'))return;
+  if(!await showWorkoutDialog({title:'Pular exercício?',message:'O exercício “'+item.exercise.name+'” será marcado como não realizado e você voltará à lista para escolher outro.',confirmLabel:'Sim, pular exercício',danger:true}))return;
   skippedExerciseIndices.add(item.exerciseIndex);
   for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
   persistWorkoutState();renderExercisePicker();
@@ -1405,7 +1439,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   section.querySelectorAll('[data-begin-ex]').forEach(b=>b.onclick=()=>beginExercise(Number(b.dataset.beginEx)));
   section.querySelectorAll('[data-mark-done]').forEach(b=>b.onclick=()=>markExerciseDone(Number(b.dataset.markDone)));
   section.querySelectorAll('[data-mark-skipped]').forEach(b=>b.onclick=()=>markExerciseNotDone(Number(b.dataset.markSkipped)));
-  $('finishWorkout').onclick=()=>{const unfinished=sessionExerciseRows.map((_,i)=>exerciseProgress(i)).filter(x=>x.status!=='done').length;if(unfinished&&!confirm(unfinished+' exercício(s) ainda não estão marcados como feitos. Eles aparecerão como não executados/parciais no histórico. Finalizar mesmo assim?'))return;finishSession()};
+$('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_,i)=>exerciseProgress(i)).filter(x=>x.status!=='done').length;if(unfinished&&!await showWorkoutDialog({title:'Finalizar treino?',message:unfinished+' exercício(s) ainda não estão marcados como feitos. Eles aparecerão como não realizados ou parciais no histórico. Deseja finalizar mesmo assim?',confirmLabel:'Finalizar treino',danger:true}))return;finishSession()};
   $('cancelSession').onclick=exitSessionToHome;
  }
  async function exitSessionToHome(){
@@ -1462,12 +1496,12 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const pending=sessionPlan.filter(x=>x.exerciseIndex===index&&!hasSetLog(x.exercise.id,x.setIndex+1));
   if(pending.some(x=>x.set.mode&&x.set.mode!=='reps'))return alert('Para registrar exercícios por tempo, inicie o cronômetro de cada série e conclua o registro ao terminar.');
   if(!pending.length)return renderExercisePicker();
-  if(!confirm('Marcar "'+exercise.name+'" como feito usando as repetições e cargas programadas? Você poderá ajustar os valores no histórico.'))return;
+  if(!await showWorkoutDialog({title:'Marcar como feito?',message:'As séries pendentes de “'+exercise.name+'” serão registradas usando as repetições e cargas programadas. Você poderá ajustar os valores no histórico.',confirmLabel:'Sim, marcar como feito'}))return;
   if(!isCurrent())return;
   const rows=[];
   for(const item of pending){
    let reps=item.set.reps;
-   if(reps==='MR'){const value=prompt('Quantas repetições você realizou na série '+(item.setIndex+1)+' de '+exercise.name+'?');if(value===null)return;if(!Number(value)||Number(value)<1)return alert('Informe um número de repetições válido.');reps=Number(value)}
+   if(reps==='MR'){const value=await showWorkoutDialog({title:'Quantas repetições você fez?',message:'Informe as repetições realizadas na série '+(item.setIndex+1)+' de “'+exercise.name+'”.',confirmLabel:'Continuar',input:{label:'Repetições realizadas',placeholder:'Ex.: 12',min:1,step:1}});if(value===null)return;reps=Number(value)}
    rows.push({session_id:sessionId,exercise_id:exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:item.set.load_kg??null});
   }
   if(!isCurrent())return;
@@ -1492,9 +1526,9 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    persistWorkoutState();renderExercisePicker();
   }finally{if(savingSetOwner===sessionId){savingSet=false;savingSetOwner=null}}
  }
- function markExerciseNotDone(index){
+ async function markExerciseNotDone(index){
   const exercise=sessionExerciseRows[index];if(!exercise)return;
-  if(!confirm('Marcar "'+exercise.name+'" como não executado?'))return;
+  if(!await showWorkoutDialog({title:'Marcar como não realizado?',message:'“'+exercise.name+'” ficará registrado como não realizado. As séries já concluídas serão preservadas.',confirmLabel:'Sim, não realizado',danger:true}))return;
   const previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices);
   skippedExerciseIndices.add(index);
   for(let i=0;i<(exercise.sets||[]).length;i++)if(!hasSetLog(exercise.id,i+1))skippedSetKeys.add(exercise.id+':'+(i+1));
@@ -1619,6 +1653,45 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   }
   renderExercisePicker();
  }
+ function showWorkoutDialog({title,message,confirmLabel='Confirmar',cancelLabel='Cancelar',danger=false,input=null}){
+  return new Promise(resolve=>{
+   const old=$('workoutActionDialog');if(old)old.remove();
+   const overlay=document.createElement('div');overlay.id='workoutActionDialog';overlay.className='workout-dialog-backdrop';
+   overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input" type="number" min="'+input.min+'" step="'+input.step+'" placeholder="'+esc(input.placeholder)+'" inputmode="numeric">':'')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
+   section.append(overlay);
+   const finish=value=>{overlay.remove();resolve(value)};
+   overlay.querySelector('.workout-dialog-cancel').onclick=()=>finish(null);
+   overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min)){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}finish(value)};
+   overlay.addEventListener('click',event=>{if(event.target===overlay)finish(null)});
+   overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();finish(null)}if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();overlay.querySelector('.workout-dialog-confirm').click()}};
+   const field=overlay.querySelector('#workoutDialogInput');(field||overlay.querySelector('.workout-dialog-confirm')).focus();
+  });
+ }
+ function renderWorkoutCompletion(summary){
+  const duration=formatWorkoutTime(summary.durationSeconds);
+  const subtitle=summary.allExercisesDone
+   ?'Você concluiu todas as etapas deste treino. Excelente trabalho — seu progresso foi registrado!'
+   :'Seu treino foi finalizado e o que você realizou ficou registrado. Continue evoluindo no seu ritmo.';
+  section.classList.remove('training-gallery');
+  section.innerHTML='<div class="completion-screen">'+
+   '<div class="completion-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></div>'+
+   '<p class="completion-workout">'+esc(summary.workoutTitle)+'</p>'+
+   '<h1>'+(summary.allExercisesDone?'Parabéns!':'Boa sessão!')+'</h1>'+
+   '<p class="completion-subtitle">'+subtitle+'</p>'+
+   '<div class="completion-stats">'+
+    '<div class="completion-stat"><strong>'+duration+'</strong><span>Tempo de treino</span></div>'+
+    '<div class="completion-stat"><strong>'+summary.completedSets+'/'+summary.totalSets+'</strong><span>Séries registradas</span></div>'+
+    '<div class="completion-stat"><strong>'+summary.completedExercises+'/'+summary.totalExercises+'</strong><span>Exercícios concluídos</span></div>'+
+    '<div class="completion-stat"><strong>'+summary.skippedExercises+'</strong><span>Não concluídos/parciais</span></div>'+
+   '</div>'+
+   '<div class="completion-sync '+(summary.synced?'':'pending')+'" role="status" aria-live="polite">'+
+    (summary.synced?'✓ Treino sincronizado com seu histórico.':'↻ Treino salvo neste aparelho. A sincronização será concluída automaticamente quando a conexão voltar. Não apague os dados do navegador antes disso.')+
+   '</div>'+
+   '<div class="completion-actions"><button type="button" class="completion-primary" id="completionBackToWorkouts">Voltar aos treinos</button><button type="button" class="completion-secondary" id="completionGoHome">Ir para o início</button></div>'+
+  '</div>';
+  $('completionBackToWorkouts').onclick=()=>home();
+  $('completionGoHome').onclick=()=>{const homeTab=document.querySelector('.nav button[data-page="home"]');if(homeTab)homeTab.click();else home()};
+ }
  async function finishSession(){
   if(savingSet)return alert('Aguarde o registro das séries terminar antes de finalizar o treino.');
   if(!session||finishingSession)return;
@@ -1626,7 +1699,8 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   finishingSession=true;finishingSessionOwner=sessionId;
   const finishButton=$('finishWorkout');if(finishButton)finishButton.disabled=true;
   restSnapshot=null;if(timer)clearInterval(timer);timer=null;activeRest=null;
-  session.status='completed';session.finished_at=new Date().toISOString();if(!persistWorkoutState()){
+  const finishedAt=new Date().toISOString();
+  session.status='completed';session.finished_at=finishedAt;if(!persistWorkoutState()){
    session.status='in_progress';session.finished_at=null;
    if(finishingSessionOwner===sessionId){finishingSession=false;finishingSessionOwner=null}
    if(finishButton)finishButton.disabled=false;
@@ -1634,10 +1708,22 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   }
   const synced=await syncPendingWorkout();
   if(!isCurrent())return;
-  if(synced){clearPersistedWorkout(userId);alert('Treino concluído e sincronizado com o histórico.')}else{alert('Treino concluído e guardado neste aparelho. Será enviado ao Supabase automaticamente quando a conexão voltar. Não apague os dados do navegador antes da sincronização.')}
+  const progress=sessionExerciseRows.map((_,i)=>exerciseProgress(i));
+  const totalSets=sessionPlan.length;
+  const completedSets=sessionSetLogs.filter(row=>Number(row.duration_seconds)>0||Number(row.reps_completed)>0).length;
+  const completedExercises=progress.filter(item=>item.status==='done').length;
+  const summary={
+   workoutTitle:subworkouts.find(item=>String(item.id)===String(session.subworkout_id))?.title||'Treino',
+   durationSeconds:Math.max(0,Math.round((new Date(finishedAt).getTime()-new Date(session.started_at||finishedAt).getTime())/1000)),
+   completedSets,totalSets,completedExercises,totalExercises:sessionExerciseRows.length,
+   skippedExercises:progress.filter(item=>item.status!=='done').length,
+   allExercisesDone:progress.length>0&&progress.every(item=>item.status==='done'),
+   synced:!!synced
+  };
+  if(synced)clearPersistedWorkout(userId);
   session=null;sessionPlan=[];sessionExerciseRows=[];sessionSetLogs=[];
   if(finishingSessionOwner===sessionId){finishingSession=false;finishingSessionOwner=null}
-  home();
+  renderWorkoutCompletion(summary);
  }
  window.beginStrengthActivity=async function(){
   const db=dbRef(),u=userRef(),userId=u?.id;if(!db||!userId)return alert('Faça login para iniciar um treino.');

@@ -33,6 +33,7 @@ Atualizado em 19/11/2026.
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [ ] Revisar transições entre séries, exercícios e descansos.
+- [ ] Substituir mensagens e confirmações nativas por telas amigáveis e consistentes, começando pela tela de conclusão do treino (resumo, status de sincronização e próximos passos).
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
