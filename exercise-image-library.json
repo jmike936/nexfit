@@ -8,9 +8,14 @@
       "id": "ab-wheel-rollout",
       "name": "Ab Wheel Rollout",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal roda solo",
+        "abdominal roda"
+      ],
       "keys": [
-        "abwheelrollout"
+        "abwheelrollout",
+        "abdominalrodasolo",
+        "abdominalroda"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/ab-wheel-rollout/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/ab-wheel-rollout/end.webp",
@@ -171,9 +176,12 @@
       "id": "arnold-press",
       "name": "Arnold Press",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "desenvolvimento arnold"
+      ],
       "keys": [
-        "arnoldpress"
+        "arnoldpress",
+        "desenvolvimentoarnold"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/arnold-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/arnold-press/end.webp",
@@ -229,10 +237,13 @@
       "aliases": [
         "hyperextension"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "hiperextensão lombar"
+      ],
       "keys": [
         "backextension",
-        "hyperextension"
+        "hyperextension",
+        "hiperextensaolombar"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/back-extensions/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/back-extensions/end.webp",
@@ -729,9 +740,14 @@
       "id": "barbell-glute-bridge",
       "name": "Barbell Glute Bridge",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação pélvica com barra",
+        "ponte de glúteos"
+      ],
       "keys": [
-        "barbellglutebridge"
+        "barbellglutebridge",
+        "elevacaopelvicacombarra",
+        "pontedegluteos"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/barbell-glute-bridge/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/barbell-glute-bridge/end.webp",
@@ -851,12 +867,15 @@
         "double rope waves",
         "battle rope alternating waves"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "battle rope"
+      ],
       "keys": [
         "battleropedoublewaves",
         "twoarmropewaves",
         "doubleropewaves",
-        "battleropealternatingwaves"
+        "battleropealternatingwaves",
+        "battlerope"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/battle-rope-double-waves/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/battle-rope-double-waves/end.webp",
@@ -1036,9 +1055,12 @@
       "id": "bicycle-crunch",
       "name": "Bicycle Crunch",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal bicicleta"
+      ],
       "keys": [
-        "bicyclecrunch"
+        "bicyclecrunch",
+        "abdominalbicicleta"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bicycle-crunch/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bicycle-crunch/end.webp",
@@ -1201,10 +1223,13 @@
       "aliases": [
         "rear-foot-elevated split squat"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "agachamento búlgaro"
+      ],
       "keys": [
         "bulgariansplitsquat",
-        "rearfootelevatedsplitsquat"
+        "rearfootelevatedsplitsquat",
+        "agachamentobulgaro"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bulgarian-split-squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bulgarian-split-squat/end.webp",
@@ -1276,10 +1301,15 @@
       "aliases": [
         "cable fly"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crossover na polia média",
+        "crossover"
+      ],
       "keys": [
         "cablecrossover",
-        "cablefly"
+        "cablefly",
+        "crossovernapoliamedia",
+        "crossover"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-crossover/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-crossover/end.webp",
@@ -1294,9 +1324,12 @@
       "id": "cable-crunch",
       "name": "Cable Crunch",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal na polia"
+      ],
       "keys": [
-        "cablecrunch"
+        "cablecrunch",
+        "abdominalnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-crunch/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-crunch/end.webp",
@@ -1348,9 +1381,12 @@
       "id": "cable-fly-high-to-low",
       "name": "Cable Fly High To Low",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crossover na polia alta"
+      ],
       "keys": [
-        "cableflyhightolow"
+        "cableflyhightolow",
+        "crossovernapoliaalta"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-fly-high-to-low/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-fly-high-to-low/end.webp",
@@ -1365,9 +1401,12 @@
       "id": "cable-fly-low-to-high",
       "name": "Cable Fly Low To High",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crossover na polia baixa"
+      ],
       "keys": [
-        "cableflylowtohigh"
+        "cableflylowtohigh",
+        "crossovernapoliabaixa"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-fly-low-to-high/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-fly-low-to-high/end.webp",
@@ -1382,9 +1421,12 @@
       "id": "cable-front-raise",
       "name": "Cable Front Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação frontal na polia"
+      ],
       "keys": [
-        "cablefrontraise"
+        "cablefrontraise",
+        "elevacaofrontalnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-front-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-front-raise/end.webp",
@@ -1419,9 +1461,14 @@
       "id": "cable-kickback",
       "name": "Cable Glute Kickback",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "coice na polia",
+        "glúteo na polia"
+      ],
       "keys": [
-        "cableglutekickback"
+        "cableglutekickback",
+        "coicenapolia",
+        "gluteonapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-kickback/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-kickback/end.webp",
@@ -1437,9 +1484,12 @@
       "id": "cable-lateral-raise",
       "name": "Cable Lateral Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação lateral na polia"
+      ],
       "keys": [
-        "cablelateralraise"
+        "cablelateralraise",
+        "elevacaolateralnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-lateral-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-lateral-raise/end.webp",
@@ -1521,9 +1571,12 @@
       "id": "cable-upright-row",
       "name": "Cable Upright Row",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "remada alta na polia"
+      ],
       "keys": [
-        "cableuprightrow"
+        "cableuprightrow",
+        "remadaaltanapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-upright-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-upright-row/end.webp",
@@ -1733,10 +1786,12 @@
       "aliases": [
         "chinup"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "barra fixa supinada"
+      ],
       "keys": [
         "chinup",
-        "chinup"
+        "barrafixasupinada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/chin-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/chin-up/end.webp",
@@ -1817,10 +1872,17 @@
       "aliases": [
         "v-bar pulldown"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "puxada alta com triângulo",
+        "puxada alta pegada fechada",
+        "puxada alta triângulo"
+      ],
       "keys": [
         "closegriplatpulldown",
-        "vbarpulldown"
+        "vbarpulldown",
+        "puxadaaltacomtriangulo",
+        "puxadaaltapegadafechada",
+        "puxadaaltatriangulo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/close-grip-lat-pulldown/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/close-grip-lat-pulldown/end.webp",
@@ -2096,10 +2158,13 @@
       "aliases": [
         "feet-elevated push-up"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "flexão declinada"
+      ],
       "keys": [
         "declinepushup",
-        "feetelevatedpushup"
+        "feetelevatedpushup",
+        "flexaodeclinada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/decline-push-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/decline-push-up/end.webp",
@@ -2173,10 +2238,13 @@
       "aliases": [
         "triceps dips"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "mergulho nas paralelas"
+      ],
       "keys": [
         "dips",
-        "tricepsdips"
+        "tricepsdips",
+        "mergulhonasparalelas"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dips/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dips/end.webp",
@@ -2388,13 +2456,17 @@
         "dumbbell flyes"
       ],
       "portugueseAliases": [
-        "crucifixo com halteres"
+        "crucifixo com halteres",
+        "crucifixo reto com halteres",
+        "crucifixo"
       ],
       "keys": [
         "dumbbellfly",
         "dumbbellchestfly",
         "dumbbellflyes",
-        "crucifixocomhalteres"
+        "crucifixocomhalteres",
+        "crucifixoretocomhalteres",
+        "crucifixo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/end.webp",
@@ -2470,11 +2542,18 @@
         "weighted lunge",
         "walking lunge"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "afundo com halteres",
+        "passada com halteres",
+        "avanço"
+      ],
       "keys": [
         "dumbbelllunge",
         "weightedlunge",
-        "walkinglunge"
+        "walkinglunge",
+        "afundocomhalteres",
+        "passadacomhalteres",
+        "avanco"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-lunge/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-lunge/end.webp",
@@ -2508,9 +2587,12 @@
       "id": "dumbbell-pullover",
       "name": "Dumbbell Pullover",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "pullover com halter"
+      ],
       "keys": [
-        "dumbbellpullover"
+        "dumbbellpullover",
+        "pullovercomhalter"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-pullover/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-pullover/end.webp",
@@ -2655,11 +2737,16 @@
         "seated dumbbell press",
         "db shoulder press"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "desenvolvimento c halteres sentado",
+        "desenvolvimento com halteres"
+      ],
       "keys": [
         "dumbbellshoulderpress",
         "seateddumbbellpress",
-        "dbshoulderpress"
+        "dbshoulderpress",
+        "desenvolvimentochalteressentado",
+        "desenvolvimentocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-shoulder-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-shoulder-press/end.webp",
@@ -2848,12 +2935,15 @@
         "cross trainer",
         "elliptical machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elíptico"
+      ],
       "keys": [
         "elliptical",
         "ellipticaltrainer",
         "crosstrainer",
-        "ellipticalmachine"
+        "ellipticalmachine",
+        "eliptico"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/elliptical/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/elliptical/end.webp",
@@ -2889,9 +2979,12 @@
       "id": "face-pulls",
       "name": "Face Pull",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "face pull na polia"
+      ],
       "keys": [
-        "facepull"
+        "facepull",
+        "facepullnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/face-pulls/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/face-pulls/end.webp",
@@ -2909,10 +3002,13 @@
       "aliases": [
         "farmer carry"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "farmer walk"
+      ],
       "keys": [
         "farmerswalk",
-        "farmercarry"
+        "farmercarry",
+        "farmerwalk"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/farmers-walk/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/farmers-walk/end.webp",
@@ -3058,9 +3154,14 @@
       "id": "front-raises",
       "name": "Front Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação frontal com barra",
+        "elevação frontal com halteres"
+      ],
       "keys": [
-        "frontraise"
+        "frontraise",
+        "elevacaofrontalcombarra",
+        "elevacaofrontalcomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/front-raises/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/front-raises/end.webp",
@@ -3073,9 +3174,12 @@
       "id": "front-squat",
       "name": "Front Squat",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "agachamento frontal"
+      ],
       "keys": [
-        "frontsquat"
+        "frontsquat",
+        "agachamentofrontal"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/front-squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/front-squat/end.webp",
@@ -3327,9 +3431,12 @@
       "id": "hanging-knee-raise",
       "name": "Hanging Knee Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação de joelhos na barra"
+      ],
       "keys": [
-        "hangingkneeraise"
+        "hangingkneeraise",
+        "elevacaodejoelhosnabarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hanging-knee-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hanging-knee-raise/end.webp",
@@ -3447,10 +3554,17 @@
       "aliases": [
         "abductor machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdução de quadril na máquina",
+        "abdutora",
+        "cadeira abdutora"
+      ],
       "keys": [
         "hipabduction",
-        "abductormachine"
+        "abductormachine",
+        "abducaodequadrilnamaquina",
+        "abdutora",
+        "cadeiraabdutora"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-abduction-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-abduction-machine/end.webp",
@@ -3488,11 +3602,14 @@
         "glute drive machine",
         "machine hip thrust"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação pélvica na máquina"
+      ],
       "keys": [
         "hipthrustmachine",
         "glutedrivemachine",
-        "machinehipthrust"
+        "machinehipthrust",
+        "elevacaopelvicanamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrust-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrust-machine/end.webp",
@@ -3652,9 +3769,12 @@
       "id": "incline-dumbbell-fly",
       "name": "Incline Dumbbell Fly",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crucifixo inclinado com halteres"
+      ],
       "keys": [
-        "inclinedumbbellfly"
+        "inclinedumbbellfly",
+        "crucifixoinclinadocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-dumbbell-fly/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-dumbbell-fly/end.webp",
@@ -3692,10 +3812,13 @@
       "aliases": [
         "hands-elevated push-up"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "flexão inclinada"
+      ],
       "keys": [
         "inclinepushup",
-        "handselevatedpushup"
+        "handselevatedpushup",
+        "flexaoinclinada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-push-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-push-up/end.webp",
@@ -3760,12 +3883,15 @@
         "skipping rope",
         "jump rope basic bounce"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "pular corda"
+      ],
       "keys": [
         "jumprope",
         "skipping",
         "skippingrope",
-        "jumpropebasicbounce"
+        "jumpropebasicbounce",
+        "pularcorda"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/jump-rope/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/jump-rope/end.webp",
@@ -3802,9 +3928,12 @@
       "id": "jumping-jacks",
       "name": "Jumping Jack",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "polichinelo"
+      ],
       "keys": [
-        "jumpingjack"
+        "jumpingjack",
+        "polichinelo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/jumping-jacks/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/jumping-jacks/end.webp",
@@ -4256,7 +4385,11 @@
       "portugueseAliases": [
         "puxada alta",
         "puxada frente",
-        "pulley frente"
+        "pulley frente",
+        "pulldown na polia",
+        "puxada aberta",
+        "puxada alta pegada aberta",
+        "puxada na máquina"
       ],
       "keys": [
         "latpulldown",
@@ -4264,7 +4397,11 @@
         "widegriplatpulldown",
         "puxadaalta",
         "puxadafrente",
-        "pulleyfrente"
+        "pulleyfrente",
+        "pulldownnapolia",
+        "puxadaaberta",
+        "puxadaaltapegadaaberta",
+        "puxadanamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lat-pulldown/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lat-pulldown/end.webp",
@@ -4445,11 +4582,16 @@
         "calf press on leg press",
         "toe press"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "panturrilha leg press",
+        "panturrilha no leg press"
+      ],
       "keys": [
         "legpresscalfraise",
         "calfpressonlegpress",
-        "toepress"
+        "toepress",
+        "panturrilhalegpress",
+        "panturrilhanolegpress"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-press-calf-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-press-calf-raise/end.webp",
@@ -4488,10 +4630,13 @@
       "aliases": [
         "lying leg raise"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação de pernas"
+      ],
       "keys": [
         "legraise",
-        "lyinglegraise"
+        "lyinglegraise",
+        "elevacaodepernas"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-raises/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-raises/end.webp",
@@ -4543,11 +4688,14 @@
         "ab crunch machine",
         "machine crunch"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal na máquina"
+      ],
       "keys": [
         "machineabdominalcrunch",
         "abcrunchmachine",
-        "machinecrunch"
+        "machinecrunch",
+        "abdominalnamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-abdominal-crunch/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-abdominal-crunch/end.webp",
@@ -4563,11 +4711,14 @@
         "glute machine kickback",
         "standing glute machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "coice na máquina"
+      ],
       "keys": [
         "machineglutekickback",
         "glutemachinekickback",
-        "standingglutemachine"
+        "standingglutemachine",
+        "coicenamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-glute-kickback/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-glute-kickback/end.webp",
@@ -4585,11 +4736,14 @@
         "iso-lateral high row",
         "plate-loaded high row"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "remada articulada"
+      ],
       "keys": [
         "machinehighrow",
         "isolateralhighrow",
-        "plateloadedhighrow"
+        "plateloadedhighrow",
+        "remadaarticulada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-high-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-high-row/end.webp",
@@ -4607,9 +4761,12 @@
       "id": "machine-lateral-raise",
       "name": "Machine Lateral Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "elevação lateral na máquina"
+      ],
       "keys": [
-        "machinelateralraise"
+        "machinelateralraise",
+        "elevacaolateralnamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-lateral-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-lateral-raise/end.webp",
@@ -4647,11 +4804,14 @@
         "pullover machine",
         "overhead pullover machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "pullover na polia"
+      ],
       "keys": [
         "machinepullover",
         "pullovermachine",
-        "overheadpullovermachine"
+        "overheadpullovermachine",
+        "pullovernapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-pullover/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-pullover/end.webp",
@@ -4673,14 +4833,16 @@
       "portugueseAliases": [
         "remada baixa",
         "remada baixa na maquina",
-        "remada sentada"
+        "remada sentada",
+        "remada baixa com triângulo"
       ],
       "keys": [
         "seatedmachinerow",
         "chestsupportedrow",
         "remadabaixa",
         "remadabaixanamaquina",
-        "remadasentada"
+        "remadasentada",
+        "remadabaixacomtriangulo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/end.webp",
@@ -4906,9 +5068,12 @@
       "id": "neutral-grip-pull-up",
       "name": "Neutral Grip Pull Up",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "barra fixa pegada fechada"
+      ],
       "keys": [
-        "neutralgrippullup"
+        "neutralgrippullup",
+        "barrafixapegadafechada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/neutral-grip-pull-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/neutral-grip-pull-up/end.webp",
@@ -4942,10 +5107,13 @@
       "aliases": [
         "nordic curl"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "flexão nórdica assistida"
+      ],
       "keys": [
         "nordichamstringcurl",
-        "nordiccurl"
+        "nordiccurl",
+        "flexaonordicaassistida"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/nordic-hamstring-curl/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/nordic-hamstring-curl/end.webp",
@@ -4964,12 +5132,15 @@
         "twisted crunch",
         "cross crunch on floor"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal oblíquo"
+      ],
       "keys": [
         "obliquecrunch",
         "sidecrunch",
         "twistedcrunch",
-        "crosscrunchonfloor"
+        "crosscrunchonfloor",
+        "abdominalobliquo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/oblique-crunch/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/oblique-crunch/end.webp",
@@ -5032,7 +5203,8 @@
       ],
       "portugueseAliases": [
         "desenvolvimento militar",
-        "desenvolvimento com barra"
+        "desenvolvimento com barra",
+        "desenvolvimento barra"
       ],
       "keys": [
         "overheadpress",
@@ -5040,7 +5212,8 @@
         "barbellshoulderpress",
         "militarypress",
         "desenvolvimentomilitar",
-        "desenvolvimentocombarra"
+        "desenvolvimentocombarra",
+        "desenvolvimentobarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/overhead-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/overhead-press/end.webp",
@@ -5106,9 +5279,12 @@
       "id": "pallof-press",
       "name": "Pallof Press",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "pallof press na polia"
+      ],
       "keys": [
-        "pallofpress"
+        "pallofpress",
+        "pallofpressnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pallof-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pallof-press/end.webp",
@@ -5126,10 +5302,15 @@
       "aliases": [
         "machine fly"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crucifixo na máquina",
+        "peck deck"
+      ],
       "keys": [
         "pecdeck",
-        "machinefly"
+        "machinefly",
+        "crucifixonamaquina",
+        "peckdeck"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pec-deck/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pec-deck/end.webp",
@@ -5243,12 +5424,14 @@
         "forearm plank"
       ],
       "portugueseAliases": [
-        "prancha abdominal"
+        "prancha abdominal",
+        "prancha isométrica"
       ],
       "keys": [
         "plank",
         "forearmplank",
-        "pranchaabdominal"
+        "pranchaabdominal",
+        "pranchaisometrica"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/plank/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/plank/hold.webp",
@@ -5604,11 +5787,14 @@
         "reverse fly",
         "rear delt flies"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crucifixo inverso com halteres"
+      ],
       "keys": [
         "reardeltfly",
         "reversefly",
-        "reardeltflies"
+        "reardeltflies",
+        "crucifixoinversocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/rear-delt-fly/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/rear-delt-fly/end.webp",
@@ -5643,9 +5829,12 @@
       "id": "reverse-crunch",
       "name": "Reverse Crunch",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal infra"
+      ],
       "keys": [
-        "reversecrunch"
+        "reversecrunch",
+        "abdominalinfra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-crunch/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-crunch/end.webp",
@@ -5696,9 +5885,12 @@
       "id": "reverse-grip-lat-pulldown",
       "name": "Reverse-Grip Lat Pulldown",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "puxada alta supinada"
+      ],
       "keys": [
-        "reversegriplatpulldown"
+        "reversegriplatpulldown",
+        "puxadaaltasupinada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-grip-lat-pulldown/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-grip-lat-pulldown/end.webp",
@@ -5788,10 +5980,15 @@
       "aliases": [
         "reverse machine fly"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "crucifixo inverso máquina",
+        "crucifixo inverso na máquina"
+      ],
       "keys": [
         "reversepecdeck",
-        "reversemachinefly"
+        "reversemachinefly",
+        "crucifixoinversomaquina",
+        "crucifixoinversonamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-pec-deck/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/reverse-pec-deck/end.webp",
@@ -6040,9 +6237,14 @@
       "id": "seated-calf-raise",
       "name": "Seated Calf Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "panturrilha sentada",
+        "panturrilha sentado"
+      ],
       "keys": [
-        "seatedcalfraise"
+        "seatedcalfraise",
+        "panturrilhasentada",
+        "panturrilhasentado"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/seated-calf-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/seated-calf-raise/end.webp",
@@ -6189,11 +6391,13 @@
         "seated leg press sliding seat",
         "seated leg press machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "leg press horizontal"
+      ],
       "keys": [
         "seatedlegpressslidingseat",
-        "seatedlegpressslidingseat",
-        "seatedlegpressmachine"
+        "seatedlegpressmachine",
+        "legpresshorizontal"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/seated-leg-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/seated-leg-press/end.webp",
@@ -6271,9 +6475,12 @@
       "id": "shoulder-press-machine",
       "name": "Machine Shoulder Press",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "desenvolvimento na máquina"
+      ],
       "keys": [
-        "machineshoulderpress"
+        "machineshoulderpress",
+        "desenvolvimentonamaquina"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/shoulder-press-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/shoulder-press-machine/end.webp",
@@ -6342,9 +6549,12 @@
       "id": "side-plank",
       "name": "Side Plank",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "prancha lateral"
+      ],
       "keys": [
-        "sideplank"
+        "sideplank",
+        "pranchalateral"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/side-plank/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/side-plank/hold.webp",
@@ -6455,9 +6665,12 @@
       "id": "single-leg-calf-raise",
       "name": "Single-Leg Calf Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "panturrilha unilateral"
+      ],
       "keys": [
-        "singlelegcalfraise"
+        "singlelegcalfraise",
+        "panturrilhaunilateral"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/single-leg-calf-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/single-leg-calf-raise/end.webp",
@@ -6472,9 +6685,12 @@
       "id": "single-leg-glute-bridge",
       "name": "Single-Leg Glute Bridge",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "glute bridge unilateral"
+      ],
       "keys": [
-        "singlelegglutebridge"
+        "singlelegglutebridge",
+        "glutebridgeunilateral"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/single-leg-glute-bridge/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/single-leg-glute-bridge/end.webp",
@@ -6688,9 +6904,12 @@
       "id": "smith-machine-calf-raise",
       "name": "Smith Machine Calf Raise",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "panturrilha no smith"
+      ],
       "keys": [
-        "smithmachinecalfraise"
+        "smithmachinecalfraise",
+        "panturrilhanosmith"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-calf-raise/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-calf-raise/end.webp",
@@ -6741,9 +6960,12 @@
       "id": "smith-machine-lunge",
       "name": "Smith Machine Lunge",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "avanço no smith"
+      ],
       "keys": [
-        "smithmachinelunge"
+        "smithmachinelunge",
+        "avanconosmith"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-lunge/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-lunge/end.webp",
@@ -6816,9 +7038,12 @@
       "id": "smith-machine-squat",
       "name": "Smith Machine Squat",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "agachamento no smith"
+      ],
       "keys": [
-        "smithmachinesquat"
+        "smithmachinesquat",
+        "agachamentonosmith"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/smith-machine-squat/end.webp",
@@ -7103,11 +7328,14 @@
         "stair stepper",
         "stair machine"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "escada ergométrica"
+      ],
       "keys": [
         "stairclimber",
         "stairstepper",
-        "stairmachine"
+        "stairmachine",
+        "escadaergometrica"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/stair-climber/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/stair-climber/hold.webp",
@@ -7146,9 +7374,12 @@
       "id": "standing-cable-hip-abduction",
       "name": "Standing Cable Hip Abduction",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdução de quadril na polia"
+      ],
       "keys": [
-        "standingcablehipabduction"
+        "standingcablehipabduction",
+        "abducaodequadrilnapolia"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-cable-hip-abduction/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-cable-hip-abduction/end.webp",
@@ -7163,9 +7394,12 @@
       "id": "standing-calf-raise-machine",
       "name": "Standing Calf Raise Machine",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "panturrilha sentada ou em pé"
+      ],
       "keys": [
-        "standingcalfraisemachine"
+        "standingcalfraisemachine",
+        "panturrilhasentadaouempe"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-calf-raise-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-calf-raise-machine/end.webp",
@@ -7215,10 +7449,13 @@
       "aliases": [
         "standing side leg raise"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdução de quadril com miniband"
+      ],
       "keys": [
         "standinghipabduction",
-        "standingsidelegraise"
+        "standingsidelegraise",
+        "abducaodequadrilcomminiband"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-hip-abduction/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-hip-abduction/end.webp",
@@ -7262,12 +7499,15 @@
         "single leg curl machine",
         "standing leg curl"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "flexora em pé"
+      ],
       "keys": [
         "standinglegcurlmachine",
         "standinghamstringcurlmachine",
         "singlelegcurlmachine",
-        "standinglegcurl"
+        "standinglegcurl",
+        "flexoraempe"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-leg-curl-machine/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/standing-leg-curl-machine/end.webp",
@@ -7328,13 +7568,18 @@
         "indoor cycling",
         "exercise cycle"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "bicicleta ergométrica",
+        "bicicleta horizontal"
+      ],
       "keys": [
         "stationarybike",
         "exercisebike",
         "uprightbike",
         "indoorcycling",
-        "exercisecycle"
+        "exercisecycle",
+        "bicicletaergometrica",
+        "bicicletahorizontal"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/stationary-bike/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/stationary-bike/hold.webp",
@@ -7419,9 +7664,12 @@
       "id": "straight-arm-pulldown",
       "name": "Straight-Arm Pulldown",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "pulldown com braços retos"
+      ],
       "keys": [
-        "straightarmpulldown"
+        "straightarmpulldown",
+        "pulldowncombracosretos"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/straight-arm-pulldown/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/straight-arm-pulldown/end.webp",
@@ -7465,9 +7713,12 @@
       "id": "sumo-deadlift",
       "name": "Sumo Deadlift",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "levantamento terra sumô"
+      ],
       "keys": [
-        "sumodeadlift"
+        "sumodeadlift",
+        "levantamentoterrasumo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/sumo-deadlift/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/sumo-deadlift/end.webp",
@@ -7487,11 +7738,14 @@
         "plie squat",
         "dumbbell sumo squat"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "agachamento sumô"
+      ],
       "keys": [
         "sumosquat",
         "pliesquat",
-        "dumbbellsumosquat"
+        "dumbbellsumosquat",
+        "agachamentosumo"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/sumo-squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/sumo-squat/end.webp",
@@ -7891,12 +8145,15 @@
         "treadmill walk",
         "incline treadmill"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "caminhada inclinada"
+      ],
       "keys": [
         "treadmillinclinewalk",
         "inclinewalking",
         "treadmillwalk",
-        "inclinetreadmill"
+        "inclinetreadmill",
+        "caminhadainclinada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/treadmill-incline-walk/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/treadmill-incline-walk/hold.webp",
@@ -7917,12 +8174,15 @@
         "treadmill jog",
         "running on treadmill"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "esteira"
+      ],
       "keys": [
         "treadmillrun",
         "treadmillrunning",
         "treadmilljog",
-        "runningontreadmill"
+        "runningontreadmill",
+        "esteira"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/treadmill-run/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/treadmill-run/hold.webp",
@@ -7999,9 +8259,14 @@
       "id": "upright-row",
       "name": "Upright Row",
       "aliases": [],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "remada alta com barra",
+        "remada alta livre"
+      ],
       "keys": [
-        "uprightrow"
+        "uprightrow",
+        "remadaaltacombarra",
+        "remadaaltalivre"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/upright-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/upright-row/end.webp",
@@ -8045,10 +8310,13 @@
       "aliases": [
         "jackknife sit-up"
       ],
-      "portugueseAliases": [],
+      "portugueseAliases": [
+        "abdominal canivete"
+      ],
       "keys": [
         "vup",
-        "jackknifesitup"
+        "jackknifesitup",
+        "abdominalcanivete"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/v-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/v-up/end.webp",
