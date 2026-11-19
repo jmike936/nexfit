@@ -37,3 +37,8 @@ Atualizado em 19/11/2026.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
+
+## Prioridade 5 — Comunicação e orientação visual
+- [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.
+- [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras.
+- [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
