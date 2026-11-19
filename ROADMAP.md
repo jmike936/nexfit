@@ -33,4 +33,4 @@ Atualizado em 19/11/2026.
 - [ ] Revisar transições entre séries, exercícios e descansos.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
-- [ ] Reduzir consultas e renderizações desnecessárias.
+- [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
