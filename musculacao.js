@@ -809,7 +809,8 @@
    +editorField('editorExerciseRest','Descanso','90','text','Segundos, mm:ss ou minutos');
   showProgramEditor('Adicionar exercício',fields,async()=>{
    if(!isCurrentEditor())return false;
-   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}
+   const exerciseMode=$('editorExerciseMode')?.value||'reps';
+   let reps=[];if(exerciseMode==='reps'){try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}}
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
    let item=null;
    if($('newCatalogExerciseFields').style.display!=='none'){
@@ -818,7 +819,7 @@
    }else item=catalog.find(x=>String(x.id)===String($('editorCatalogExercise').value));
    if(!isCurrentEditor())return false;
    if(!item){alert('Selecione um exercício ou cadastre um novo.');return false}
-   const exerciseMode=$('editorExerciseMode')?.value||'reps';let sets;if(exerciseMode==='reps')sets=reps.map(value=>({reps:value,load_kg:null,mode:'reps'}));else{const count=Math.max(1,Math.min(30,Number($('editorTimedSetCount')?.value)||1));const target=Number($('editorTargetSeconds')?.value)||0;if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){alert('Informe uma duração-alvo entre 1 segundo e 24 horas.');return false}sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}))}
+   let sets;if(exerciseMode==='reps')sets=reps.map(value=>({reps:value,load_kg:null,mode:'reps'}));else{const count=Math.max(1,Math.min(30,Number($('editorTimedSetCount')?.value)||1));const target=Number($('editorTargetSeconds')?.value)||0;if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){alert('Informe uma duração-alvo entre 1 segundo e 24 horas.');return false}sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}))}
    const {data,error}=await db.from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(error){alert(error.message);return false}
@@ -1524,7 +1525,8 @@
   if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.')}
   if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   const isTimed=!!item.set?.mode&&item.set.mode!=='reps';
-  const timedSeconds=isTimed?Math.max(0,Math.floor(Number(activeExerciseTimer?.elapsedSeconds)||0)):0;
+  const timedSeconds=isTimed?Math.max(0,Math.floor(exerciseTimerElapsed())):0;
+  if(isTimed&&activeExerciseTimer){activeExerciseTimer.elapsedSeconds=timedSeconds;activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null}
   const repsInput=$('sessionReps');
   const reps=isTimed?'0':(repsInput?repsInput.value.trim():String(item.set.reps??''));
   const load=$('sessionLoad')?.value.trim()??'';
