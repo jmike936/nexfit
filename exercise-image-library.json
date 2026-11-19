@@ -8,6 +8,7 @@
       "id": "ab-wheel-rollout",
       "name": "Ab Wheel Rollout",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "abwheelrollout"
       ],
@@ -24,6 +25,7 @@
       "id": "adductor-rock-backs",
       "name": "Adductor Rock-Backs",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "adductorrockbacks"
       ],
@@ -34,7 +36,7 @@
       ],
       "secondary": [
         "Posterior de coxa",
-        "adductors"
+        "Adutores"
       ]
     },
     {
@@ -43,6 +45,7 @@
       "aliases": [
         "fan bike"
       ],
+      "portugueseAliases": [],
       "keys": [
         "airbike",
         "fanbike"
@@ -64,6 +67,7 @@
       "id": "alternating-dumbbell-curl",
       "name": "Alternating Dumbbell Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "alternatingdumbbellcurl"
       ],
@@ -80,6 +84,7 @@
       "id": "ankle-circles",
       "name": "Ankle Circles",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "anklecircles"
       ],
@@ -96,6 +101,7 @@
       "id": "ankle-rocks",
       "name": "Ankle Rocks",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "anklerocks"
       ],
@@ -112,6 +118,7 @@
       "id": "archer-push-up",
       "name": "Archer Push-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "archerpushup"
       ],
@@ -131,6 +138,7 @@
       "aliases": [
         "small-arm-circles"
       ],
+      "portugueseAliases": [],
       "keys": [
         "armcircles",
         "smallarmcircles"
@@ -146,6 +154,7 @@
       "id": "arm-crossovers",
       "name": "Arm Crossovers",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "armcrossovers"
       ],
@@ -162,6 +171,7 @@
       "id": "arnold-press",
       "name": "Arnold Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "arnoldpress"
       ],
@@ -180,6 +190,7 @@
       "id": "assisted-dip-machine",
       "name": "Assisted Dip",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "assisteddip"
       ],
@@ -197,6 +208,7 @@
       "id": "assisted-pull-up",
       "name": "Assisted Pull-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "assistedpullup"
       ],
@@ -217,6 +229,7 @@
       "aliases": [
         "hyperextension"
       ],
+      "portugueseAliases": [],
       "keys": [
         "backextension",
         "hyperextension"
@@ -239,6 +252,7 @@
         "backpack curl",
         "bag curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "backpackbicepscurl",
         "backpackcurl",
@@ -260,6 +274,7 @@
         "one-arm backpack row",
         "bag row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "backpackrow",
         "onearmbackpackrow",
@@ -282,6 +297,7 @@
       "aliases": [
         "band tibialis raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandankledorsiflexion",
         "bandtibialisraise"
@@ -297,6 +313,7 @@
       "id": "band-bicep-curl",
       "name": "Band Bicep Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandbicepcurl"
       ],
@@ -313,6 +330,7 @@
       "id": "band-chest-press",
       "name": "Band Chest Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandchestpress"
       ],
@@ -333,6 +351,7 @@
         "resistance band deadlift",
         "band rdl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "banddeadlift",
         "resistancebanddeadlift",
@@ -353,6 +372,7 @@
       "id": "band-dislocates",
       "name": "Band Dislocates",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "banddislocates"
       ],
@@ -373,6 +393,7 @@
         "band shoulder external rotation",
         "rotator cuff band external rotation"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandexternalrotation",
         "bandshoulderexternalrotation",
@@ -389,6 +410,7 @@
       "id": "band-glute-kickback",
       "name": "Band Glute Kickback",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandglutekickback"
       ],
@@ -409,6 +431,7 @@
         "band shoulder internal rotation",
         "rotator cuff band internal rotation"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandinternalrotation",
         "bandshoulderinternalrotation",
@@ -430,6 +453,7 @@
         "resistance band lat pulldown",
         "kneeling band pulldown"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandlatpulldown",
         "resistancebandlatpulldown",
@@ -450,6 +474,7 @@
       "id": "band-lateral-raise",
       "name": "Band Lateral Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandlateralraise"
       ],
@@ -466,6 +491,7 @@
       "aliases": [
         "monster walk"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandlateralwalk",
         "monsterwalk"
@@ -485,6 +511,7 @@
       "aliases": [
         "seated resistance band knee extension"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandlegextension",
         "seatedresistancebandkneeextension"
@@ -503,6 +530,7 @@
         "band hamstring curl",
         "band prone leg curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandlyinglegcurl",
         "bandhamstringcurl",
@@ -519,6 +547,7 @@
       "id": "band-overhead-press",
       "name": "Band Overhead Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandoverheadpress"
       ],
@@ -540,6 +569,7 @@
         "resistance band pallof press",
         "band anti-rotation press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandpallofpress",
         "resistancebandpallofpress",
@@ -561,6 +591,7 @@
       "aliases": [
         "band-pull-aparts"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bandpullapart",
         "bandpullaparts"
@@ -581,6 +612,7 @@
       "aliases": [
         "band row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "resistancebandrow",
         "bandrow"
@@ -600,6 +632,7 @@
       "id": "band-squat",
       "name": "Band Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandsquat"
       ],
@@ -618,6 +651,7 @@
       "id": "band-tricep-pushdown",
       "name": "Band Tricep Pushdown",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandtriceppushdown"
       ],
@@ -632,6 +666,7 @@
       "id": "banded-glute-bridge",
       "name": "Banded Glute Bridge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bandedglutebridge"
       ],
@@ -652,10 +687,16 @@
         "bb curl",
         "standing barbell curl"
       ],
+      "portugueseAliases": [
+        "rosca direta",
+        "rosca direta com barra"
+      ],
       "keys": [
         "barbellcurl",
         "bbcurl",
-        "standingbarbellcurl"
+        "standingbarbellcurl",
+        "roscadireta",
+        "roscadiretacombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/barbell-curl/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/barbell-curl/end.webp",
@@ -670,6 +711,7 @@
       "id": "barbell-floor-press",
       "name": "Barbell Floor Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "barbellfloorpress"
       ],
@@ -687,6 +729,7 @@
       "id": "barbell-glute-bridge",
       "name": "Barbell Glute Bridge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "barbellglutebridge"
       ],
@@ -704,6 +747,7 @@
       "id": "barbell-lunge",
       "name": "Barbell Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "barbelllunge"
       ],
@@ -722,6 +766,7 @@
       "id": "barbell-pullover",
       "name": "Barbell Pullover",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "barbellpullover"
       ],
@@ -739,6 +784,7 @@
       "id": "barbell-reverse-lunge",
       "name": "Barbell Reverse Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "barbellreverselunge"
       ],
@@ -759,6 +805,7 @@
       "aliases": [
         "split squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "barbellsplitsquat",
         "splitsquat"
@@ -780,6 +827,7 @@
       "aliases": [
         "barbell step up onto box"
       ],
+      "portugueseAliases": [],
       "keys": [
         "barbellstepup",
         "barbellstepupontobox"
@@ -803,6 +851,7 @@
         "double rope waves",
         "battle rope alternating waves"
       ],
+      "portugueseAliases": [],
       "keys": [
         "battleropedoublewaves",
         "twoarmropewaves",
@@ -823,6 +872,7 @@
       "id": "bear-crawl",
       "name": "Bear Crawl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bearcrawl"
       ],
@@ -842,6 +892,7 @@
         "bear hover",
         "quadruped hover"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bearplank",
         "bearhover",
@@ -864,6 +915,7 @@
         "machine belt squat",
         "hip belt squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "beltsquat",
         "machinebeltsquat",
@@ -886,6 +938,7 @@
       "aliases": [
         "tricep dip on bench"
       ],
+      "portugueseAliases": [],
       "keys": [
         "benchdip",
         "tricepdiponbench"
@@ -906,9 +959,17 @@
       "aliases": [
         "flat bench press"
       ],
+      "portugueseAliases": [
+        "supino reto",
+        "supino reto com barra",
+        "supino barra"
+      ],
       "keys": [
         "barbellbenchpress",
-        "flatbenchpress"
+        "flatbenchpress",
+        "supinoreto",
+        "supinoretocombarra",
+        "supinobarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bench-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bench-press/end.webp",
@@ -927,10 +988,16 @@
         "barbell row",
         "bb row"
       ],
+      "portugueseAliases": [
+        "remada curvada",
+        "remada curvada com barra"
+      ],
       "keys": [
         "bentoverrow",
         "barbellrow",
-        "bbrow"
+        "bbrow",
+        "remadacurvada",
+        "remadacurvadacombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bent-over-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/bent-over-row/end.webp",
@@ -950,6 +1017,7 @@
         "dumbbell curl",
         "dumbbell bicep curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bicepscurl",
         "dumbbellcurl",
@@ -968,6 +1036,7 @@
       "id": "bicycle-crunch",
       "name": "Bicycle Crunch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bicyclecrunch"
       ],
@@ -983,6 +1052,7 @@
       "id": "bird-dog",
       "name": "Bird Dog",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "birddog"
       ],
@@ -1001,6 +1071,7 @@
       "id": "bodyweight-good-mornings",
       "name": "Bodyweight Good Mornings",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "bodyweightgoodmornings"
       ],
@@ -1021,6 +1092,7 @@
         "bench-supported hip thrust",
         "unweighted hip thrust"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bodyweighthipthrust",
         "benchsupportedhipthrust",
@@ -1043,6 +1115,7 @@
         "air squat",
         "bodyweight-squats"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bodyweightsquat",
         "airsquat",
@@ -1063,6 +1136,7 @@
       "id": "box-jump",
       "name": "Box Jump",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "boxjump"
       ],
@@ -1083,6 +1157,7 @@
         "squat to bench",
         "chair squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "boxsquat",
         "squattobench",
@@ -1105,6 +1180,7 @@
       "aliases": [
         "standing long jump"
       ],
+      "portugueseAliases": [],
       "keys": [
         "broadjump",
         "standinglongjump"
@@ -1125,6 +1201,7 @@
       "aliases": [
         "rear-foot-elevated split squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "bulgariansplitsquat",
         "rearfootelevatedsplitsquat"
@@ -1144,6 +1221,7 @@
       "id": "burpees",
       "name": "Burpee",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "burpee"
       ],
@@ -1163,6 +1241,7 @@
       "id": "butt-kicks",
       "name": "Butt Kicks",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "buttkicks"
       ],
@@ -1178,6 +1257,7 @@
       "id": "butterfly-stretch",
       "name": "Butterfly Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "butterflystretch"
       ],
@@ -1187,7 +1267,7 @@
         "Glúteos"
       ],
       "secondary": [
-        "adductors"
+        "Adutores"
       ]
     },
     {
@@ -1196,6 +1276,7 @@
       "aliases": [
         "cable fly"
       ],
+      "portugueseAliases": [],
       "keys": [
         "cablecrossover",
         "cablefly"
@@ -1213,6 +1294,7 @@
       "id": "cable-crunch",
       "name": "Cable Crunch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cablecrunch"
       ],
@@ -1229,6 +1311,7 @@
       "id": "cable-curl",
       "name": "Cable Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cablecurl"
       ],
@@ -1248,6 +1331,7 @@
         "cable shoulder external rotation",
         "rotator cuff cable external rotation"
       ],
+      "portugueseAliases": [],
       "keys": [
         "cableexternalrotation",
         "cableshoulderexternalrotation",
@@ -1264,6 +1348,7 @@
       "id": "cable-fly-high-to-low",
       "name": "Cable Fly High To Low",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cableflyhightolow"
       ],
@@ -1280,6 +1365,7 @@
       "id": "cable-fly-low-to-high",
       "name": "Cable Fly Low To High",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cableflylowtohigh"
       ],
@@ -1296,6 +1382,7 @@
       "id": "cable-front-raise",
       "name": "Cable Front Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cablefrontraise"
       ],
@@ -1313,6 +1400,7 @@
         "cable shoulder internal rotation",
         "rotator cuff cable internal rotation"
       ],
+      "portugueseAliases": [],
       "keys": [
         "cableinternalrotation",
         "cableshoulderinternalrotation",
@@ -1331,6 +1419,7 @@
       "id": "cable-kickback",
       "name": "Cable Glute Kickback",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cableglutekickback"
       ],
@@ -1348,6 +1437,7 @@
       "id": "cable-lateral-raise",
       "name": "Cable Lateral Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cablelateralraise"
       ],
@@ -1362,8 +1452,14 @@
       "id": "cable-overhead-triceps-extension",
       "name": "Cable Overhead Triceps Extension",
       "aliases": [],
+      "portugueseAliases": [
+        "triceps frances",
+        "extensao de triceps acima da cabeca"
+      ],
       "keys": [
-        "cableoverheadtricepsextension"
+        "cableoverheadtricepsextension",
+        "tricepsfrances",
+        "extensaodetricepsacimadacabeca"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-overhead-triceps-extension/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/cable-overhead-triceps-extension/end.webp",
@@ -1376,6 +1472,7 @@
       "id": "cable-pull-through",
       "name": "Cable Pull-Through",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cablepullthrough"
       ],
@@ -1394,6 +1491,7 @@
       "id": "cable-shrug",
       "name": "Cable Shrug",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cableshrug"
       ],
@@ -1408,6 +1506,7 @@
       "id": "cable-triceps-kickback",
       "name": "Cable Triceps Kickback",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cabletricepskickback"
       ],
@@ -1422,6 +1521,7 @@
       "id": "cable-upright-row",
       "name": "Cable Upright Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cableuprightrow"
       ],
@@ -1441,6 +1541,7 @@
       "aliases": [
         "woodchop"
       ],
+      "portugueseAliases": [],
       "keys": [
         "cablewoodchopper",
         "woodchop"
@@ -1462,6 +1563,7 @@
         "cable Y raise",
         "low pulley Y raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "cableyraise",
         "cableyraise",
@@ -1483,9 +1585,15 @@
       "aliases": [
         "standing calf raise"
       ],
+      "portugueseAliases": [
+        "elevacao de panturrilha",
+        "panturrilha em pe"
+      ],
       "keys": [
         "calfraises",
-        "standingcalfraise"
+        "standingcalfraise",
+        "elevacaodepanturrilha",
+        "panturrilhaempe"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/calf-raises/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/calf-raises/end.webp",
@@ -1505,6 +1613,7 @@
         "roman chair knee raise",
         "VKR"
       ],
+      "portugueseAliases": [],
       "keys": [
         "captainschairkneeraise",
         "verticalkneeraise",
@@ -1525,6 +1634,7 @@
       "id": "cat-cow",
       "name": "Cat-Cow",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "catcow"
       ],
@@ -1543,6 +1653,7 @@
       "aliases": [
         "chest press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machinechestpress",
         "chestpress"
@@ -1561,6 +1672,7 @@
       "id": "chest-supported-dumbbell-row",
       "name": "Chest-Supported Dumbbell Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "chestsupporteddumbbellrow"
       ],
@@ -1582,6 +1694,7 @@
         "lever T-bar row",
         "chest-supported lever row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "chestsupportedtbarrow",
         "levertbarrow",
@@ -1603,6 +1716,7 @@
       "id": "childs-pose",
       "name": "Child's Pose",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "childspose"
       ],
@@ -1619,6 +1733,7 @@
       "aliases": [
         "chinup"
       ],
+      "portugueseAliases": [],
       "keys": [
         "chinup",
         "chinup"
@@ -1641,6 +1756,7 @@
         "clamshell",
         "clam"
       ],
+      "portugueseAliases": [],
       "keys": [
         "clamshells",
         "clamshell",
@@ -1661,6 +1777,7 @@
       "aliases": [
         "plyometric push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "clappushup",
         "plyometricpushup"
@@ -1680,6 +1797,7 @@
       "id": "close-grip-bench-press",
       "name": "Close-Grip Bench Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "closegripbenchpress"
       ],
@@ -1699,6 +1817,7 @@
       "aliases": [
         "v-bar pulldown"
       ],
+      "portugueseAliases": [],
       "keys": [
         "closegriplatpulldown",
         "vbarpulldown"
@@ -1718,6 +1837,7 @@
       "id": "cobra-stretch",
       "name": "Cobra Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cobrastretch"
       ],
@@ -1732,6 +1852,7 @@
       "id": "concentration-curl",
       "name": "Concentration Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "concentrationcurl"
       ],
@@ -1748,6 +1869,7 @@
       "id": "copenhagen-plank",
       "name": "Copenhagen Plank",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "copenhagenplank"
       ],
@@ -1764,6 +1886,7 @@
       "id": "cossack-squat",
       "name": "Cossack Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cossacksquat"
       ],
@@ -1776,13 +1899,14 @@
       "secondary": [
         "Posterior de coxa",
         "Abdômen",
-        "adductors"
+        "Adutores"
       ]
     },
     {
       "id": "crab-walk",
       "name": "Crab Walk",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "crabwalk"
       ],
@@ -1799,6 +1923,7 @@
       "id": "cross-body-hammer-curl",
       "name": "Cross-Body Hammer Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "crossbodyhammercurl"
       ],
@@ -1815,6 +1940,7 @@
       "id": "cross-body-shoulder-stretch",
       "name": "Cross-Body Shoulder Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "crossbodyshoulderstretch"
       ],
@@ -1829,8 +1955,14 @@
       "id": "crunches",
       "name": "Crunch",
       "aliases": [],
+      "portugueseAliases": [
+        "abdominal supra",
+        "abdominal crunch"
+      ],
       "keys": [
-        "crunch"
+        "crunch",
+        "abdominalsupra",
+        "abdominalcrunch"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/crunches/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/crunches/end.webp",
@@ -1845,6 +1977,7 @@
       "id": "curtsy-lunge",
       "name": "Curtsy Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "curtsylunge"
       ],
@@ -1863,6 +1996,7 @@
       "id": "dead-bug",
       "name": "Dead Bug",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "deadbug"
       ],
@@ -1879,6 +2013,7 @@
       "id": "dead-hang",
       "name": "Dead Hang",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "deadhang"
       ],
@@ -1899,9 +2034,15 @@
       "aliases": [
         "conventional deadlift"
       ],
+      "portugueseAliases": [
+        "levantamento terra",
+        "terra convencional"
+      ],
       "keys": [
         "deadlift",
-        "conventionaldeadlift"
+        "conventionaldeadlift",
+        "levantamentoterra",
+        "terraconvencional"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/deadlift/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/deadlift/end.webp",
@@ -1918,6 +2059,7 @@
       "id": "decline-bench-press",
       "name": "Decline Bench Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "declinebenchpress"
       ],
@@ -1935,6 +2077,7 @@
       "id": "decline-crunch",
       "name": "Decline Crunch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "declinecrunch"
       ],
@@ -1953,6 +2096,7 @@
       "aliases": [
         "feet-elevated push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "declinepushup",
         "feetelevatedpushup"
@@ -1971,6 +2115,7 @@
       "id": "decline-sit-up",
       "name": "Decline Sit Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "declinesitup"
       ],
@@ -1987,6 +2132,7 @@
       "id": "deficit-push-up",
       "name": "Deficit Push Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "deficitpushup"
       ],
@@ -2006,6 +2152,7 @@
       "aliases": [
         "close-grip push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "diamondpushup",
         "closegrippushup"
@@ -2026,6 +2173,7 @@
       "aliases": [
         "triceps dips"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dips",
         "tricepsdips"
@@ -2047,6 +2195,7 @@
         "donkey kick",
         "quadruped hip extension"
       ],
+      "portugueseAliases": [],
       "keys": [
         "donkeykicks",
         "donkeykick",
@@ -2066,6 +2215,7 @@
       "id": "doorway-chest-stretch",
       "name": "Chest Stretch on Post",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "cheststretchonpost"
       ],
@@ -2083,6 +2233,7 @@
         "door frame row",
         "doorframe row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "doorwayrow",
         "doorframerow",
@@ -2103,6 +2254,7 @@
       "id": "downward-dog",
       "name": "Downward Dog",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "downwarddog"
       ],
@@ -2120,6 +2272,7 @@
       "id": "dragon-flag",
       "name": "Dragon Flag",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dragonflag"
       ],
@@ -2136,6 +2289,7 @@
       "id": "dumbbell-calf-raise",
       "name": "Dumbbell Calf Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellcalfraise"
       ],
@@ -2155,6 +2309,7 @@
         "db press",
         "dumbbell bench press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellchestpress",
         "dbpress",
@@ -2174,6 +2329,7 @@
       "id": "dumbbell-deadlift",
       "name": "Dumbbell Deadlift",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbelldeadlift"
       ],
@@ -2192,6 +2348,7 @@
       "id": "dumbbell-decline-press",
       "name": "Dumbbell Decline Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbelldeclinepress"
       ],
@@ -2209,6 +2366,7 @@
       "id": "dumbbell-floor-press",
       "name": "Dumbbell Floor Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellfloorpress"
       ],
@@ -2229,10 +2387,14 @@
         "dumbbell chest fly",
         "dumbbell flyes"
       ],
+      "portugueseAliases": [
+        "crucifixo com halteres"
+      ],
       "keys": [
         "dumbbellfly",
         "dumbbellchestfly",
-        "dumbbellflyes"
+        "dumbbellflyes",
+        "crucifixocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/dumbbell-fly/end.webp",
@@ -2249,6 +2411,7 @@
       "aliases": [
         "double dumbbell rack carry"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellfrontrackcarry",
         "doubledumbbellrackcarry"
@@ -2268,6 +2431,7 @@
       "id": "dumbbell-hip-thrust",
       "name": "Dumbbell Hip Thrust",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellhipthrust"
       ],
@@ -2287,6 +2451,7 @@
       "aliases": [
         "dumbbell kickback"
       ],
+      "portugueseAliases": [],
       "keys": [
         "tricepskickback",
         "dumbbellkickback"
@@ -2305,6 +2470,7 @@
         "weighted lunge",
         "walking lunge"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbelllunge",
         "weightedlunge",
@@ -2325,6 +2491,7 @@
       "id": "dumbbell-preacher-curl",
       "name": "Dumbbell Preacher Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellpreachercurl"
       ],
@@ -2341,6 +2508,7 @@
       "id": "dumbbell-pullover",
       "name": "Dumbbell Pullover",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellpullover"
       ],
@@ -2360,6 +2528,7 @@
       "aliases": [
         "DB push press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellpushpress",
         "dbpushpress"
@@ -2380,6 +2549,7 @@
       "id": "dumbbell-reverse-lunge",
       "name": "Dumbbell Reverse Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellreverselunge"
       ],
@@ -2400,6 +2570,7 @@
       "aliases": [
         "DB wrist extension"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellreversewristcurl",
         "dbwristextension"
@@ -2417,6 +2588,7 @@
       "aliases": [
         "db rdl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellromaniandeadlift",
         "dbrdl"
@@ -2439,6 +2611,7 @@
         "single-arm row",
         "one-arm row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellrow",
         "singlearmrow",
@@ -2462,6 +2635,7 @@
         "scaption raise",
         "DB scaption"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellscaption",
         "scaptionraise",
@@ -2481,6 +2655,7 @@
         "seated dumbbell press",
         "db shoulder press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellshoulderpress",
         "seateddumbbellpress",
@@ -2501,6 +2676,7 @@
       "id": "dumbbell-shrug",
       "name": "Dumbbell Shrug",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellshrug"
       ],
@@ -2515,6 +2691,7 @@
       "id": "dumbbell-side-bend",
       "name": "Dumbbell Side Bend",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellsidebend"
       ],
@@ -2532,6 +2709,7 @@
       "id": "dumbbell-skull-crusher",
       "name": "Dumbbell Skull Crusher",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellskullcrusher"
       ],
@@ -2546,6 +2724,7 @@
       "id": "dumbbell-squat",
       "name": "Dumbbell Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellsquat"
       ],
@@ -2567,6 +2746,7 @@
         "hex press",
         "crush press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellsqueezepress",
         "hexpress",
@@ -2586,6 +2766,7 @@
       "id": "dumbbell-step-up",
       "name": "Dumbbell Step Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellstepup"
       ],
@@ -2606,6 +2787,7 @@
       "aliases": [
         "DB squat to press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellthruster",
         "dbsquattopress"
@@ -2626,6 +2808,7 @@
       "id": "dumbbell-upright-row",
       "name": "Dumbbell Upright Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "dumbbelluprightrow"
       ],
@@ -2645,6 +2828,7 @@
       "aliases": [
         "seated DB wrist curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "dumbbellwristcurl",
         "seateddbwristcurl"
@@ -2664,6 +2848,7 @@
         "cross trainer",
         "elliptical machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "elliptical",
         "ellipticaltrainer",
@@ -2687,6 +2872,7 @@
       "id": "ez-bar-curl",
       "name": "EZ-Bar Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "ezbarcurl"
       ],
@@ -2703,6 +2889,7 @@
       "id": "face-pulls",
       "name": "Face Pull",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "facepull"
       ],
@@ -2722,6 +2909,7 @@
       "aliases": [
         "farmer carry"
       ],
+      "portugueseAliases": [],
       "keys": [
         "farmerswalk",
         "farmercarry"
@@ -2741,6 +2929,7 @@
       "id": "feet-elevated-inverted-row",
       "name": "Feet Elevated Inverted Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "feetelevatedinvertedrow"
       ],
@@ -2759,6 +2948,7 @@
       "id": "figure-four-stretch",
       "name": "Figure-Four Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "figurefourstretch"
       ],
@@ -2776,6 +2966,7 @@
         "fire hydrant",
         "quadruped hip abduction"
       ],
+      "portugueseAliases": [],
       "keys": [
         "firehydrants",
         "firehydrant",
@@ -2796,6 +2987,7 @@
       "aliases": [
         "scissor kicks"
       ],
+      "portugueseAliases": [],
       "keys": [
         "flutterkick",
         "scissorkicks"
@@ -2813,6 +3005,7 @@
       "id": "foam-rolling-quads",
       "name": "Foam Rolling — Quads",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "foamrollingquads"
       ],
@@ -2827,6 +3020,7 @@
       "id": "foam-rolling-upper-back",
       "name": "Foam Rolling — Upper Back",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "foamrollingupperback"
       ],
@@ -2844,6 +3038,7 @@
         "frog pump",
         "frog glute bridge"
       ],
+      "portugueseAliases": [],
       "keys": [
         "frogpumps",
         "frogpump",
@@ -2863,6 +3058,7 @@
       "id": "front-raises",
       "name": "Front Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "frontraise"
       ],
@@ -2877,6 +3073,7 @@
       "id": "front-squat",
       "name": "Front Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "frontsquat"
       ],
@@ -2897,6 +3094,7 @@
       "aliases": [
         "glute-bridges"
       ],
+      "portugueseAliases": [],
       "keys": [
         "glutebridge",
         "glutebridges"
@@ -2918,6 +3116,7 @@
         "marching glute bridge",
         "bridge march"
       ],
+      "portugueseAliases": [],
       "keys": [
         "glutebridgemarch",
         "marchingglutebridge",
@@ -2941,6 +3140,7 @@
         "glute ham developer raise",
         "GHD raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "glutehamraise",
         "ghr",
@@ -2962,6 +3162,7 @@
       "id": "glute-squeeze",
       "name": "Standing Glute Squeezes",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "standingglutesqueezes"
       ],
@@ -2976,8 +3177,14 @@
       "id": "goblet-squat",
       "name": "Goblet Squat",
       "aliases": [],
+      "portugueseAliases": [
+        "agachamento goblet",
+        "agachamento com halter"
+      ],
       "keys": [
-        "gobletsquat"
+        "gobletsquat",
+        "agachamentogoblet",
+        "agachamentocomhalter"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/goblet-squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/goblet-squat/end.webp",
@@ -2994,6 +3201,7 @@
       "id": "good-morning",
       "name": "Good Morning",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "goodmorning"
       ],
@@ -3012,6 +3220,7 @@
       "id": "hack-squat",
       "name": "Hack Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "hacksquat"
       ],
@@ -3030,8 +3239,14 @@
       "id": "hammer-curls",
       "name": "Hammer Curl",
       "aliases": [],
+      "portugueseAliases": [
+        "rosca martelo",
+        "rosca martelo com halteres"
+      ],
       "keys": [
-        "hammercurl"
+        "hammercurl",
+        "roscamartelo",
+        "roscamartelocomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hammer-curls/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hammer-curls/end.webp",
@@ -3049,6 +3264,7 @@
         "bridge walkout",
         "glute bridge heel walkout"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hamstringwalkout",
         "bridgewalkout",
@@ -3070,6 +3286,7 @@
       "aliases": [
         "wall handstand push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "handstandpushup",
         "wallhandstandpushup"
@@ -3089,6 +3306,7 @@
       "id": "hang-clean",
       "name": "Hang Clean",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "hangclean"
       ],
@@ -3109,6 +3327,7 @@
       "id": "hanging-knee-raise",
       "name": "Hanging Knee Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "hangingkneeraise"
       ],
@@ -3125,6 +3344,7 @@
       "id": "hanging-leg-raise",
       "name": "Hanging Leg Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "hanginglegraise"
       ],
@@ -3141,6 +3361,7 @@
       "id": "heel-taps",
       "name": "Heel Taps",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "heeltaps"
       ],
@@ -3158,6 +3379,7 @@
       "aliases": [
         "spot jogging"
       ],
+      "portugueseAliases": [],
       "keys": [
         "highknees",
         "spotjogging"
@@ -3178,6 +3400,7 @@
       "aliases": [
         "dand"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hindupushup",
         "dand"
@@ -3200,6 +3423,7 @@
         "baithaks",
         "dand baithak squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hindusquat",
         "baithak",
@@ -3223,6 +3447,7 @@
       "aliases": [
         "abductor machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hipabduction",
         "abductormachine"
@@ -3242,6 +3467,7 @@
       "aliases": [
         "adductor machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hipadduction",
         "adductormachine"
@@ -3252,7 +3478,7 @@
         "Glúteos"
       ],
       "secondary": [
-        "adductors"
+        "Adutores"
       ]
     },
     {
@@ -3262,6 +3488,7 @@
         "glute drive machine",
         "machine hip thrust"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hipthrustmachine",
         "glutedrivemachine",
@@ -3283,9 +3510,15 @@
       "aliases": [
         "barbell hip thrust"
       ],
+      "portugueseAliases": [
+        "elevacao pelvica",
+        "elevacao de quadril"
+      ],
       "keys": [
         "hipthrust",
-        "barbellhipthrust"
+        "barbellhipthrust",
+        "elevacaopelvica",
+        "elevacaodequadril"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrusts/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/hip-thrusts/end.webp",
@@ -3303,6 +3536,7 @@
       "aliases": [
         "hollow hold"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hollowbodyhold",
         "hollowhold"
@@ -3323,6 +3557,7 @@
         "hollow rock",
         "hollow hold rock"
       ],
+      "portugueseAliases": [],
       "keys": [
         "hollowbodyrock",
         "hollowrock",
@@ -3339,6 +3574,7 @@
       "id": "horizontal-cable-twist",
       "name": "Horizontal Cable Twist",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "horizontalcabletwist"
       ],
@@ -3356,6 +3592,7 @@
       "id": "inchworm",
       "name": "Inchworm",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "inchworm"
       ],
@@ -3374,9 +3611,15 @@
       "aliases": [
         "incline press"
       ],
+      "portugueseAliases": [
+        "supino inclinado",
+        "supino inclinado com barra"
+      ],
       "keys": [
         "inclinebenchpress",
-        "inclinepress"
+        "inclinepress",
+        "supinoinclinado",
+        "supinoinclinadocombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-bench-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/incline-bench-press/end.webp",
@@ -3392,6 +3635,7 @@
       "id": "incline-dumbbell-curl",
       "name": "Incline Dumbbell Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "inclinedumbbellcurl"
       ],
@@ -3408,6 +3652,7 @@
       "id": "incline-dumbbell-fly",
       "name": "Incline Dumbbell Fly",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "inclinedumbbellfly"
       ],
@@ -3426,6 +3671,7 @@
       "aliases": [
         "incline db press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "inclinedumbbellpress",
         "inclinedbpress"
@@ -3446,6 +3692,7 @@
       "aliases": [
         "hands-elevated push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "inclinepushup",
         "handselevatedpushup"
@@ -3467,6 +3714,7 @@
         "australian pull-up",
         "bodyweight row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "invertedrow",
         "australianpullup",
@@ -3489,6 +3737,7 @@
       "aliases": [
         "split jump"
       ],
+      "portugueseAliases": [],
       "keys": [
         "jumplunge",
         "splitjump"
@@ -3511,6 +3760,7 @@
         "skipping rope",
         "jump rope basic bounce"
       ],
+      "portugueseAliases": [],
       "keys": [
         "jumprope",
         "skipping",
@@ -3533,6 +3783,7 @@
       "aliases": [
         "squat jump"
       ],
+      "portugueseAliases": [],
       "keys": [
         "jumpsquat",
         "squatjump"
@@ -3551,6 +3802,7 @@
       "id": "jumping-jacks",
       "name": "Jumping Jack",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "jumpingjack"
       ],
@@ -3570,6 +3822,7 @@
       "aliases": [
         "kb clean"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellclean",
         "kbclean"
@@ -3593,6 +3846,7 @@
       "aliases": [
         "kb deadlift"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebelldeadlift",
         "kbdeadlift"
@@ -3612,6 +3866,7 @@
       "id": "kettlebell-goblet-lunge",
       "name": "Kettlebell Goblet Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellgobletlunge"
       ],
@@ -3630,6 +3885,7 @@
       "id": "kettlebell-goblet-squat",
       "name": "Kettlebell Goblet Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellgobletsquat"
       ],
@@ -3650,6 +3906,7 @@
       "aliases": [
         "kb press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellpress",
         "kbpress"
@@ -3668,6 +3925,7 @@
       "id": "kettlebell-romanian-deadlift",
       "name": "Kettlebell Romanian Deadlift",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellromaniandeadlift"
       ],
@@ -3686,6 +3944,7 @@
       "id": "kettlebell-row",
       "name": "Kettlebell Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellrow"
       ],
@@ -3706,6 +3965,7 @@
       "aliases": [
         "kb snatch"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellsnatch",
         "kbsnatch"
@@ -3727,6 +3987,7 @@
       "id": "kettlebell-sumo-deadlift",
       "name": "Kettlebell Sumo Deadlift",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellsumodeadlift"
       ],
@@ -3747,6 +4008,7 @@
       "aliases": [
         "kb swing"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellswing",
         "kbswing"
@@ -3769,6 +4031,7 @@
         "kb windmill",
         "windmill"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kettlebellwindmill",
         "kbwindmill",
@@ -3793,6 +4056,7 @@
         "modified forearm plank",
         "kneeling forearm plank"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kneeplank",
         "modifiedforearmplank",
@@ -3813,6 +4077,7 @@
       "aliases": [
         "kneeling push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kneepushup",
         "kneelingpushup"
@@ -3834,6 +4099,7 @@
         "modified side plank",
         "bent-knee side plank"
       ],
+      "portugueseAliases": [],
       "keys": [
         "kneesideplank",
         "modifiedsideplank",
@@ -3854,6 +4120,7 @@
       "id": "kneeling-hip-flexor-stretch",
       "name": "Kneeling Hip Flexor Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kneelinghipflexorstretch"
       ],
@@ -3868,6 +4135,7 @@
       "id": "knees-to-chest",
       "name": "Knees-to-Chest Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "kneestocheststretch"
       ],
@@ -3882,6 +4150,7 @@
       "id": "l-sit",
       "name": "L-Sit",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "lsit"
       ],
@@ -3898,6 +4167,7 @@
       "id": "landmine-press",
       "name": "Landmine Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "landminepress"
       ],
@@ -3918,6 +4188,7 @@
       "aliases": [
         "landmine RDL"
       ],
+      "portugueseAliases": [],
       "keys": [
         "landmineromaniandeadlift",
         "landminerdl"
@@ -3940,6 +4211,7 @@
         "landmine twist",
         "landmine rainbow"
       ],
+      "portugueseAliases": [],
       "keys": [
         "landminerotation",
         "landminetwist",
@@ -3959,6 +4231,7 @@
       "id": "landmine-squat",
       "name": "Landmine Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "landminesquat"
       ],
@@ -3980,10 +4253,18 @@
         "pulldown",
         "wide-grip lat pulldown"
       ],
+      "portugueseAliases": [
+        "puxada alta",
+        "puxada frente",
+        "pulley frente"
+      ],
       "keys": [
         "latpulldown",
         "pulldown",
-        "widegriplatpulldown"
+        "widegriplatpulldown",
+        "puxadaalta",
+        "puxadafrente",
+        "pulleyfrente"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lat-pulldown/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lat-pulldown/end.webp",
@@ -4002,6 +4283,7 @@
       "aliases": [
         "side lunge"
       ],
+      "portugueseAliases": [],
       "keys": [
         "laterallunge",
         "sidelunge"
@@ -4021,6 +4303,7 @@
       "id": "lateral-neck-raise",
       "name": "Lateral Neck Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "lateralneckraise"
       ],
@@ -4039,11 +4322,17 @@
         "lat raise (deltoid)",
         "side lateral raise"
       ],
+      "portugueseAliases": [
+        "elevacao lateral",
+        "elevacao lateral com halteres"
+      ],
       "keys": [
         "lateralraise",
         "sideraise",
         "latraisedeltoid",
-        "sidelateralraise"
+        "sidelateralraise",
+        "elevacaolateral",
+        "elevacaolateralcomhalteres"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lateral-raises/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/lateral-raises/end.webp",
@@ -4059,6 +4348,7 @@
         "side step-up",
         "lateral box step up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "lateralstepup",
         "sidestepup",
@@ -4082,10 +4372,18 @@
         "lying leg curl",
         "hamstring curl"
       ],
+      "portugueseAliases": [
+        "mesa flexora",
+        "cadeira flexora",
+        "flexora"
+      ],
       "keys": [
         "legcurl",
         "lyinglegcurl",
-        "hamstringcurl"
+        "hamstringcurl",
+        "mesaflexora",
+        "cadeiraflexora",
+        "flexora"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-curl/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-curl/end.webp",
@@ -4100,8 +4398,14 @@
       "id": "leg-extension",
       "name": "Leg Extension",
       "aliases": [],
+      "portugueseAliases": [
+        "cadeira extensora",
+        "extensora"
+      ],
       "keys": [
-        "legextension"
+        "legextension",
+        "cadeiraextensora",
+        "extensora"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-extension/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-extension/end.webp",
@@ -4114,8 +4418,14 @@
       "id": "leg-press",
       "name": "Leg Press",
       "aliases": [],
+      "portugueseAliases": [
+        "leg press 45",
+        "leg press 45 graus"
+      ],
       "keys": [
-        "legpress"
+        "legpress",
+        "legpress45",
+        "legpress45graus"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/leg-press/end.webp",
@@ -4135,6 +4445,7 @@
         "calf press on leg press",
         "toe press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "legpresscalfraise",
         "calfpressonlegpress",
@@ -4154,6 +4465,7 @@
         "horizontal leg press",
         "selectorized leg press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedlegpressmovingplate",
         "horizontallegpress",
@@ -4176,6 +4488,7 @@
       "aliases": [
         "lying leg raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "legraise",
         "lyinglegraise"
@@ -4193,6 +4506,7 @@
       "id": "leg-swings",
       "name": "Leg Swings",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "legswings"
       ],
@@ -4209,6 +4523,7 @@
       "id": "lying-spinal-twist",
       "name": "Lying Spinal Twist",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "lyingspinaltwist"
       ],
@@ -4228,6 +4543,7 @@
         "ab crunch machine",
         "machine crunch"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machineabdominalcrunch",
         "abcrunchmachine",
@@ -4247,6 +4563,7 @@
         "glute machine kickback",
         "standing glute machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machineglutekickback",
         "glutemachinekickback",
@@ -4268,6 +4585,7 @@
         "iso-lateral high row",
         "plate-loaded high row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machinehighrow",
         "isolateralhighrow",
@@ -4289,6 +4607,7 @@
       "id": "machine-lateral-raise",
       "name": "Machine Lateral Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "machinelateralraise"
       ],
@@ -4306,6 +4625,7 @@
         "machine biceps curl",
         "bicep curl machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machinepreachercurl",
         "machinebicepscurl",
@@ -4327,6 +4647,7 @@
         "pullover machine",
         "overhead pullover machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machinepullover",
         "pullovermachine",
@@ -4349,9 +4670,17 @@
       "aliases": [
         "chest-supported row"
       ],
+      "portugueseAliases": [
+        "remada baixa",
+        "remada baixa na maquina",
+        "remada sentada"
+      ],
       "keys": [
         "seatedmachinerow",
-        "chestsupportedrow"
+        "chestsupportedrow",
+        "remadabaixa",
+        "remadabaixanamaquina",
+        "remadasentada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/machine-row/end.webp",
@@ -4372,6 +4701,7 @@
         "seated tricep extension machine",
         "tricep machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "machinetricepsextension",
         "tricepsextensionmachine",
@@ -4391,6 +4721,7 @@
       "aliases": [
         "standing-march"
       ],
+      "portugueseAliases": [],
       "keys": [
         "marchinplace",
         "standingmarch"
@@ -4407,6 +4738,7 @@
       "id": "meadows-row",
       "name": "Meadows Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "meadowsrow"
       ],
@@ -4428,6 +4760,7 @@
         "med ball chest pass",
         "chest pass"
       ],
+      "portugueseAliases": [],
       "keys": [
         "medicineballchestpass",
         "medballchestpass",
@@ -4451,6 +4784,7 @@
         "overhead ball slam",
         "slam ball slam"
       ],
+      "portugueseAliases": [],
       "keys": [
         "medicineballslam",
         "overheadballslam",
@@ -4472,6 +4806,7 @@
       "id": "mountain-climbers",
       "name": "Mountain Climber",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "mountainclimber"
       ],
@@ -4488,6 +4823,7 @@
       "id": "muscle-up",
       "name": "Muscle-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "muscleup"
       ],
@@ -4506,6 +4842,7 @@
       "id": "neck-extension",
       "name": "Neck Extension",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "neckextension"
       ],
@@ -4520,6 +4857,7 @@
       "id": "neck-flexion",
       "name": "Neck Flexion",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "neckflexion"
       ],
@@ -4534,6 +4872,7 @@
       "id": "neck-side-stretch",
       "name": "Neck Side Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "necksidestretch"
       ],
@@ -4548,6 +4887,7 @@
       "id": "negative-pull-up",
       "name": "Negative Pull-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "negativepullup"
       ],
@@ -4566,6 +4906,7 @@
       "id": "neutral-grip-pull-up",
       "name": "Neutral Grip Pull Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "neutralgrippullup"
       ],
@@ -4584,6 +4925,7 @@
       "id": "ninety-ninety-hip-stretch",
       "name": "90/90 Hip Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "9090hipstretch"
       ],
@@ -4600,6 +4942,7 @@
       "aliases": [
         "nordic curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "nordichamstringcurl",
         "nordiccurl"
@@ -4621,6 +4964,7 @@
         "twisted crunch",
         "cross crunch on floor"
       ],
+      "portugueseAliases": [],
       "keys": [
         "obliquecrunch",
         "sidecrunch",
@@ -4644,6 +4988,7 @@
         "waiter walk",
         "overhead walk"
       ],
+      "portugueseAliases": [],
       "keys": [
         "overheadcarry",
         "singlearmoverheadcarry",
@@ -4666,6 +5011,7 @@
       "id": "overhead-lat-side-bend",
       "name": "Overhead Lat Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "overheadlatstretch"
       ],
@@ -4684,11 +5030,17 @@
         "barbell shoulder press",
         "military press"
       ],
+      "portugueseAliases": [
+        "desenvolvimento militar",
+        "desenvolvimento com barra"
+      ],
       "keys": [
         "overheadpress",
         "ohp",
         "barbellshoulderpress",
-        "militarypress"
+        "militarypress",
+        "desenvolvimentomilitar",
+        "desenvolvimentocombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/overhead-press/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/overhead-press/end.webp",
@@ -4705,6 +5057,7 @@
       "id": "overhead-squat",
       "name": "Overhead Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "overheadsquat"
       ],
@@ -4723,6 +5076,7 @@
       "id": "overhead-triceps-extension",
       "name": "Overhead Triceps Extension",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "overheadtricepsextension"
       ],
@@ -4737,6 +5091,7 @@
       "id": "overhead-triceps-stretch",
       "name": "Overhead Triceps Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "overheadtricepsstretch"
       ],
@@ -4751,6 +5106,7 @@
       "id": "pallof-press",
       "name": "Pallof Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pallofpress"
       ],
@@ -4770,6 +5126,7 @@
       "aliases": [
         "machine fly"
       ],
+      "portugueseAliases": [],
       "keys": [
         "pecdeck",
         "machinefly"
@@ -4787,6 +5144,7 @@
       "id": "pendlay-row",
       "name": "Pendlay Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pendlayrow"
       ],
@@ -4807,6 +5165,7 @@
       "aliases": [
         "pendulum squat machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "pendulumsquat",
         "pendulumsquatmachine"
@@ -4825,6 +5184,7 @@
       "id": "pigeon-stretch",
       "name": "Pigeon Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pigeonstretch"
       ],
@@ -4839,6 +5199,7 @@
       "id": "pike-push-up",
       "name": "Pike Push-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pikepushup"
       ],
@@ -4859,6 +5220,7 @@
       "aliases": [
         "single-leg squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "pistolsquat",
         "singlelegsquat"
@@ -4880,9 +5242,13 @@
       "aliases": [
         "forearm plank"
       ],
+      "portugueseAliases": [
+        "prancha abdominal"
+      ],
       "keys": [
         "plank",
-        "forearmplank"
+        "forearmplank",
+        "pranchaabdominal"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/plank/hold.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/plank/hold.webp",
@@ -4899,6 +5265,7 @@
       "aliases": [
         "plank jumping jack"
       ],
+      "portugueseAliases": [],
       "keys": [
         "plankjack",
         "plankjumpingjack"
@@ -4917,6 +5284,7 @@
       "id": "plank-shoulder-tap",
       "name": "Plank Shoulder Tap",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "plankshouldertap"
       ],
@@ -4934,6 +5302,7 @@
       "id": "plank-up-down",
       "name": "Plank Up-Down",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "plankupdown"
       ],
@@ -4953,6 +5322,7 @@
         "disc front raise",
         "weight plate raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "platefrontraise",
         "discfrontraise",
@@ -4973,6 +5343,7 @@
       "aliases": [
         "leverage incline press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "plateloadedinclinechestpress",
         "leverageinclinepress"
@@ -4994,6 +5365,7 @@
         "plate pinch",
         "disc pinch hold"
       ],
+      "portugueseAliases": [],
       "keys": [
         "platepinchhold",
         "platepinch",
@@ -5010,6 +5382,7 @@
       "id": "power-clean",
       "name": "Power Clean",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "powerclean"
       ],
@@ -5032,6 +5405,7 @@
       "aliases": [
         "ez bar preacher curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "preachercurl",
         "ezbarpreachercurl"
@@ -5052,6 +5426,7 @@
         "prone t",
         "t raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "pronetraise",
         "pronet",
@@ -5074,6 +5449,7 @@
         "prone w",
         "w raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "pronewraise",
         "pronew",
@@ -5093,6 +5469,7 @@
       "id": "prone-y-raise",
       "name": "Prone Y-Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "proneyraise"
       ],
@@ -5112,9 +5489,15 @@
       "aliases": [
         "pullup"
       ],
+      "portugueseAliases": [
+        "barra fixa",
+        "barra fixa pronada"
+      ],
       "keys": [
         "pullup",
-        "pullup"
+        "pullup",
+        "barrafixa",
+        "barrafixapronada"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pull-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/pull-up/end.webp",
@@ -5131,6 +5514,7 @@
       "id": "push-jerk",
       "name": "Push Jerk",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pushjerk"
       ],
@@ -5149,6 +5533,7 @@
       "id": "push-press",
       "name": "Push Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "pushpress"
       ],
@@ -5170,10 +5555,18 @@
         "pushup",
         "press-up"
       ],
+      "portugueseAliases": [
+        "flexao de braco",
+        "flexao de braços",
+        "flexao de peito"
+      ],
       "keys": [
         "pushup",
         "pushup",
-        "pressup"
+        "pressup",
+        "flexaodebraco",
+        "flexaodebracos",
+        "flexaodepeito"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/push-up/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/push-up/end.webp",
@@ -5189,6 +5582,7 @@
       "id": "rack-pull",
       "name": "Rack Pull",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "rackpull"
       ],
@@ -5210,6 +5604,7 @@
         "reverse fly",
         "rear delt flies"
       ],
+      "portugueseAliases": [],
       "keys": [
         "reardeltfly",
         "reversefly",
@@ -5229,6 +5624,7 @@
       "id": "renegade-row",
       "name": "Renegade Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "renegaderow"
       ],
@@ -5247,6 +5643,7 @@
       "id": "reverse-crunch",
       "name": "Reverse Crunch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversecrunch"
       ],
@@ -5263,6 +5660,7 @@
       "id": "reverse-curl",
       "name": "Reverse Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversecurl"
       ],
@@ -5279,6 +5677,7 @@
       "id": "reverse-grip-barbell-row",
       "name": "Reverse Grip Barbell Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversegripbarbellrow"
       ],
@@ -5297,6 +5696,7 @@
       "id": "reverse-grip-lat-pulldown",
       "name": "Reverse-Grip Lat Pulldown",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversegriplatpulldown"
       ],
@@ -5319,6 +5719,7 @@
         "bench reverse hyperextension",
         "prone leg raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "reversehyperextensionbench",
         "reversehyper",
@@ -5342,6 +5743,7 @@
         "lunge",
         "bodyweight lunge"
       ],
+      "portugueseAliases": [],
       "keys": [
         "reverselunge",
         "lunge",
@@ -5365,6 +5767,7 @@
         "reverse nordic curl",
         "kneeling quad lean-back"
       ],
+      "portugueseAliases": [],
       "keys": [
         "reversenordic",
         "reversenordiccurl",
@@ -5385,6 +5788,7 @@
       "aliases": [
         "reverse machine fly"
       ],
+      "portugueseAliases": [],
       "keys": [
         "reversepecdeck",
         "reversemachinefly"
@@ -5403,6 +5807,7 @@
       "id": "reverse-plank",
       "name": "Reverse Plank",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reverseplank"
       ],
@@ -5420,6 +5825,7 @@
       "id": "reverse-snow-angels",
       "name": "Reverse Snow Angels",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversesnowangels"
       ],
@@ -5437,6 +5843,7 @@
       "id": "reverse-wrist-curl",
       "name": "Reverse Wrist Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "reversewristcurl"
       ],
@@ -5454,10 +5861,16 @@
         "rdl",
         "stiff-leg deadlift"
       ],
+      "portugueseAliases": [
+        "levantamento terra romeno",
+        "stiff"
+      ],
       "keys": [
         "romaniandeadlift",
         "rdl",
-        "stifflegdeadlift"
+        "stifflegdeadlift",
+        "levantamentoterraromeno",
+        "stiff"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/romanian-deadlift/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/romanian-deadlift/end.webp",
@@ -5474,6 +5887,7 @@
       "id": "rope-hammer-curl",
       "name": "Rope Hammer Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "ropehammercurl"
       ],
@@ -5495,6 +5909,7 @@
         "erg",
         "ergometer"
       ],
+      "portugueseAliases": [],
       "keys": [
         "rowingmachine",
         "rower",
@@ -5520,6 +5935,7 @@
       "id": "russian-twists",
       "name": "Russian Twist",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "russiantwist"
       ],
@@ -5537,6 +5953,7 @@
       "id": "scap-pulls",
       "name": "Scap Pulls",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "scappulls"
       ],
@@ -5554,6 +5971,7 @@
       "id": "scap-push-ups",
       "name": "Scap Push-Ups",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "scappushups"
       ],
@@ -5573,6 +5991,7 @@
         "dumbbell seal row",
         "prone bench row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "sealrow",
         "dumbbellsealrow",
@@ -5598,6 +6017,7 @@
         "neutral-grip seated row",
         "v-bar row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedcablerow",
         "cablerow",
@@ -5620,6 +6040,7 @@
       "id": "seated-calf-raise",
       "name": "Seated Calf Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seatedcalfraise"
       ],
@@ -5639,6 +6060,7 @@
         "machine seated calf raise",
         "seated calf press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedcalfraisemachine",
         "machineseatedcalfraise",
@@ -5655,6 +6077,7 @@
       "id": "seated-dip-machine",
       "name": "Seated Dip Machine",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seateddipmachine"
       ],
@@ -5672,6 +6095,7 @@
       "id": "seated-dumbbell-curl",
       "name": "Seated Dumbbell Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seateddumbbellcurl"
       ],
@@ -5688,6 +6112,7 @@
       "id": "seated-hamstring-stretch",
       "name": "Seated Hamstring Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seatedhamstringstretch"
       ],
@@ -5705,6 +6130,7 @@
         "seated bodyweight knee extension",
         "seated leg straightening"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedkneeextension",
         "seatedbodyweightkneeextension",
@@ -5724,6 +6150,7 @@
         "bench knee tuck",
         "seated leg tuck"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedkneetuck",
         "benchkneetuck",
@@ -5742,6 +6169,7 @@
       "id": "seated-leg-curl",
       "name": "Seated Leg Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seatedlegcurl"
       ],
@@ -5761,6 +6189,7 @@
         "seated leg press sliding seat",
         "seated leg press machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "seatedlegpressslidingseat",
         "seatedlegpressslidingseat",
@@ -5781,6 +6210,7 @@
       "id": "seated-spinal-twist",
       "name": "Seated Spinal Twist",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "seatedspinaltwist"
       ],
@@ -5801,6 +6231,7 @@
         "jab",
         "shadow box"
       ],
+      "portugueseAliases": [],
       "keys": [
         "shadowboxing",
         "boxingjab",
@@ -5822,6 +6253,7 @@
       "id": "shoulder-blade-squeezes",
       "name": "Shoulder Blade Squeezes",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "shoulderbladesqueezes"
       ],
@@ -5839,6 +6271,7 @@
       "id": "shoulder-press-machine",
       "name": "Machine Shoulder Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "machineshoulderpress"
       ],
@@ -5859,6 +6292,7 @@
       "aliases": [
         "barbell shrug"
       ],
+      "portugueseAliases": [],
       "keys": [
         "shrug",
         "barbellshrug"
@@ -5874,6 +6308,7 @@
       "id": "side-lunge-adductor-stretch",
       "name": "Side Lunge Adductor Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sidelungeadductorstretch"
       ],
@@ -5883,13 +6318,14 @@
         "Glúteos"
       ],
       "secondary": [
-        "adductors"
+        "Adutores"
       ]
     },
     {
       "id": "side-lying-leg-raise",
       "name": "Side-Lying Leg Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sidelyinglegraise"
       ],
@@ -5906,6 +6342,7 @@
       "id": "side-plank",
       "name": "Side Plank",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sideplank"
       ],
@@ -5921,6 +6358,7 @@
       "id": "side-plank-hip-dip",
       "name": "Side Plank Hip Dip",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sideplankhipdip"
       ],
@@ -5941,6 +6379,7 @@
         "side plank hip abduction",
         "star side plank leg lift"
       ],
+      "portugueseAliases": [],
       "keys": [
         "sideplanklegraise",
         "sideplankhipabduction",
@@ -5961,6 +6400,7 @@
       "id": "single-arm-cable-curl",
       "name": "Single Arm Cable Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singlearmcablecurl"
       ],
@@ -5977,6 +6417,7 @@
       "id": "single-arm-cable-row",
       "name": "Single-Arm Cable Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singlearmcablerow"
       ],
@@ -5995,6 +6436,7 @@
       "id": "single-arm-overhead-press",
       "name": "Single Arm Overhead Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singlearmoverheadpress"
       ],
@@ -6013,6 +6455,7 @@
       "id": "single-leg-calf-raise",
       "name": "Single-Leg Calf Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singlelegcalfraise"
       ],
@@ -6029,6 +6472,7 @@
       "id": "single-leg-glute-bridge",
       "name": "Single-Leg Glute Bridge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singlelegglutebridge"
       ],
@@ -6046,6 +6490,7 @@
       "id": "single-leg-leg-press",
       "name": "Single Leg Leg Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "singleleglegpress"
       ],
@@ -6066,6 +6511,7 @@
       "aliases": [
         "single leg rdl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "singlelegromaniandeadlift",
         "singlelegrdl"
@@ -6085,6 +6531,7 @@
       "id": "sissy-squat",
       "name": "Sissy Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sissysquat"
       ],
@@ -6101,6 +6548,7 @@
       "id": "sit-up",
       "name": "Sit-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "situp"
       ],
@@ -6119,6 +6567,7 @@
       "aliases": [
         "skaters"
       ],
+      "portugueseAliases": [],
       "keys": [
         "skaterjump",
         "skaters"
@@ -6139,6 +6588,7 @@
       "aliases": [
         "ski ergometer"
       ],
+      "portugueseAliases": [],
       "keys": [
         "skimachine",
         "skiergometer"
@@ -6159,6 +6609,7 @@
       "aliases": [
         "lying triceps extension"
       ],
+      "portugueseAliases": [],
       "keys": [
         "skullcrusher",
         "lyingtricepsextension"
@@ -6177,6 +6628,7 @@
         "towel leg curl",
         "floor slider hamstring curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "slidinghamstringcurl",
         "towellegcurl",
@@ -6196,6 +6648,7 @@
       "id": "smith-machine-bench-press",
       "name": "Smith Machine Bench Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinebenchpress"
       ],
@@ -6215,6 +6668,7 @@
       "aliases": [
         "Smith barbell row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinebentoverrow",
         "smithbarbellrow"
@@ -6234,6 +6688,7 @@
       "id": "smith-machine-calf-raise",
       "name": "Smith Machine Calf Raise",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinecalfraise"
       ],
@@ -6250,6 +6705,7 @@
       "id": "smith-machine-hip-thrust",
       "name": "Smith Machine Hip Thrust",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinehipthrust"
       ],
@@ -6267,6 +6723,7 @@
       "id": "smith-machine-incline-press",
       "name": "Smith Machine Incline Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachineinclinepress"
       ],
@@ -6284,6 +6741,7 @@
       "id": "smith-machine-lunge",
       "name": "Smith Machine Lunge",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinelunge"
       ],
@@ -6302,6 +6760,7 @@
       "id": "smith-machine-overhead-press",
       "name": "Smith Machine Overhead Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachineoverheadpress"
       ],
@@ -6322,6 +6781,7 @@
       "aliases": [
         "Smith RDL"
       ],
+      "portugueseAliases": [],
       "keys": [
         "smithmachineromaniandeadlift",
         "smithrdl"
@@ -6341,6 +6801,7 @@
       "id": "smith-machine-shrug",
       "name": "Smith Machine Shrug",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachineshrug"
       ],
@@ -6355,6 +6816,7 @@
       "id": "smith-machine-squat",
       "name": "Smith Machine Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "smithmachinesquat"
       ],
@@ -6375,6 +6837,7 @@
       "aliases": [
         "barbell snatch"
       ],
+      "portugueseAliases": [],
       "keys": [
         "snatch",
         "barbellsnatch"
@@ -6399,6 +6862,7 @@
         "sphinx push up",
         "forearm to hand push-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "sphinxpushup",
         "sphinxpushup",
@@ -6418,6 +6882,7 @@
       "id": "spider-curl",
       "name": "Spider Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "spidercurl"
       ],
@@ -6437,10 +6902,16 @@
         "back squat",
         "barbell squat"
       ],
+      "portugueseAliases": [
+        "agachamento livre",
+        "agachamento com barra"
+      ],
       "keys": [
         "barbellbacksquat",
         "backsquat",
-        "barbellsquat"
+        "barbellsquat",
+        "agachamentolivre",
+        "agachamentocombarra"
       ],
       "start": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/squat/start.webp",
       "end": "https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@4c0476c83c37e35323fee8510a1e059808cc7b13/images/squat/end.webp",
@@ -6461,6 +6932,7 @@
         "low impact squat thrust",
         "walk-out burpee"
       ],
+      "portugueseAliases": [],
       "keys": [
         "squatthruststepback",
         "stepbackburpee",
@@ -6483,6 +6955,7 @@
       "id": "squat-to-stand",
       "name": "Squat to Stand",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "squattostand"
       ],
@@ -6503,6 +6976,7 @@
         "Swiss ball crunch",
         "gym ball crunch"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballcrunch",
         "swissballcrunch",
@@ -6522,6 +6996,7 @@
         "Swiss ball leg curl",
         "gym ball hamstring curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballhamstringcurl",
         "swissballlegcurl",
@@ -6544,6 +7019,7 @@
         "Swiss ball knee tuck",
         "gym ball jackknife"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballkneetuck",
         "swissballkneetuck",
@@ -6564,6 +7040,7 @@
       "aliases": [
         "Swiss ball pike"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballpike",
         "swissballpike"
@@ -6583,6 +7060,7 @@
       "aliases": [
         "Swiss ball ab rollout"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballrollout",
         "swissballabrollout"
@@ -6603,6 +7081,7 @@
       "aliases": [
         "Swiss ball wall squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stabilityballwallsquat",
         "swissballwallsquat"
@@ -6624,6 +7103,7 @@
         "stair stepper",
         "stair machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stairclimber",
         "stairstepper",
@@ -6646,6 +7126,7 @@
       "aliases": [
         "standing pulley chest press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standingcablechestpress",
         "standingpulleychestpress"
@@ -6665,6 +7146,7 @@
       "id": "standing-cable-hip-abduction",
       "name": "Standing Cable Hip Abduction",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "standingcablehipabduction"
       ],
@@ -6681,6 +7163,7 @@
       "id": "standing-calf-raise-machine",
       "name": "Standing Calf Raise Machine",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "standingcalfraisemachine"
       ],
@@ -6699,6 +7182,7 @@
       "aliases": [
         "standing bodyweight leg curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standinghamstringcurl",
         "standingbodyweightlegcurl"
@@ -6714,6 +7198,7 @@
       "id": "standing-hamstring-stretch",
       "name": "Standing Hamstring Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "standinghamstringstretch"
       ],
@@ -6730,6 +7215,7 @@
       "aliases": [
         "standing side leg raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standinghipabduction",
         "standingsidelegraise"
@@ -6751,6 +7237,7 @@
         "standing cross crunch",
         "standing oblique crunch"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standingkneedrive",
         "standingkneetoelbow",
@@ -6775,6 +7262,7 @@
         "single leg curl machine",
         "standing leg curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standinglegcurlmachine",
         "standinghamstringcurlmachine",
@@ -6794,6 +7282,7 @@
       "id": "standing-quad-stretch",
       "name": "Standing Quad Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "standingquadstretch"
       ],
@@ -6813,6 +7302,7 @@
         "waist twister",
         "rotating disc twist"
       ],
+      "portugueseAliases": [],
       "keys": [
         "standingtwister",
         "twister",
@@ -6838,6 +7328,7 @@
         "indoor cycling",
         "exercise cycle"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stationarybike",
         "exercisebike",
@@ -6863,6 +7354,7 @@
         "forward step down",
         "controlled step down"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stepdown",
         "forwardstepdown",
@@ -6886,6 +7378,7 @@
         "step out jack",
         "no-jump jumping jack"
       ],
+      "portugueseAliases": [],
       "keys": [
         "stepjack",
         "lowimpactjumpingjack",
@@ -6907,6 +7400,7 @@
       "id": "step-ups",
       "name": "Step-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "stepup"
       ],
@@ -6925,6 +7419,7 @@
       "id": "straight-arm-pulldown",
       "name": "Straight-Arm Pulldown",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "straightarmpulldown"
       ],
@@ -6947,6 +7442,7 @@
         "single-arm carry",
         "suitcase walk"
       ],
+      "portugueseAliases": [],
       "keys": [
         "suitcasecarry",
         "onearmfarmercarry",
@@ -6969,6 +7465,7 @@
       "id": "sumo-deadlift",
       "name": "Sumo Deadlift",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "sumodeadlift"
       ],
@@ -6990,6 +7487,7 @@
         "plie squat",
         "dumbbell sumo squat"
       ],
+      "portugueseAliases": [],
       "keys": [
         "sumosquat",
         "pliesquat",
@@ -7004,13 +7502,14 @@
       "secondary": [
         "Posterior de coxa",
         "Abdômen",
-        "adductors"
+        "Adutores"
       ]
     },
     {
       "id": "superman",
       "name": "Superman",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "superman"
       ],
@@ -7031,6 +7530,7 @@
         "prone pulldown",
         "superman lat pulldown"
       ],
+      "portugueseAliases": [],
       "keys": [
         "supermanpulldown",
         "pronepulldown",
@@ -7051,6 +7551,7 @@
       "id": "suspension-assisted-squat",
       "name": "Suspension Assisted Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "suspensionassistedsquat"
       ],
@@ -7070,6 +7571,7 @@
       "aliases": [
         "suspension arm curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "suspensionbicepscurl",
         "suspensionarmcurl"
@@ -7090,6 +7592,7 @@
       "aliases": [
         "suspension push-up press"
       ],
+      "portugueseAliases": [],
       "keys": [
         "suspensionchestpress",
         "suspensionpushuppress"
@@ -7109,6 +7612,7 @@
       "id": "suspension-hamstring-curl",
       "name": "Suspension Hamstring Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "suspensionhamstringcurl"
       ],
@@ -7128,6 +7632,7 @@
       "aliases": [
         "suspension inverted row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "suspensionrow",
         "suspensioninvertedrow"
@@ -7147,6 +7652,7 @@
       "id": "suspension-triceps-extension",
       "name": "Suspension Triceps Extension",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "suspensiontricepsextension"
       ],
@@ -7163,6 +7669,7 @@
       "id": "t-bar-row",
       "name": "T-Bar Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "tbarrow"
       ],
@@ -7184,6 +7691,7 @@
         "table row",
         "under-table row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "tableinvertedrow",
         "tablerow",
@@ -7204,6 +7712,7 @@
       "id": "thoracic-extensions",
       "name": "Thoracic Extensions",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "thoracicextensions"
       ],
@@ -7220,6 +7729,7 @@
       "id": "thoracic-rotations",
       "name": "Thoracic Rotations",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "thoracicrotations"
       ],
@@ -7236,6 +7746,7 @@
       "id": "thruster",
       "name": "Thruster",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "thruster"
       ],
@@ -7259,6 +7770,7 @@
         "seated tibialis raise",
         "tibia trainer"
       ],
+      "portugueseAliases": [],
       "keys": [
         "tibialisraisemachine",
         "tibraisemachine",
@@ -7276,6 +7788,7 @@
       "id": "toe-touches",
       "name": "Toe Touches",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "toetouches"
       ],
@@ -7292,6 +7805,7 @@
       "id": "toes-to-bar",
       "name": "Toes-to-Bar",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "toestobar"
       ],
@@ -7311,6 +7825,7 @@
         "towel inverted row",
         "door towel row"
       ],
+      "portugueseAliases": [],
       "keys": [
         "towelrow",
         "towelinvertedrow",
@@ -7334,6 +7849,7 @@
         "towel twist",
         "towel wringing"
       ],
+      "portugueseAliases": [],
       "keys": [
         "towelwring",
         "toweltwist",
@@ -7350,6 +7866,7 @@
       "id": "trap-bar-deadlift",
       "name": "Trap Bar Deadlift",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "trapbardeadlift"
       ],
@@ -7374,6 +7891,7 @@
         "treadmill walk",
         "incline treadmill"
       ],
+      "portugueseAliases": [],
       "keys": [
         "treadmillinclinewalk",
         "inclinewalking",
@@ -7399,6 +7917,7 @@
         "treadmill jog",
         "running on treadmill"
       ],
+      "portugueseAliases": [],
       "keys": [
         "treadmillrun",
         "treadmillrunning",
@@ -7423,6 +7942,7 @@
         "cable pushdown",
         "rope pushdown"
       ],
+      "portugueseAliases": [],
       "keys": [
         "triceppushdown",
         "cablepushdown",
@@ -7439,6 +7959,7 @@
       "id": "tuck-jump",
       "name": "Tuck Jump",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "tuckjump"
       ],
@@ -7458,6 +7979,7 @@
       "aliases": [
         "tgu"
       ],
+      "portugueseAliases": [],
       "keys": [
         "turkishgetup",
         "tgu"
@@ -7477,6 +7999,7 @@
       "id": "upright-row",
       "name": "Upright Row",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "uprightrow"
       ],
@@ -7498,6 +8021,7 @@
         "v squat",
         "leverage squat machine"
       ],
+      "portugueseAliases": [],
       "keys": [
         "vsquatmachine",
         "powersquatmachine",
@@ -7521,6 +8045,7 @@
       "aliases": [
         "jackknife sit-up"
       ],
+      "portugueseAliases": [],
       "keys": [
         "vup",
         "jackknifesitup"
@@ -7538,6 +8063,7 @@
       "id": "wall-calf-stretch",
       "name": "Wall Calf Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wallcalfstretch"
       ],
@@ -7552,6 +8078,7 @@
       "id": "wall-handstand-hold",
       "name": "Wall Handstand Hold",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wallhandstandhold"
       ],
@@ -7569,6 +8096,7 @@
       "id": "wall-push-up",
       "name": "Wall Push-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wallpushup"
       ],
@@ -7586,6 +8114,7 @@
       "id": "wall-sit",
       "name": "Wall Sit",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wallsit"
       ],
@@ -7603,6 +8132,7 @@
       "id": "wall-slides",
       "name": "Wall Slides",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wallslides"
       ],
@@ -7620,6 +8150,7 @@
         "wall-supported toe raise",
         "wall shin raise"
       ],
+      "portugueseAliases": [],
       "keys": [
         "walltibialisraise",
         "wallsupportedtoeraise",
@@ -7636,6 +8167,7 @@
       "id": "wide-grip-bench-press",
       "name": "Wide Grip Bench Press",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "widegripbenchpress"
       ],
@@ -7653,6 +8185,7 @@
       "id": "wide-grip-pull-up",
       "name": "Wide Grip Pull Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "widegrippullup"
       ],
@@ -7671,6 +8204,7 @@
       "id": "wide-push-up",
       "name": "Wide Push-Up",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "widepushup"
       ],
@@ -7691,6 +8225,7 @@
         "lying windshield wipers",
         "floor wipers"
       ],
+      "portugueseAliases": [],
       "keys": [
         "windshieldwipers",
         "lyingwindshieldwipers",
@@ -7710,6 +8245,7 @@
       "id": "wrist-curl",
       "name": "Wrist Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wristcurl"
       ],
@@ -7724,6 +8260,7 @@
       "id": "wrist-extensor-stretch",
       "name": "Wrist Extensor Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wristextensorstretch"
       ],
@@ -7738,6 +8275,7 @@
       "id": "wrist-flexor-stretch",
       "name": "Wrist Flexor Stretch",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "wristflexorstretch"
       ],
@@ -7755,6 +8293,7 @@
         "forearm roller",
         "wrist roller curl"
       ],
+      "portugueseAliases": [],
       "keys": [
         "wristroller",
         "forearmroller",
@@ -7773,6 +8312,7 @@
       "id": "zercher-squat",
       "name": "Zercher Squat",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "zerchersquat"
       ],
@@ -7791,6 +8331,7 @@
       "id": "zottman-curl",
       "name": "Zottman Curl",
       "aliases": [],
+      "portugueseAliases": [],
       "keys": [
         "zottmancurl"
       ],
