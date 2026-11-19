@@ -1,6 +1,6 @@
 /* NEXFIT | Musculação — programas versionados */
 (()=>{
- if(window.__nexfitStrengthLoaded)return;window.__nexfitStrengthLoaded=true;
+ if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
  const css=`
  #strengthPage .panel{background:linear-gradient(145deg,#202b37,#18212b);border:1px solid #2b3948;border-radius:18px;padding:18px;margin:14px 0}
  #strengthPage input,#strengthPage textarea,#strengthPage select{background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:11px;width:100%;min-width:0}
@@ -104,8 +104,8 @@
  @media(max-width:600px){#strengthPage .execution-screen{padding:6px 0 12px}#strengthPage .execution-media{height:clamp(175px,52vw,270px)}#strengthPage .execution-stat{min-height:70px}#strengthPage .execution-stat>strong{font-size:21px}#strengthPage .execution-exercise-heading h2{font-size:20px}}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
- const nav=document.querySelector('.nav');if(!nav)return;
- const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab)return;
+ const nav=document.querySelector('.nav');if(!nav){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Navegação principal não encontrada.';console.error('[NEXFIT] Módulo de musculação: navegação principal não encontrada.');return;}
+ const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Botão Treinos não encontrado na navegação.';console.error('[NEXFIT] Módulo de musculação: botão Treinos não encontrado.');return;}
  const section=document.createElement('section');section.className='page';section.id='strengthPage';document.querySelector('.app').append(section);
  let executionFeedbackTimer=null,handlingSetAction=false;
  function setExecutionFeedback(message,state='info'){
@@ -1670,5 +1670,6 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   };
   if(available.length===1)chooseProgram(available[0].id);else showPrograms();
  };
- home();
+ window.__nexfitStrengthLoaded=true;window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=null;
+ home().catch(error=>{window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha ao abrir a tela inicial de musculação:',error)});
 })();
