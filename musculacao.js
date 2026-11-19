@@ -1,7 +1,3 @@
-Warning: truncated output (original token count: 42841)
-Total output lines: 1802
-
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* NEXFIT | Musculação — programas versionados */
 (()=>{
  if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
