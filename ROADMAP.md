@@ -8,7 +8,8 @@ Atualizado em 19/11/2026.
 - [x] Evitar abrir uma versão enquanto sua cópia de treinos e exercícios ainda está em andamento.
 - [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta.
 - [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões.
-- [ ] Definir vínculo estável entre treinos/exercícios de versões diferentes, inclusive quando o nome do treino for alterado.
+- [x] Definir identidade estável entre treinos/exercícios copiados entre versões, independente de renomeação.
+- [ ] Permitir substituição isolada de um treino sem zerar o histórico dos demais.
 
 ## Prioridade 2 — Exercícios por tempo
 
