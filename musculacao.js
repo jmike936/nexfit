@@ -76,12 +76,27 @@
  #strengthPage .execution-media-pair figure{min-width:0;margin:0;padding:7px;border:1px solid #28342b;border-radius:12px;background:#111610}
  #strengthPage .execution-media-pair img{display:block;width:100%;height:clamp(150px,38vw,240px);object-fit:contain}
  #strengthPage .execution-media-pair figcaption{padding:5px 0 0;color:#a0a99c;text-align:center;font-size:11px}
+ #strengthPage .execution-image-unavailable{display:grid;place-items:center;min-height:120px;padding:12px;color:#a0a99c;text-align:center;font-size:12px}
  #strengthPage .execution-muscle-map{margin:12px 0;padding:12px;border:1px solid #28342b;border-radius:14px;background:#121812}
  #strengthPage .execution-muscle-map h3{margin:0 0 6px;font-size:14px}
- #strengthPage .execution-muscle-map>p{margin:0 0 8px;color:#a0a99c;font-size:11px}\n #strengthPage .muscle-map-svg{display:block;width:100%;max-height:220px}\n #strengthPage .muscle-map-svg .body-base{fill:#59645b;stroke:#89948a;stroke-width:1.2}\n #strengthPage .muscle-map-svg .muscle-region{fill:#313c32;stroke:#687568;stroke-width:.8;opacity:.95}\n #strengthPage .muscle-map-svg .muscle-region.primary{fill:#b7f34a;stroke:#d5ff8b}\n #strengthPage .muscle-map-svg .muscle-region.secondary{fill:#e5a83b;stroke:#ffd27d}\n #strengthPage .muscle-map-legend{display:flex;gap:12px;flex-wrap:wrap;color:#a0a99c;font-size:11px}\n #strengthPage .muscle-map-legend span{display:inline-flex;align-items:center;gap:5px}\n #strengthPage .muscle-map-legend i{width:9px;height:9px;border-radius:50%;background:#b7f34a}\n #strengthPage .muscle-map-legend span+span i{background:#e5a83b}
- #strengthPage .execution-muscle-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
- #strengthPage .execution-muscle-tags span{padding:5px 8px;border:1px solid #526b32;border-radius:99px;color:#d5ff8b;font-size:11px}
- #strengthPage .execution-muscle-tags span.secondary{border-color:#80602f;color:#ffd27d}
+ #strengthPage .execution-muscle-map>p{margin:0 0 10px;color:#a0a99c;font-size:12px}
+ #strengthPage .execution-muscle-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #strengthPage .execution-muscle-summary>div{padding:10px;border:1px solid #29372b;border-radius:10px;background:#101610}
+ #strengthPage .execution-muscle-summary strong{display:block;margin-bottom:4px;font-size:12px}
+ #strengthPage .execution-muscle-summary p{margin:0;color:#e5ebdf;font-size:13px;line-height:1.45}
+ #strengthPage .execution-muscle-summary .primary strong{color:#b7f34a}
+ #strengthPage .execution-muscle-summary .secondary strong{color:#e5b34e}
+ #strengthPage .execution-muscle-map details{margin-top:9px;border-top:1px solid #29372b;padding-top:8px}
+ #strengthPage .execution-muscle-map summary{color:#c8d2c4;font-size:12px;cursor:pointer}
+ #strengthPage .muscle-map-svg{display:block;width:100%;max-height:175px;margin-top:8px}
+ #strengthPage .muscle-map-svg .body-base{fill:#59645b;stroke:#89948a;stroke-width:1.2}
+ #strengthPage .muscle-map-svg .muscle-region{fill:#313c32;stroke:#687568;stroke-width:.8;opacity:.95}
+ #strengthPage .muscle-map-svg .muscle-region.primary{fill:#b7f34a;stroke:#d5ff8b}
+ #strengthPage .muscle-map-svg .muscle-region.secondary{fill:#e5a83b;stroke:#ffd27d}
+ #strengthPage .muscle-map-legend{display:flex;gap:12px;flex-wrap:wrap;color:#a0a99c;font-size:11px}
+ #strengthPage .muscle-map-legend span{display:inline-flex;align-items:center;gap:5px}
+ #strengthPage .muscle-map-legend i{width:9px;height:9px;border-radius:50%;background:#b7f34a}
+ #strengthPage .muscle-map-legend span+span i{background:#e5a83b}
  #strengthPage .execution-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 12px}
  #strengthPage .execution-stat{display:flex;min-width:0;min-height:76px;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 5px;border:1px solid #202821;border-radius:13px;background:linear-gradient(145deg,#171d18,#111511);text-align:center}
  #strengthPage .execution-stat>span,#strengthPage .execution-stat>label{color:#a0a99c;font-size:12px}
@@ -1353,7 +1368,9 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const labels=[...primary.map(x=>({name:x,role:'primary'})),...secondary.filter(x=>!primary.includes(x)).map(x=>({name:x,role:'secondary'}))];
   const body='<g class="body-base"><circle cx="85" cy="16" r="10"/><rect x="76" y="26" width="18" height="12" rx="5"/><path d="M67 39 Q58 41 56 51 L63 99 Q70 106 85 106 Q100 106 107 99 L114 51 Q112 41 103 39Z"/><path d="M57 46 Q48 45 45 58 L36 99 Q35 106 42 108 Q49 109 51 101 L65 58Z"/><path d="M113 46 Q122 45 125 58 L134 99 Q135 106 128 108 Q121 109 119 101 L105 58Z"/><path d="M68 103 L81 105 L78 151 L72 183 L62 183 L64 149Z"/><path d="M89 105 L102 103 L106 149 L108 183 L98 183 L92 151Z"/><circle cx="248" cy="16" r="10"/><rect x="239" y="26" width="18" height="12" rx="5"/><path d="M230 39 Q221 41 219 51 L226 99 Q233 106 248 106 Q263 106 270 99 L277 51 Q275 41 266 39Z"/><path d="M220 46 Q211 45 208 58 L199 99 Q198 106 205 108 Q212 109 214 101 L228 58Z"/><path d="M276 46 Q285 45 288 58 L297 99 Q298 106 291 108 Q284 109 282 101 L268 58Z"/><path d="M231 103 L244 105 L241 151 L235 183 L225 183 L227 149Z"/><path d="M252 105 L265 103 L269 149 L271 183 L261 183 L255 151Z"/></g>';
   const muscleShapes=['chest','shoulders','biceps','triceps','forearms','core','obliques','quads','calves','lats','back','traps','lower_back','glutes','hamstrings','tibialis','neck'].map(region).join('');
-  return '<section class="execution-muscle-map"><h3>Músculos trabalhados</h3><p>Mapa ilustrativo dos grupos musculares mais solicitados neste exercício</p><svg class="muscle-map-svg" viewBox="0 0 320 190" role="img" aria-label="Mapa muscular frontal e posterior">'+body+'<g>'+muscleShapes+'</g><g fill="#a0a99c" font-size="9" text-anchor="middle"><text x="85" y="189">Frente</text><text x="248" y="189">Costas</text></g></svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div><div class="execution-muscle-tags">'+labels.map(x=>'<span class="'+x.role+'">'+esc(x.name)+'</span>').join('')+'</div></section>';
+  const primaryNames=primary.length?primary.join(' · '):'—';
+  const secondaryNames=secondary.length?secondary.join(' · '):'—';
+  return '<section class="execution-muscle-map"><h3>Grupos musculares</h3><p>Veja quais músculos recebem maior estímulo neste exercício.</p><div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><details><summary>Ver mapa ilustrativo do corpo</summary><svg class="muscle-map-svg" viewBox="0 0 320 190" role="img" aria-label="Mapa muscular frontal e posterior">'+body+'<g>'+muscleShapes+'</g><g fill="#a0a99c" font-size="9" text-anchor="middle"><text x="85" y="189">Frente</text><text x="248" y="189">Costas</text></g></svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div></details></section>';
  }
   function renderSessionStep(){
   sessionView='exercise';
@@ -1368,6 +1385,27 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const muscleMap=renderExecutionMuscleMap(e.primary_muscles,e.secondary_muscles);
   const instructions=e.execution_instructions?'<div class="execution-feedback" style="margin:10px 0 12px"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(e.execution_instructions)+'</p></div>':'';
   host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  host.querySelectorAll('.execution-media').forEach(img=>{
+   img.dataset.fallbackStep='0';
+   img.onerror=()=>{
+    const step=Number(img.dataset.fallbackStep||'0');
+    if(step===0&&img.src.includes('cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@')){
+     img.dataset.fallbackStep='1';
+     img.src=img.src.replace('https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@','https://raw.githubusercontent.com/MarvinNazari/exercise-images/').replace(/\\/gh\\//,'/');
+     return;
+    }
+    if(step<=1&&img.src.includes('cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@')){
+     img.dataset.fallbackStep='2';
+     img.src=img.src.replace('https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@','https://fastly.jsdelivr.net/gh/MarvinNazari/exercise-images@');
+     return;
+    }
+    img.hidden=true;
+    const note=document.createElement('div');
+    note.className='execution-image-unavailable';
+    note.textContent='Imagem temporariamente indisponível';
+    img.parentElement.insertBefore(note,img.nextSibling);
+   };
+  });
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   if($('sessionReps'))$('sessionReps').oninput=()=>{const actual=Number($('sessionReps').value),suggested=previousLoadsByExercise[identity]?.[actual],loadInput=$('sessionLoad');if(suggested!==undefined&&loadInput&&!loadInput.dataset.userEdited){loadInput.value=String(suggested);sessionLoads[loadKey]=String(suggested);const hint=$('previousLoadHint');if(hint)hint.textContent='Última carga registrada'}persistWorkoutState()};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
