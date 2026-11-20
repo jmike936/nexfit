@@ -437,16 +437,16 @@ with library(exercise_id, match_keys, image_start, image_end, primary_muscles, s
  order by c.id, cardinality(l.match_keys) asc
 )
 update public.training_exercise_catalog c
-set demonstration_image_url = coalesce(c.demonstration_image_url, m.image_start),
-    demonstration_end_image_url = coalesce(c.demonstration_end_image_url, m.image_end),
+set demonstration_image_url = case when c.demonstration_image_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then m.image_start else coalesce(c.demonstration_image_url, m.image_start) end,
+    demonstration_end_image_url = case when c.demonstration_end_image_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then m.image_end else coalesce(c.demonstration_end_image_url, m.image_end) end,
     primary_muscles = coalesce(c.primary_muscles, m.primary_muscles),
     secondary_muscles = coalesce(c.secondary_muscles, m.secondary_muscles)
 from matches m
 where c.id = m.id;
 
 update public.training_exercises e
-set media_url = coalesce(e.media_url, c.demonstration_image_url),
-    media_end_url = coalesce(e.media_end_url, c.demonstration_end_image_url),
+set media_url = case when e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then c.demonstration_image_url else coalesce(e.media_url, c.demonstration_image_url) end,
+    media_end_url = case when e.media_end_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then c.demonstration_end_image_url else coalesce(e.media_end_url, c.demonstration_end_image_url) end,
     primary_muscles = coalesce(e.primary_muscles, c.primary_muscles),
     secondary_muscles = coalesce(e.secondary_muscles, c.secondary_muscles)
 from public.training_exercise_catalog c
@@ -477,8 +477,8 @@ where e.id = m.exercise_id
 -- Reaplica os metadados aos exercícios agora associados, sem substituir
 -- imagens ou grupos musculares que já tenham sido personalizados.
 update public.training_exercises e
-set media_url = coalesce(e.media_url, c.demonstration_image_url),
-    media_end_url = coalesce(e.media_end_url, c.demonstration_end_image_url),
+set media_url = case when e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then c.demonstration_image_url else coalesce(e.media_url, c.demonstration_image_url) end,
+    media_end_url = case when e.media_end_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' then c.demonstration_end_image_url else coalesce(e.media_end_url, c.demonstration_end_image_url) end,
     primary_muscles = coalesce(e.primary_muscles, c.primary_muscles),
     secondary_muscles = coalesce(e.secondary_muscles, c.secondary_muscles)
 from public.training_exercise_catalog c
