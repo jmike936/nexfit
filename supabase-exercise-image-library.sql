@@ -453,6 +453,39 @@ from public.training_exercise_catalog c
 where e.catalog_exercise_id = c.id
   and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null);
 
+-- Backfill de exercícios antigos que ainda não possuem catalog_exercise_id.
+-- Só associa quando o nome encontra exatamente um item visual do catálogo;
+-- preserva vínculos existentes e qualquer mídia personalizada.
+with unique_matches as (
+  select
+    e.id as exercise_id,
+    min(c.id::text)::uuid as catalog_id
+  from public.training_exercises e
+  join public.training_exercise_catalog c
+    on lower(btrim(e.name)) = lower(btrim(c.name))
+   and c.demonstration_image_url is not null
+  where e.catalog_exercise_id is null
+  group by e.id
+  having count(distinct c.id) = 1
+)
+update public.training_exercises e
+set catalog_exercise_id = m.catalog_id
+from unique_matches m
+where e.id = m.exercise_id
+  and e.catalog_exercise_id is null;
+
+-- Reaplica os metadados aos exercícios agora associados, sem substituir
+-- imagens ou grupos musculares que já tenham sido personalizados.
+update public.training_exercises e
+set media_url = coalesce(e.media_url, c.demonstration_image_url),
+    media_end_url = coalesce(e.media_end_url, c.demonstration_end_image_url),
+    primary_muscles = coalesce(e.primary_muscles, c.primary_muscles),
+    secondary_muscles = coalesce(e.secondary_muscles, c.secondary_muscles)
+from public.training_exercise_catalog c
+where e.catalog_exercise_id = c.id
+  and c.demonstration_image_url is not null
+  and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null);
+
 select count(*) as catalog_exercises_with_visuals
 from public.training_exercise_catalog
 where demonstration_image_url like 'https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%';
