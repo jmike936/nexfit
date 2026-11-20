@@ -451,7 +451,7 @@ set media_url = case when e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/ex
     secondary_muscles = coalesce(e.secondary_muscles, c.secondary_muscles)
 from public.training_exercise_catalog c
 where e.catalog_exercise_id = c.id
-  and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null);
+  and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null or e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' or e.media_end_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%');
 
 -- Backfill de exercícios antigos que ainda não possuem catalog_exercise_id.
 -- Só associa quando o nome encontra exatamente um item visual do catálogo;
@@ -484,7 +484,7 @@ set media_url = case when e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/ex
 from public.training_exercise_catalog c
 where e.catalog_exercise_id = c.id
   and c.demonstration_image_url is not null
-  and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null);
+  and (e.media_url is null or e.media_end_url is null or e.primary_muscles is null or e.secondary_muscles is null or e.media_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%' or e.media_end_url like '%cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@%');
 
 select count(*) as catalog_exercises_with_visuals
 from public.training_exercise_catalog
