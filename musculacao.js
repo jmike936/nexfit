@@ -1,6 +1,7 @@
 /* NEXFIT | Musculação — programas versionados */
 (()=>{
  if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
+ try{
  const css=`
  #strengthPage .panel{background:linear-gradient(145deg,#202b37,#18212b);border:1px solid #2b3948;border-radius:18px;padding:18px;margin:14px 0}
  #strengthPage input,#strengthPage textarea,#strengthPage select{background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:11px;width:100%;min-width:0}
@@ -1868,4 +1869,5 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
  };
  window.__nexfitStrengthLoaded=true;window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=null;
  home().catch(error=>{window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha ao abrir a tela inicial de musculação:',error)});
+} }catch(error){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha na inicialização do módulo de musculação:',error)}
 })();
