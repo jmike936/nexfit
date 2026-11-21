@@ -56,15 +56,22 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||(Number(x.reps_completed)>0&&x.load_kg!==null&&x.load_kg!==undefined));
  if(!logs.length)return [];
  const exerciseIds=[...new Set(logs.map(x=>x.exercise_id).filter(Boolean))];
- const exercisesQ=await client.from('training_exercises').select('id,name').in('id',exerciseIds);
+ const exercisesQ=await client.from('training_exercises').select('id,name,identity_id').in('id',exerciseIds);
  if(!isCurrent())return null;if(exercisesQ.error)throw exercisesQ.error;
- const exerciseMap=new Map((exercisesQ.data||[]).map(x=>[x.id,x.name])),grouped=new Map();
+ const exerciseMap=new Map((exercisesQ.data||[]).map(x=>[x.id,{name:x.name,identityId:x.identity_id||null}])),grouped=new Map();
  for(const log of logs){
-  const name=exerciseMap.get(log.exercise_id);if(!name)continue;
-  const metricType=Number(log.duration_seconds)>0?'time':'load',normalized=normalize(name);if(!normalized)continue;
-  const key=normalized+'|'+metricType,session=sessionMap.get(log.session_id);if(!session)continue;
-  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[]});
-  grouped.get(key).points.push({date:activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
+  const exercise=exerciseMap.get(log.exercise_id);if(!exercise?.name)continue;
+  const name=exercise.name,metricType=Number(log.duration_seconds)>0?'time':'load',normalized=normalize(name);if(!normalized)continue;
+  const session=sessionMap.get(log.session_id);if(!session)continue;
+  const date=activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at;
+  // Exercícios copiados entre versões mantêm identity_id, mesmo quando são renomeados.
+  // Registros anteriores à identidade estável continuam agrupados pelo nome normalizado.
+  const identityKey=exercise.identityId?'identity:'+exercise.identityId:'legacy-name:'+normalized;
+  const key=identityKey+'|'+metricType;
+  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
+  const group=grouped.get(key);
+  if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga');group.latestDate=date}
+  group.points.push({date,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
  }
  return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 }
