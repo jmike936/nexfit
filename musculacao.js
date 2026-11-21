@@ -385,12 +385,12 @@
  async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const isSameAccount=()=>userRef()?.id===expectedUserId;
   if(!expectedUserId||!expectedDb||!isSameAccount())return false;
-  if(!confirm('Adicionar uma cópia independente deste programa ao seu perfil? A cópia poderá ser editada sem alterar o programa público original.'))return;
+  if(await showWorkoutDialog({title:'Adicionar cópia?',message:'Será criada uma cópia independente deste programa no seu perfil. Você poderá editá-la sem alterar o programa público original.',confirmLabel:'Adicionar cópia',cancelLabel:'Cancelar'})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await expectedDb.rpc('nexfit_copy_public_program',{p_program:id});
   if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message))return alert('A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.');return alert(message)}
-  activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
+  if(error){const message=error.message||String(error);await showWorkoutDialog({title:'Não foi possível copiar o programa',message:/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message)?'A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.':message,confirmLabel:'Entendi',danger:true});return false}
+  activeTrainingTab='mine';await showWorkoutDialog({title:'Cópia adicionada',message:'O programa foi copiado para seu perfil. Você poderá editá-lo em Gerenciar Programas de Treino.',confirmLabel:'Continuar'});await home();
  }
 
  async function startOfflineWorkout(workoutId,expectedUserId=userRef()?.id){
@@ -502,11 +502,11 @@
   const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
   if(!db||!expectedUserId||!isSameAccount())return false;
   const makePublic=!p.is_public;
-  if(makePublic&&!confirm('Este programa ficará visível no menu Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original. Tornar público?'))return;
+  if(makePublic&&await showWorkoutDialog({title:'Tornar programa público?',message:'Este programa ficará visível em Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original.',confirmLabel:'Tornar público',cancelLabel:'Manter privado'})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await db.from('training_programs').update({is_public:makePublic}).eq('id',p.id);
   if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/is_public|row.level security|42501/i.test(message))return alert('Não foi possível alterar a visibilidade. Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.');return alert(message)}
+  if(error){const message=error.message||String(error);await showWorkoutDialog({title:'Não foi possível alterar a visibilidade',message:/is_public|row.level security|42501/i.test(message)?'Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.':message,confirmLabel:'Entendi',danger:true});return false}
   await home();
  }
  function renderProgramManagement(){
@@ -675,16 +675,16 @@
   if(!db||!userId)return false;
   let permissions={can_view_history:false,can_manage_programs:false};
   if(approve){
-   permissions.can_view_history=confirm('Permitir que este profissional visualize seu histórico de treinos?');
+   permissions.can_view_history=await showWorkoutDialog({title:'Permitir acesso ao histórico?',message:'O profissional poderá visualizar seu histórico de sessões e sua evolução de treinos.',confirmLabel:'Permitir acesso',cancelLabel:'Não permitir'} )===true;
    if(!isSameAccount())return false;
-   permissions.can_manage_programs=confirm('Permitir que este profissional crie e gerencie os programas que ele próprio criar para você?');
+   permissions.can_manage_programs=await showWorkoutDialog({title:'Permitir gerenciamento de programas?',message:'O profissional poderá criar e gerenciar os programas que ele próprio criar para você. Isso não concede acesso para alterar programas de outros profissionais.',confirmLabel:'Permitir gerenciamento',cancelLabel:'Não permitir'})===true;
    if(!isSameAccount())return false;
-   if(!permissions.can_view_history&&!permissions.can_manage_programs&&!confirm('Nenhuma permissão foi concedida. Deseja aprovar mesmo assim?'))return;
+   if(!permissions.can_view_history&&!permissions.can_manage_programs&&await showWorkoutDialog({title:'Aprovar sem permissões?',message:'Nenhuma permissão foi concedida. O vínculo será aprovado, mas o profissional não poderá visualizar seu histórico nem gerenciar programas.',confirmLabel:'Aprovar mesmo assim',cancelLabel:'Voltar'})!==true)return;
   }
   if(!isSameAccount())return false;
   const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',userId);
   if(!isSameAccount())return false;
-  if(error)return alert(error.message);await home();
+  if(error){await showWorkoutDialog({title:'Não foi possível atualizar as permissões',message:error.message,confirmLabel:'Entendi',danger:true});return false}await home();
  }
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
@@ -704,7 +704,7 @@
   const isAthlete=program.athlete_id===userId;
   shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
   $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion(userId,db,program)};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id,userId,db)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id,userId,db)};
-  if($('confirmVersion'))$('confirmVersion').onclick=()=>withProgramActionLock('confirmVersion',async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return false;if(result.error)alert(result.error.message);else await openProgram(id,userId,db)});
+  if($('confirmVersion'))$('confirmVersion').onclick=()=>withProgramActionLock('confirmVersion',async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return false;if(result.error){await showWorkoutDialog({title:'Não foi possível confirmar a versão',message:result.error.message,confirmLabel:'Entendi',danger:true});return false}await showWorkoutDialog({title:'Versão confirmada',message:'A nova versão do programa agora está vigente.',confirmLabel:'Continuar'});await openProgram(id,userId,db)});
   renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
  async function newVersion(){
@@ -722,7 +722,7 @@
    const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(q.error)return alert(q.error.message);
-   const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
+   const next=(q.data?.[0]?.version_number||0)+1,changeNoteInput=await showWorkoutDialog({title:'Resumo da nova versão',message:'Descreva brevemente o que mudou. Essa informação ajuda o atleta a entender a atualização.',confirmLabel:'Criar versão',cancelLabel:'Cancelar',input:{type:'text',label:'Resumo das alterações',placeholder:'Ex.: Ajuste de cargas e inclusão de exercícios',maxLength:180,allowEmpty:true}});if(changeNoteInput===null)return false;const changeNote=changeNoteInput.trim()||'Atualização do programa';
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
    if(error){
@@ -790,11 +790,11 @@
    const programVersion=version;
    if(!programVersion||programVersion.status!=='pending')return alert('Prepare uma nova versão antes de adicionar treinos.');
    const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
-   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
+   const titleValue=await showWorkoutDialog({title:'Adicionar treino',message:'Informe o nome do novo treino nesta versão do programa.',confirmLabel:'Adicionar treino',cancelLabel:'Cancelar',input:{type:'text',label:'Nome do treino',placeholder:'Ex.: A — Peito e tríceps',maxLength:100}});if(titleValue===null)return;const title=normalizeHumanText(titleValue);if(!title)return;
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
    if(!isCurrentEditor())return false;
-   if(error)return alert(error.message);
+   if(error){await showWorkoutDialog({title:'Não foi possível adicionar o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await openWorkoutEditor(data.id,userId,db);
   });
  }
@@ -1050,11 +1050,11 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
   const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
   if(!db||!expectedUserId||!isSameAccount())return false;
-  if(!confirm('Excluir este programa da lista de treinos? Ele será arquivado para preservar o histórico das sessões.'))return;
+  if(await showWorkoutDialog({title:'Arquivar programa?',message:'O programa sairá da lista de treinos ativos, mas será arquivado para preservar o histórico das sessões.',confirmLabel:'Arquivar programa',cancelLabel:'Manter programa',danger:true})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await db.from('training_programs').update({status:'archived'}).eq('id',p.id);
   if(!isSameAccount())return false;
-  if(error)return alert('Não foi possível excluir o programa: '+error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível arquivar o programa',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   if(current?.id===p.id){current=null;version=null;subworkouts=[];editorSubworkoutId=null}
   await home();
  }
@@ -1184,17 +1184,17 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const db=expectedDb,program=expectedProgram,userId=expectedUserId;
    const isCurrentProgram=()=>!!db&&!!userId&&userRef()?.id===userId&&current?.id===program?.id;
    if(!isCurrentProgram())return false;
-   const reason=prompt('Motivo do pedido de arquivamento (opcional):')||null;
+   const reasonInput=await showWorkoutDialog({title:'Solicitar arquivamento',message:'Se desejar, informe o motivo do pedido. O atleta ainda precisará aprovar ou rejeitar a solicitação.',confirmLabel:'Enviar pedido',cancelLabel:'Cancelar',input:{type:'text',label:'Motivo (opcional)',placeholder:'Descreva o motivo do pedido',maxLength:240,allowEmpty:true}});if(reasonInput===null)return false;const reason=reasonInput.trim()||null;
    if(!isCurrentProgram())return false;
    const {error}=await db.from('training_program_deletion_requests').insert({program_id:program.id,requested_by:userId,reason});
    if(!isCurrentProgram())return false;
-   if(error)return alert(error.message);
+   if(error){await showWorkoutDialog({title:'Não foi possível enviar o pedido',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    const updated=await db.from('training_programs').update({status:'deletion_pending'}).eq('id',program.id);
    if(!isCurrentProgram())return false;
-   if(updated.error)return alert(updated.error.message);
+   if(updated.error){await showWorkoutDialog({title:'Pedido não concluído',message:updated.error.message,confirmLabel:'Entendi',danger:true});return false}
    await db.from('app_notifications').insert({user_id:program.athlete_id,type:'deletion_request',title:'Pedido de arquivamento',body:'Um profissional solicitou arquivar um programa. Aprove ou rejeite o pedido.',entity_id:program.id});
    if(!isCurrentProgram())return false;
-   alert('Pedido enviado ao atleta para aprovação.');
+   await showWorkoutDialog({title:'Pedido enviado',message:'O atleta receberá a solicitação e poderá aprovar ou rejeitar o arquivamento do programa.',confirmLabel:'Entendi'});
   });
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
@@ -1845,11 +1845,12 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   return new Promise(resolve=>{
    const old=$('workoutActionDialog');if(old)old.remove();
    const overlay=document.createElement('div');overlay.id='workoutActionDialog';overlay.className='workout-dialog-backdrop';
-   overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input" type="number" min="'+input.min+'" step="'+input.step+'" placeholder="'+esc(input.placeholder)+'" inputmode="numeric">':'')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
+   const inputType=input?.type==='text'?'text':'number',inputAttrs=input?(' type="'+inputType+'"'+(inputType==='number'?' min="'+esc(input.min??'')+'" step="'+esc(input.step??'any')+'" inputmode="decimal"':' maxlength="'+esc(input.maxLength??160)+'" autocomplete="off"')+' placeholder="'+esc(input.placeholder||'')+'" value="'+esc(input.value??'')+'"'):'';
+   overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input"'+inputAttrs+' required>' : '')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
    section.append(overlay);
    const finish=value=>{overlay.remove();resolve(value)};
    overlay.querySelector('.workout-dialog-cancel').onclick=()=>finish(null);
-   overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min)){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}finish(value)};
+   overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(inputType==='number'&&(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min))){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}if(inputType==='text'&&!value&&!input.allowEmpty){field.setCustomValidity('Preencha este campo.');field.reportValidity();return}finish(value)};
    overlay.addEventListener('click',event=>{if(event.target===overlay)finish(null)});
    overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();finish(null)}if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();overlay.querySelector('.workout-dialog-confirm').click()}};
    const field=overlay.querySelector('#workoutDialogInput');(field||overlay.querySelector('.workout-dialog-confirm')).focus();
