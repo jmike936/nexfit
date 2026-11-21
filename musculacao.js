@@ -1074,7 +1074,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
   if(!db||!program||!programVersion||!userId||!item)return false;
   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
-  if(!confirm('Excluir o treino "'+item.title+'"?'))return;
+  if(await showWorkoutDialog({title:'Excluir treino?',message:'O treino “'+item.title+'” será removido desta versão. O histórico de versões anteriores continuará preservado.',confirmLabel:'Excluir treino',cancelLabel:'Manter treino',danger:true})!==true)return;
   if(!isCurrentEditor())return false;
   const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
   if(!isCurrentEditor())return false;
@@ -1154,7 +1154,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
   if(!isCurrentEditor())return false;
   if(q.error||!q.data)return alert('Não foi possível localizar o exercício.');
-  if(!confirm('Excluir o exercício "'+q.data.name+'"?'))return;
+  if(await showWorkoutDialog({title:'Excluir exercício?',message:'“'+q.data.name+'” será removido desta versão. Registros históricos não serão apagados.',confirmLabel:'Excluir exercício',cancelLabel:'Manter exercício',danger:true})!==true)return;
   if(!isCurrentEditor())return false;
   const used=await db.from('training_set_logs').select('id',{count:'exact',head:true}).eq('exercise_id',id);
   if(!isCurrentEditor())return false;
