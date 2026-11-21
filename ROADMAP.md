@@ -34,7 +34,7 @@ Atualizado em 21/11/2026.
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [ ] Revisar transições entre séries, exercícios e descansos.
-- [ ] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
+- [x] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
 - [ ] Substituir mensagens e confirmações nativas por telas amigáveis e consistentes, começando pela tela de conclusão do treino (resumo, status de sincronização e próximos passos).
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
@@ -44,4 +44,4 @@ Atualizado em 21/11/2026.
 - [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.
 - [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras.
 - [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
-- [ ] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
+- [x] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
