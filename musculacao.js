@@ -1742,10 +1742,10 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
  }
  async function completeCurrentSet(){
   if(savingSet){setExecutionFeedback('Já existe um registro de série em andamento.');return}
-  if(!session){setExecutionFeedback('A sessão de treino não está ativa. Volte à lista de exercícios.','error');return alert('A sessão de treino não está ativa. Volte à lista de exercícios e tente novamente.')}
+  if(!session){setExecutionFeedback('A sessão de treino não está ativa. Volte à lista de exercícios.','error');return}
   const sessionId=session.id,userId=userRef()?.id,db=dbRef(),isCurrent=()=>userRef()?.id===userId&&session?.id===sessionId;
   const item=sessionPlan[sessionIndex],button=$('completeSet');
-  if(!item){setExecutionFeedback('Não foi possível identificar a série atual.','error');return alert('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.')}
+  if(!item){setExecutionFeedback('Não foi possível identificar a série atual. Atualize a tela do exercício antes de continuar.','error');return}
   if(hasSetLog(item.exercise.id,item.setIndex+1)){setExecutionFeedback('Esta série já estava registrada. Recuperando a execução…','success');continueAfterRecordedSet(item);return}
   const isTimed=!!item.set?.mode&&item.set.mode!=='reps';
   const timedSeconds=isTimed?Math.max(0,Math.floor(exerciseTimerElapsed())):0;
@@ -1753,9 +1753,9 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const repsInput=$('sessionReps');
   const reps=isTimed?'0':(repsInput?repsInput.value.trim():String(item.set.reps??''));
   const load=$('sessionLoad')?.value.trim()??'';
-  if(!isTimed&&(!reps||reps==='MR'||Number(reps)<1)){setExecutionFeedback('Informe as repetições realizadas.','error');return alert('Informe as repetições realizadas.')}
-  if(isTimed&&timedSeconds<1){setExecutionFeedback('Inicie o cronômetro e registre ao concluir.','error');return alert('Registre pelo menos um segundo de execução.')}
-  if(load!==''&&!Number.isFinite(Number(load))){setExecutionFeedback('Informe uma carga válida.','error');return alert('Informe uma carga válida.')}
+  if(!isTimed&&(!reps||reps==='MR'||Number(reps)<1)){setExecutionFeedback('Informe as repetições realizadas.','error');repsInput?.focus();return}
+  if(isTimed&&timedSeconds<1){setExecutionFeedback('Inicie o cronômetro e registre ao concluir.','error');return}
+  if(load!==''&&!Number.isFinite(Number(load))){setExecutionFeedback('Informe uma carga válida.','error');$('sessionLoad')?.focus();return}
   if(load!=='')sessionLoads[item.exercise.id+':'+item.setIndex]=load;
   const row={session_id:sessionId,exercise_id:item.exercise.id,set_number:item.setIndex+1,reps_completed:Number(reps),load_kg:isTimed?null:(load===''?(item.set.load_kg??null):Number(load)),duration_seconds:isTimed?timedSeconds:null,completed_at:new Date().toISOString()};
   if(isTimed){activeExerciseTimer=null;if(timer)clearInterval(timer);timer=null}
