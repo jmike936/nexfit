@@ -1387,18 +1387,20 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const instructions=e.execution_instructions?'<div class="execution-feedback" style="margin:10px 0 12px"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(e.execution_instructions)+'</p></div>':'';
   host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
   host.querySelectorAll('.execution-media').forEach(img=>{
-   img.dataset.originalSrc=img.getAttribute('src')||'';
-   img.dataset.fallbackStep='0';
+   const initial=img.getAttribute('src')||img.src;
+   const pathMatch=initial.match(/images\/(.+?)(?:[?#].*)?$/);
+   const candidates=pathMatch?[
+    'https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
+    'https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
+    'https://fastly.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1]
+   ]:[];
+   img.dataset.fallbackIndex='0';
    img.onerror=()=>{
-    const step=Number(img.dataset.fallbackStep||'0'),original=img.dataset.originalSrc||'';
-    if(step===0&&original.includes('raw.githubusercontent.com/MarvinNazari/exercise-images/')){
-     img.dataset.fallbackStep='1';
-     img.src=original.replace('https://raw.githubusercontent.com/MarvinNazari/exercise-images/','https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@');
-     return;
-    }
-    if(step===1&&original.includes('raw.githubusercontent.com/MarvinNazari/exercise-images/')){
-     img.dataset.fallbackStep='2';
-     img.src=original.replace('https://raw.githubusercontent.com/MarvinNazari/exercise-images/','https://fastly.jsdelivr.net/gh/MarvinNazari/exercise-images@');
+    const index=Number(img.dataset.fallbackIndex||'0');
+    if(index<candidates.length){
+     img.dataset.fallbackIndex=String(index+1);
+     if(candidates[index]!==img.src){img.src=candidates[index];return}
+     img.onerror();
      return;
     }
     img.hidden=true;
