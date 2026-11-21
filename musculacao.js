@@ -840,16 +840,30 @@
     ]);
     if(!isCurrent())return;
     for(const exercise of exerciseQuery.data||[]){const key=String(exercise.subworkout_id);if(!exercisesByWorkout.has(key))exercisesByWorkout.set(key,[]);exercisesByWorkout.get(key).push(exercise)}
+    if(doneQuery.error){
+     const host=$('subList');
+     if(host)host.innerHTML='<div class="panel"><p class="muted">Não foi possível consultar o histórico dos treinos: '+esc(doneQuery.error.message)+'</p></div>';
+     return;
+    }
     for(const row of doneQuery.data||[]){const key=String(row.subworkout_id||'');if(key)sessionCountsByWorkout.set(key,(sessionCountsByWorkout.get(key)||0)+1)}
     const historicalIds=[...sessionCountsByWorkout.keys()];
     if(historicalIds.length){
      const names=await db.from('training_subworkouts').select('id,title,identity_id').in('id',historicalIds);
      if(!isCurrent())return;
+     if(names.error){
+      const host=$('subList');
+      if(host)host.innerHTML='<div class="panel"><p class="muted">Não foi possível relacionar o histórico dos treinos: '+esc(names.error.message)+'</p></div>';
+      return;
+     }
      for(const item of names.data||[]){
       const count=sessionCountsByWorkout.get(String(item.id))||0;
-      if(item.identity_id)sessionsByIdentity.set(String(item.identity_id),(sessionsByIdentity.get(String(item.identity_id))||0)+count);
-      const title=String(item.title||'').trim().toLocaleLowerCase('pt-BR');
-      if(title)sessionsByTitle.set(title,(sessionsByTitle.get(title)||0)+count);
+      if(item.identity_id){
+       sessionsByIdentity.set(String(item.identity_id),(sessionsByIdentity.get(String(item.identity_id))||0)+count);
+      }else{
+       // Fallback por título somente para sessões realmente legadas, sem identidade estável.
+       const title=String(item.title||'').trim().toLocaleLowerCase('pt-BR');
+       if(title)sessionsByTitle.set(title,(sessionsByTitle.get(title)||0)+count);
+      }
      }
     }
    }
