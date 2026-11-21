@@ -161,7 +161,47 @@
  #strengthPage .completion-secondary{border:1px solid #354454;background:transparent;color:#f4f7fa}
  @media(max-width:420px){#strengthPage .completion-screen{padding:14px 4px 24px}#strengthPage .completion-stat{min-height:80px}}
 
- @media(max-width:600px){#strengthPage .execution-screen{padding:6px 0 12px}#strengthPage .execution-media{height:clamp(175px,52vw,270px)}#strengthPage .execution-stat{min-height:70px}#strengthPage .execution-stat>strong{font-size:21px}#strengthPage .execution-exercise-heading h2{font-size:20px}}
+ @media(max-width:600px){
+  #strengthPage .execution-screen{width:100%;max-width:100%;padding:8px 10px 18px}
+  #strengthPage .execution-header{grid-template-columns:40px minmax(0,1fr) 42px;gap:4px;min-height:44px}
+  #strengthPage .execution-header strong{font-size:16px}
+  #strengthPage .execution-header>span{font-size:12px}
+  #strengthPage .execution-back{width:40px;height:44px}
+  #strengthPage .execution-progress{margin:7px 0 14px}
+  #strengthPage .execution-exercise-heading{align-items:flex-start;gap:5px;margin-bottom:9px}
+  #strengthPage .execution-exercise-heading h2{font-size:19px;line-height:1.25}
+  #strengthPage .execution-exercise-heading p{max-width:42%;font-size:11px;line-height:1.35}
+  #strengthPage .execution-media-pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px}
+  #strengthPage .execution-media-pair figure{padding:5px;border-radius:11px}
+  #strengthPage .execution-media-pair img{height:clamp(138px,43vw,190px);max-width:100%;object-fit:contain}
+  #strengthPage .execution-media-pair figcaption{font-size:11px;padding:6px 0 2px}
+  #strengthPage .execution-muscle-map{margin:10px 0;padding:11px;border-radius:13px}
+  #strengthPage .execution-muscle-map h3{font-size:15px}
+  #strengthPage .execution-muscle-map>p{font-size:12px;line-height:1.45}
+  #strengthPage .execution-muscle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  #strengthPage .execution-muscle-summary>div{padding:9px 8px}
+  #strengthPage .execution-muscle-summary strong{font-size:12px}
+  #strengthPage .execution-muscle-summary p{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+  #strengthPage .muscle-map-svg{max-height:210px}
+  #strengthPage .execution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 10px}
+  #strengthPage .execution-stat{min-height:74px;padding:8px 4px;border-radius:11px}
+  #strengthPage .execution-stat>span,#strengthPage .execution-stat>label{font-size:11px}
+  #strengthPage .execution-stat>strong{font-size:21px}
+  #strengthPage .execution-load-control{grid-template-columns:22px minmax(0,1fr) 22px}
+  #strengthPage .execution-load-control button{min-width:28px;min-height:34px;font-size:20px}
+  #strengthPage .execution-load-control input{font-size:18px}
+  #strengthPage .execution-actions{gap:7px;margin-top:9px}
+  #strengthPage .execution-primary,#strengthPage .execution-secondary{min-height:52px;padding:12px 8px;font-size:13px}
+  #strengthPage .execution-skip-exercise{min-height:40px;padding:10px}
+}
+@media(max-width:360px){
+  #strengthPage .execution-screen{padding-right:8px;padding-left:8px}
+  #strengthPage .execution-media-pair img{height:138px}
+  #strengthPage .execution-muscle-summary{grid-template-columns:1fr}
+  #strengthPage .execution-exercise-heading p{font-size:10px}
+  #strengthPage .execution-stat>strong{font-size:19px}
+  #strengthPage .execution-actions{grid-template-columns:1fr 1fr}
+}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
  const nav=document.querySelector('.nav');if(!nav){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Navegação principal não encontrada.';console.error('[NEXFIT] Módulo de musculação: navegação principal não encontrada.');return;}
