@@ -1294,7 +1294,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;skippingExercise=false;finishingSession=false;finishingSessionOwner=null;
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
@@ -1582,15 +1582,16 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const confirmed=await showWorkoutDialog({title:'Pular exercício?',message:'O exercício “'+item.exercise.name+'” será marcado como não realizado e você voltará à lista para escolher outro.',confirmLabel:'Sim, pular exercício',danger:true});
    if(!confirmed||!isCurrent())return;
    if(savingSet){setExecutionFeedback('Aguarde o registro da série terminar antes de pular o exercício.');return}
-   const previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices),previousTimer=activeExerciseTimer?{...activeExerciseTimer}:null;
+   const previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices),previousTimer=activeExerciseTimer?{...activeExerciseTimer}:null,previousView=sessionView;
    skippedExerciseIndices.add(item.exerciseIndex);
    for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
    // Encerrar o cronômetro da série pulada para que ele não continue ativo na lista
    // nem seja reaproveitado acidentalmente pelo próximo exercício.
    if(timer)clearInterval(timer);timer=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
    if(activeRest){activeRest=null;restSnapshot=null}
+   sessionView='picker';
    if(!persistWorkoutState()){
-    skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;activeExerciseTimer=previousTimer;
+    skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;activeExerciseTimer=previousTimer;sessionView=previousView;
     if(activeExerciseTimer?.running)timer=setInterval(tickExerciseTimer,200);
     setExecutionFeedback('Não foi possível salvar a alteração neste aparelho. Libere espaço e tente novamente.','error');
     return;
