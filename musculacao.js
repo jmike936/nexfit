@@ -332,17 +332,20 @@
    const date=activityDateBySession.get(item.id),historical=historicalById.get(String(item.subworkout_id));
    if(!item.subworkout_id||!historical||!date)continue;
    const keys=[];
-   if(historical.identityId)keys.push(workoutHistoryKey(item.program_id,'identity',historical.identityId));
-   // Compatibilidade: versões criadas antes da identidade estável receberam UUIDs independentes.
-   if(historical.title)keys.push(workoutHistoryKey(item.program_id,'legacy-title',historical.title));
+   if(historical.identityId){
+    keys.push(workoutHistoryKey(item.program_id,'identity',historical.identityId));
+   }else if(historical.title){
+    // Fallback apenas para sessões legadas sem identidade estável.
+    keys.push(workoutHistoryKey(item.program_id,'legacy-title',historical.title));
+   }
    for(const key of keys){
     const previous=lastExecution.get(key);
     if(!previous||date>previous)lastExecution.set(key,date);
    }
   }
   const lastExecutionForWorkout=(programId,workout)=>{
-   const byIdentity=lastExecution.get(workoutHistoryKey(programId,'identity',workout.identity_id));
-   if(byIdentity)return byIdentity;
+   const identityId=String(workout.identity_id||'');
+   if(identityId)return lastExecution.get(workoutHistoryKey(programId,'identity',identityId))||null;
    const legacyTitle=String(workout.title||'').trim().toLocaleLowerCase('pt-BR');
    return legacyTitle?lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||null:null;
   };
