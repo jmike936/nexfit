@@ -1936,7 +1936,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    if(vq.error||!vq.data){await showWorkoutDialog({title:'Versão não encontrada',message:'Não foi possível localizar a versão vigente deste programa.',confirmLabel:'Entendi',danger:true});return false}
    const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
    if(!isSameAccount())return false;
-   if(sq.error)return alert(sq.error.message);
+   if(sq.error){await showWorkoutDialog({title:'Não foi possível carregar os treinos',message:sq.error.message,confirmLabel:'Entendi',danger:true});return false}
    if(!sq.data?.length){await showWorkoutDialog({title:'Programa sem treinos',message:'Este programa ainda não possui treinos. Adicione A, B, C… na aba Musculação.',confirmLabel:'Entendi'});return false}
    current=program;version=vq.data;subworkouts=sq.data;
    shell('Qual treino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(normalizeHumanText(s.title))+'</strong><p class="muted">'+esc(s.description||'Treino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
