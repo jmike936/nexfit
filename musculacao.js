@@ -117,14 +117,25 @@
  #strengthPage .execution-skip-exercise{display:block;margin:8px auto 0;border:0;background:transparent;color:#a0a99c;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
  #strengthPage .execution-rest[hidden]{display:none}
  #strengthPage .execution-rest{margin-top:14px;padding:10px 0 4px;text-align:center}
+ #strengthPage .execution-screen.is-resting .execution-media-pair,
+ #strengthPage .execution-screen.is-resting .execution-muscle-map,
+ #strengthPage .execution-screen.is-resting .execution-stat,
+ #strengthPage .execution-screen.is-resting .execution-reps-label,
+ #strengthPage .execution-screen.is-resting .execution-reps-input,
+ #strengthPage .execution-screen.is-resting .execution-feedback{display:none!important}
+ #strengthPage .execution-screen.is-resting .execution-exercise-heading{margin-bottom:8px}
+ #strengthPage .execution-screen.is-resting .execution-rest{margin:10px 0 0;padding:18px 14px 16px;border:1px solid #35452f;border-radius:18px;background:linear-gradient(145deg,#1c281b,#111811);box-shadow:0 10px 28px #0003}
+ #strengthPage .execution-screen.is-resting .execution-rest-heading{margin:0 0 12px;color:#b7f34a;font-size:13px}
+ #strengthPage .execution-screen.is-resting .execution-rest-dial{width:clamp(150px,48vw,190px);height:clamp(150px,48vw,190px)}
+ #strengthPage .execution-screen.is-resting .execution-rest-dial strong{font-size:clamp(38px,11vw,48px)}
+ #strengthPage .execution-screen.is-resting .execution-rest p{margin:14px 0;line-height:1.45}
+ #strengthPage .execution-screen.is-resting .execution-skip-rest{width:min(100%,280px);min-height:48px}
  #strengthPage .execution-rest-heading{margin:4px 0 12px;color:#a0a99c;font-size:12px;font-weight:800;letter-spacing:.14em}
  #strengthPage .execution-rest-row{display:flex;align-items:flex-end;justify-content:center;gap:14px}
  #strengthPage .execution-rest-dial{display:grid;place-items:center;width:158px;height:158px;padding:8px;border-radius:50%;background:conic-gradient(#b7f34a calc(var(--progress)*1%),#35452a 0)}
  #strengthPage .execution-rest-dial>div{display:flex;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:#101410}
  #strengthPage .execution-rest-dial strong{font-size:36px;line-height:1.1;font-variant-numeric:tabular-nums}
  #strengthPage .execution-rest-dial span{margin-top:4px;color:#a0a99c;font-size:14px}
- #strengthPage .execution-pause{display:grid;place-items:center;width:48px;height:48px;margin-bottom:5px;border:0;border-radius:50%;background:#222a23;color:#f4f7fa;cursor:pointer}
- #strengthPage .execution-pause svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
  #strengthPage .execution-rest p{min-height:20px;margin:10px 0;color:#a0a99c;font-size:13px}
  #strengthPage .execution-skip-rest{min-width:150px}
 
@@ -1437,7 +1448,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const media=e.media_url?'<div class="execution-media-pair"><figure><img class="execution-media" src="'+esc(e.media_url)+'" alt="Posição inicial de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição inicial</figcaption></figure>'+(e.media_end_url&&e.media_end_url!==e.media_url?'<figure><img class="execution-media" src="'+esc(e.media_end_url)+'" alt="Posição final de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição final</figcaption></figure>':'')+'</div>':'';
   const muscleMap=renderExecutionMuscleMap(e.primary_muscles,e.secondary_muscles);
   const instructions=e.execution_instructions?'<div class="execution-feedback" style="margin:10px 0 12px"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(e.execution_instructions)+'</p></div>':'';
-  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Não realizar série</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+"<div class=\"execution-rest\" id=\"restPanel\" hidden><div class=\"execution-rest-heading\">DESCANSO</div><div class=\"execution-rest-row\"><div class=\"execution-rest-dial\" id=\"restDial\" style=\"--progress:100\"><div><strong id=\"restClock\">00:00</strong><span>Tempo restante</span></div></div></div><p id=\"nextStepText\"></p><button class=\"execution-secondary execution-skip-rest\" type=\"button\" id=\"skipRest\">Pular descanso</button></div></div>"+''+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Não realizar série</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button>';
   host.querySelectorAll('.execution-media').forEach(img=>{
    const initial=img.getAttribute('src')||img.src;
    const pathMatch=initial.match(/images\/(.+?)(?:[?#].*)?$/);
@@ -1467,57 +1478,27 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   if(set.mode&&set.mode!=='reps'){$('toggleExerciseTimer').onclick=()=>activeExerciseTimer?.running?pauseExerciseTimer():startExerciseTimer();if(activeExerciseTimer?.running){if(timer)clearInterval(timer);timer=setInterval(tickExerciseTimer,200)}tickExerciseTimer()}else activeExerciseTimer=null;
   $('skipExercise').onclick=skipCurrentExercise;
-  $('pauseRest').onclick=toggleRestPause;$('exitSession').onclick=exitSessionToHome;
+  $('exitSession').onclick=exitSessionToHome;
  }
  function restoreActiveRestUI(){
   if(!activeRest)return false;
   const rest=activeRest,panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
   if(!panel)return false;
-  panel.hidden=false;
+  rest.remaining=rest.paused?Math.max(0,Number(rest.remaining)||0):Math.max(0,Math.ceil((rest.deadline-Date.now())/1000));rest.paused=false;rest.deadline=Date.now()+rest.remaining*1000;
+  panel.hidden=false;panel.closest('.execution-screen')?.classList.add('is-resting');
   const nextText=$('nextStepText');if(nextText)nextText.textContent=rest.nextText;
   if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
-  const pauseButton=$('pauseRest');
-  if(pauseButton){
-   pauseButton.onclick=toggleRestPause;
-   if(rest.paused){pauseButton.setAttribute('aria-label','Continuar descanso');pauseButton.title='Continuar descanso';pauseButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}
-   else{pauseButton.setAttribute('aria-label','Pausar descanso');pauseButton.title='Pausar descanso';pauseButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>'}
-  }
   const skipButton=$('skipRest');if(skipButton)skipButton.onclick=()=>{if(activeRest===rest)rest.advance()};
-  if(timer)clearInterval(timer);timer=null;
-  if(rest.paused)tickRestTimer();
-  else{timer=setInterval(tickRestTimer,250);tickRestTimer()}
+  restSnapshot={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:false,nextText:rest.nextText,notified:rest.notified,itemIndex:sessionIndex};persistWorkoutState();
+  if(timer)clearInterval(timer);timer=setInterval(tickRestTimer,250);tickRestTimer();
   return true;
- }
- function adjustLoad(loadKey,delta){
-  const input=$('sessionLoad');if(!input)return;
-  const value=Number(input.value||0),next=Math.max(0,value+delta);
-  input.value=Number(next.toFixed(2));input.dataset.userEdited='true';sessionLoads[loadKey]=input.value;
- }
- async function enableWorkoutNotifications(){
-  if(!('Notification' in window)){notificationsAllowed=false;return}
-  try{if(Notification.permission==='granted')notificationsAllowed=true;else if(Notification.permission==='default')notificationsAllowed=(await Notification.requestPermission())==='granted';else notificationsAllowed=false}catch(_){notificationsAllowed=false}
- }
- function toggleRestPause(){
-  if(!activeRest)return;
-  const button=$('pauseRest');
-  if(activeRest.paused){
-   activeRest.deadline=Date.now()+activeRest.remaining*1000;activeRest.paused=false;
-   if(button){button.setAttribute('aria-label','Pausar descanso');button.title='Pausar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>'}
-   timer=setInterval(tickRestTimer,250);tickRestTimer();
-  }else{
-   activeRest.remaining=Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));activeRest.paused=true;
-   if(timer)clearInterval(timer);timer=null;
-   if(button){button.setAttribute('aria-label','Continuar descanso');button.title='Continuar descanso';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 12 7-12 7z"/></svg>'}
-   tickRestTimer();
-  }
-  if(activeRest){restSnapshot={deadline:activeRest.deadline,total:activeRest.total,remaining:activeRest.remaining,paused:activeRest.paused,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex};persistWorkoutState()}
  }
  function tickRestTimer(){
   if(!activeRest)return;
-  const remaining=activeRest.paused?activeRest.remaining:Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));
+  const remaining=Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));
   const clock=$('restClock');if(clock){const m=Math.floor(remaining/60),s=remaining%60;clock.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
   const dial=$('restDial');if(dial)dial.style.setProperty('--progress',String(Math.max(0,Math.min(100,remaining/Math.max(1,activeRest.total)*100))));
-  if(activeRest.paused||remaining>0)return;
+  if(remaining>0)return;
   const rest=activeRest;
   if(!rest.notified){
    rest.notified=true;persistWorkoutState();
@@ -1747,7 +1728,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
   if(!rest){advanceAfterSet(item);return}
   if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
-  panel.hidden=false;const deadline=Date.now()+rest*1000;
+  panel.hidden=false;panel.closest('.execution-screen')?.classList.add('is-resting');const deadline=Date.now()+rest*1000;
   const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
   const nextIdentity=sameExercise?exerciseIdentity(next.exercise.name):null,nextReps=sameExercise&&next.set.reps!=='MR'?Number(next.set.reps):null;
   const suggestedNextLoad=nextReps!==null&&Number.isFinite(nextReps)?previousLoadsByExercise[nextIdentity]?.[nextReps]:undefined;
