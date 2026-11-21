@@ -31,7 +31,7 @@ const css=`
 #strengthPage .personal-record strong{display:block;color:#b7f34a;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
 #strengthPage .personal-record small{display:block;color:#a0a99c;font-size:11px}
 @media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
-@media(max-width:420px){#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat strong{font-size:16px}}
+@media(max-width:420px){#strengthPage .evolution-panel{padding:12px}#strengthPage .evolution-panel select{min-height:44px;font-size:14px}#strengthPage .evolution-intro{font-size:12px;line-height:1.45}#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat span{font-size:10px}#strengthPage .evolution-stat strong{font-size:16px}#strengthPage .evolution-record{gap:7px;padding:10px 0}#strengthPage .evolution-record strong{font-size:12px}#strengthPage .evolution-record small{font-size:10px}#strengthPage .evolution-record b{font-size:12px}}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
 let cache=null,cachedUserId=null,renderGeneration=0;
@@ -78,10 +78,11 @@ async function load(expectedUserId,expectedClient,isCurrent){
 function chart(points,metricType){
  const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.value>old.value)bySession.set(p.sessionId,p)}
  const series=[...bySession.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));if(!series.length)return '<div class="evolution-chart-empty">Ainda não há registros para este exercício.</div>';
- const width=620,height=240,left=58,right=16,top=18,bottom=42,plotW=width-left-right,plotH=height-top-bottom,vals=series.map(x=>x.value),min=0,max=Math.max(1,...vals),range=max-min||1;
+ const width=360,height=224,left=52,right=12,top=16,bottom=40,plotW=width-left-right,plotH=height-top-bottom,vals=series.map(x=>x.value),min=0,max=Math.max(1,...vals),range=max-min||1;
  const x=i=>left+(series.length===1?plotW/2:i/(series.length-1)*plotW),y=v=>top+plotH-(v-min)/range*plotH,pts=series.map((p,i)=>({x:x(i),y:y(p.value),p}));
- const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-8)+'" y="'+(yy+4)+'" text-anchor="end">'+(metricType==='time'?formatDuration(v):Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1}))+'</text>'}).join('');
- const labels=pts.length===1?'<text x="'+pts[0].x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(pts[0].p.date)+'</text>':[pts[0],pts[Math.floor((pts.length-1)/2)],pts[pts.length-1]].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i).map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="middle">'+dateLabel(p.p.date)+'</text>').join('');
+ const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-7)+'" y="'+(yy+4)+'" text-anchor="end">'+(metricType==='time'?formatDuration(v):Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1}))+'</text>'}).join('');
+ const labelPoints=pts.length===1?[{...pts[0],anchor:'middle'}]:[{...pts[0],anchor:'start'},{...pts[Math.floor((pts.length-1)/2)],anchor:'middle'},{...pts[pts.length-1],anchor:'end'}].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i);
+ const labels=labelPoints.map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="'+p.anchor+'">'+dateLabel(p.p.date)+'</text>').join('');
  const subject=metricType==='time'?'maior duração':'maior carga';
  return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
 }
@@ -97,7 +98,7 @@ async function render(host){
   cache=loaded;
   if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre a carga ou a duração das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
-  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros de versões diferentes do mesmo programa pelo nome do exercício.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
+  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
    if(!isCurrent())return;
