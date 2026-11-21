@@ -1092,14 +1092,14 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!isCurrentEditor())return false;
   const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
   if(!isCurrentEditor())return false;
-  if(used.error)return alert('Não foi possível verificar o histórico: '+used.error.message);
-  if((used.count||0)>0)return alert('Este treino já tem sessões registradas. Para preservar o histórico, ele não pode ser excluído.');
+  if(used.error){await showWorkoutDialog({title:'Não foi possível verificar o histórico',message:used.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if((used.count||0)>0){await showWorkoutDialog({title:'Treino com histórico',message:'Este treino possui sessões registradas e não pode ser excluído. O histórico será preservado.',confirmLabel:'Entendi'});return false}
   const delExercises=await db.from('training_exercises').delete().eq('subworkout_id',item.id);
   if(!isCurrentEditor())return false;
-  if(delExercises.error)return alert('Não foi possível excluir os exercícios: '+delExercises.error.message);
+  if(delExercises.error){await showWorkoutDialog({title:'Não foi possível excluir os exercícios',message:delExercises.error.message,confirmLabel:'Entendi',danger:true});return false}
   const {error}=await db.from('training_subworkouts').delete().eq('id',item.id);
   if(!isCurrentEditor())return false;
-  if(error)return alert('Não foi possível excluir o treino: '+error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível excluir o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   await openProgram(program.id,userId,db);
  }
  function parseRestSeconds(value){
@@ -1172,11 +1172,11 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!isCurrentEditor())return false;
   const used=await db.from('training_set_logs').select('id',{count:'exact',head:true}).eq('exercise_id',id);
   if(!isCurrentEditor())return false;
-  if(used.error)return alert('Não foi possível verificar o histórico: '+used.error.message);
-  if((used.count||0)>0)return alert('Este exercício tem séries registradas. Para preservar o histórico, ele não pode ser excluído.');
+  if(used.error){await showWorkoutDialog({title:'Não foi possível verificar o histórico',message:used.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if((used.count||0)>0){await showWorkoutDialog({title:'Exercício com histórico',message:'Este exercício possui séries registradas e não pode ser excluído. O histórico será preservado.',confirmLabel:'Entendi'});return false}
   const {error}=await db.from('training_exercises').delete().eq('id',id);
   if(!isCurrentEditor())return false;
-  if(error)return alert('Não foi possível excluir o exercício: '+error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível excluir o exercício',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   await refresh();
  }
  async function requestDeletion(expectedUserId=userRef()?.id,expectedDb=dbRef(),expectedProgram=current){
