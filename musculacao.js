@@ -699,7 +699,7 @@
   version=selectedVersion;
   const sq=await db.from('training_subworkouts').select('*').eq('version_id',selectedVersion.id).order('position');
   if(!isCurrentProgram()||version?.id!==selectedVersion.id)return false;
-  if(sq.error)return alert(sq.error.message);
+  if(sq.error){await showWorkoutDialog({title:'Não foi possível carregar os treinos',message:sq.error.message,confirmLabel:'Entendi',danger:true});return false}
   subworkouts=sq.data||[];
   const isAthlete=program.athlete_id===userId;
   shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
@@ -721,7 +721,7 @@
    if(pendingCheck.data?.length){alert('Já existe uma versão aguardando confirmação. Ela será aberta para continuar a edição.');return openProgram(program.id,userId,db)}
    const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
-   if(q.error)return alert(q.error.message);
+   if(q.error){await showWorkoutDialog({title:'Não foi possível carregar os programas',message:q.error.message,confirmLabel:'Entendi',danger:true});return false}
    const next=(q.data?.[0]?.version_number||0)+1,changeNoteInput=await showWorkoutDialog({title:'Resumo da nova versão',message:'Descreva brevemente o que mudou. Essa informação ajuda o atleta a entender a atualização.',confirmLabel:'Criar versão',cancelLabel:'Cancelar',input:{type:'text',label:'Resumo das alterações',placeholder:'Ex.: Ajuste de cargas e inclusão de exercícios',maxLength:180,allowEmpty:true}});if(changeNoteInput===null)return false;const changeNote=changeNoteInput.trim()||'Atualização do programa';
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
@@ -1682,7 +1682,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const exercise=sessionExerciseRows[index];if(!exercise||!session)return;
   const sessionId=session.id,userId=userRef()?.id,db=dbRef(),isCurrent=()=>userRef()?.id===userId&&session?.id===sessionId;
   const pending=sessionPlan.filter(x=>x.exerciseIndex===index&&!hasSetLog(x.exercise.id,x.setIndex+1));
-  if(pending.some(x=>x.set.mode&&x.set.mode!=='reps'))return alert('Para registrar exercícios por tempo, inicie o cronômetro de cada série e conclua o registro ao terminar.');
+  if(pending.some(x=>x.set.mode&&x.set.mode!=='reps')){await showWorkoutDialog({title:'Registre as séries pelo cronômetro',message:'Para marcar este exercício como feito, inicie o cronômetro de cada série e registre o tempo realizado ao terminar.',confirmLabel:'Entendi'});return false}
   if(!pending.length)return renderExercisePicker();
   if(!await showWorkoutDialog({title:'Marcar como feito?',message:'As séries pendentes de “'+exercise.name+'” serão registradas usando as repetições e cargas programadas. Você poderá ajustar os valores no histórico.',confirmLabel:'Sim, marcar como feito'}))return;
   if(!isCurrent())return;
@@ -1702,7 +1702,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    for(const row of rows)skippedSetKeys.delete(row.exercise_id+':'+row.set_number);
    if(!persistWorkoutState()){
     sessionSetLogs=previousLogs;skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;
-    alert('Não foi possível guardar as séries deste exercício neste aparelho. Libere espaço no armazenamento e tente novamente. Nenhuma série foi confirmada.');return;
+    await showWorkoutDialog({title:'Não foi possível guardar as séries',message:'Libere espaço no armazenamento do aparelho e tente novamente. Nenhuma série foi confirmada.',confirmLabel:'Entendi',danger:true});return;
    }
    if(navigator.onLine&&!session.localOnly){
     for(const row of rows){
@@ -1722,7 +1722,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   for(let i=0;i<(exercise.sets||[]).length;i++)if(!hasSetLog(exercise.id,i+1))skippedSetKeys.add(exercise.id+':'+(i+1));
   if(!persistWorkoutState()){
    skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;
-   return alert('Não foi possível guardar a alteração neste aparelho. Libere espaço no armazenamento e tente novamente. O exercício permanece pendente.');
+   await showWorkoutDialog({title:'Alteração não salva',message:'Não foi possível guardar a alteração neste aparelho. Libere espaço e tente novamente. O exercício permanece pendente.',confirmLabel:'Entendi',danger:true});return false;
   }
   renderExercisePicker();
  }
@@ -1802,10 +1802,10 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   if(!db||!user||!userId||user.id!==userId||!program||!programVersion)return false;
   const isSameAccount=()=>userRef()?.id===userId;
   if(navigator.onLine){
-   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!isSameAccount())return false;if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length)return alert('Não foi possível carregar os exercícios. Abra este treino com internet antes de iniciar offline.')}catch(error){if(!isSameAccount())return false;if(!exercises?.length)return alert('Sem conexão e sem cópia offline deste treino. Abra-o com internet antes de iniciar.')}
+   try{const ex=await db.from('training_exercises').select('*').eq('subworkout_id',subId).order('position');if(!isSameAccount())return false;if(!ex.error&&ex.data?.length)exercises=ex.data;else if(!exercises?.length){await showWorkoutDialog({title:'Não foi possível carregar os exercícios',message:'Abra este treino com internet antes de iniciar offline.',confirmLabel:'Entendi',danger:true});return false}}catch(error){if(!isSameAccount())return false;if(!exercises?.length){await showWorkoutDialog({title:'Treino indisponível offline',message:'Conecte-se à internet e abra este treino antes de iniciar para salvar uma cópia neste aparelho.',confirmLabel:'Entendi'});return false}}
   }
   if(!isSameAccount())return false;
-  if(!exercises?.length)return alert('Este treino não possui exercícios disponíveis neste aparelho.');
+  if(!exercises?.length){await showWorkoutDialog({title:'Treino sem exercícios',message:'Este treino não possui exercícios disponíveis neste aparelho.',confirmLabel:'Entendi'});return false}
   await enableWorkoutNotifications();
   if(!isSameAccount())return false;
   try{if(navigator.storage?.persist)await navigator.storage.persist()}catch(_){}
@@ -1822,7 +1822,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
      return false;
     }
     if(!result.error){created=result.data;localOnly=false}
-    else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||'')))return alert('Não foi possível iniciar a sessão: '+result.error.message);
+    else if(!/failed to fetch|networkerror|load failed|fetch failed|offline|err_internet|timeout/i.test(String(result.error.message||''))){await showWorkoutDialog({title:'Não foi possível iniciar o treino',message:result.error.message,confirmLabel:'Entendi',danger:true});return false}
    }catch(error){if(!isSameAccount())return false;console.warn('Iniciando sessão local por falha de conexão',error)}
   }
   if(!isSameAccount()){
@@ -1837,7 +1837,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   if(!persistWorkoutState()){
    session=null;sessionPlan=[];sessionExerciseRows=[];
    if(created){const cleanup=await db.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',userId);if(cleanup.error&&!queueWorkoutCancellation(sessionId,userId))console.warn('Não foi possível remover a sessão que não pôde ser salva localmente',cleanup.error)}
-   return alert('Não foi possível guardar a sessão neste aparelho. Libere espaço no armazenamento e tente novamente.');
+   await showWorkoutDialog({title:'Não foi possível guardar a sessão',message:'Libere espaço no armazenamento deste aparelho e tente novamente.',confirmLabel:'Entendi',danger:true});return false;
   }
   renderExercisePicker();
  }
@@ -1915,13 +1915,13 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   renderWorkoutCompletion(summary);
  }
  window.beginStrengthActivity=async function(){
-  const db=dbRef(),u=userRef(),userId=u?.id;if(!db||!userId)return alert('Faça login para iniciar um treino.');
+  const db=dbRef(),u=userRef(),userId=u?.id;if(!db||!userId){await showWorkoutDialog({title:'Faça login',message:'Entre na sua conta para iniciar um treino.',confirmLabel:'Entendi'});return false}
   const isSameAccount=()=>userRef()?.id===userId;
   const q=await db.from('training_programs').select('*').eq('athlete_id',userId).eq('status','active').order('updated_at',{ascending:false});
   if(!isSameAccount())return false;
   if(q.error)return alert(q.error.message);
   const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
-  if(!available.length)return alert('Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar seu programa.');
+  if(!available.length){await showWorkoutDialog({title:'Nenhum programa ativo',message:'Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar seu programa.',confirmLabel:'Entendi'});return false}
   if(typeof window.go==='function')window.go('strengthPage');else{document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section))}
   const showPrograms=()=>{
    if(!isSameAccount())return;
@@ -1933,11 +1933,11 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    const program=available.find(p=>String(p.id)===String(id));if(!program)return;
    const vq=await db.from('training_program_versions').select('*').eq('id',program.current_version_id).maybeSingle();
    if(!isSameAccount())return false;
-   if(vq.error||!vq.data)return alert('Não foi possível localizar a versão vigente deste programa.');
+   if(vq.error||!vq.data){await showWorkoutDialog({title:'Versão não encontrada',message:'Não foi possível localizar a versão vigente deste programa.',confirmLabel:'Entendi',danger:true});return false}
    const sq=await db.from('training_subworkouts').select('*').eq('version_id',vq.data.id).order('position');
    if(!isSameAccount())return false;
    if(sq.error)return alert(sq.error.message);
-   if(!sq.data?.length)return alert('Este programa ainda não possui treinos. Adicione A, B, C… na aba Musculação.');
+   if(!sq.data?.length){await showWorkoutDialog({title:'Programa sem treinos',message:'Este programa ainda não possui treinos. Adicione A, B, C… na aba Musculação.',confirmLabel:'Entendi'});return false}
    current=program;version=vq.data;subworkouts=sq.data;
    shell('Qual treino você vai executar?','<div class="panel"><p class="muted">'+esc(program.title)+' · Escolha seu treino de hoje.</p>'+sq.data.map((s,i)=>'<div class="item"><strong style="font-size:18px">'+esc(normalizeHumanText(s.title))+'</strong><p class="muted">'+esc(s.description||'Treino '+(i+1))+'</p><button class="btn" data-start-selected="'+s.id+'">Começar este treino</button></div>').join('')+'<button class="btn alt" id="backPrograms">Escolher outro programa</button></div>');
    section.querySelectorAll('[data-start-selected]').forEach(button=>button.onclick=()=>startSession(button.dataset.startSelected,null,userId,db));
