@@ -675,16 +675,16 @@
   if(!db||!userId)return false;
   let permissions={can_view_history:false,can_manage_programs:false};
   if(approve){
-   permissions.can_view_history=confirm('Permitir que este profissional visualize seu histórico de treinos?');
+   permissions.can_view_history=await showWorkoutDialog({title:'Permitir acesso ao histórico?',message:'O profissional poderá visualizar seu histórico de sessões e sua evolução de treinos.',confirmLabel:'Permitir acesso',cancelLabel:'Não permitir'} )===true;
    if(!isSameAccount())return false;
-   permissions.can_manage_programs=confirm('Permitir que este profissional crie e gerencie os programas que ele próprio criar para você?');
+   permissions.can_manage_programs=await showWorkoutDialog({title:'Permitir gerenciamento de programas?',message:'O profissional poderá criar e gerenciar os programas que ele próprio criar para você. Isso não concede acesso para alterar programas de outros profissionais.',confirmLabel:'Permitir gerenciamento',cancelLabel:'Não permitir'})===true;
    if(!isSameAccount())return false;
-   if(!permissions.can_view_history&&!permissions.can_manage_programs&&!confirm('Nenhuma permissão foi concedida. Deseja aprovar mesmo assim?'))return;
+   if(!permissions.can_view_history&&!permissions.can_manage_programs&&await showWorkoutDialog({title:'Aprovar sem permissões?',message:'Nenhuma permissão foi concedida. O vínculo será aprovado, mas o profissional não poderá visualizar seu histórico nem gerenciar programas.',confirmLabel:'Aprovar mesmo assim',cancelLabel:'Voltar'})!==true)return;
   }
   if(!isSameAccount())return false;
   const {error}=await db.from('athlete_professional_access').update({...permissions,status:approve?'active':'revoked',decided_at:new Date().toISOString()}).eq('id',id).eq('athlete_id',userId);
   if(!isSameAccount())return false;
-  if(error)return alert(error.message);await home();
+  if(error){await showWorkoutDialog({title:'Não foi possível atualizar as permissões',message:error.message,confirmLabel:'Entendi',danger:true});return false}await home();
  }
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
@@ -722,7 +722,7 @@
    const q=await db.from('training_program_versions').select('version_number').eq('program_id',program.id).order('version_number',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(q.error)return alert(q.error.message);
-   const next=(q.data?.[0]?.version_number||0)+1,changeNote=prompt('Resumo das alterações desta versão:')||'Atualização do programa';
+   const next=(q.data?.[0]?.version_number||0)+1,changeNoteInput=await showWorkoutDialog({title:'Resumo da nova versão',message:'Descreva brevemente o que mudou. Essa informação ajuda o atleta a entender a atualização.',confirmLabel:'Criar versão',cancelLabel:'Cancelar',input:{type:'text',label:'Resumo das alterações',placeholder:'Ex.: Ajuste de cargas e inclusão de exercícios',maxLength:180,allowEmpty:true}});if(changeNoteInput===null)return false;const changeNote=changeNoteInput.trim()||'Atualização do programa';
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_program_versions').insert({program_id:program.id,version_number:next,created_by:userId,change_note:changeNote}).select().single();
    if(error){
