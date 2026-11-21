@@ -767,7 +767,7 @@
     if(await abortStaleVersion())return false;
     if(oldExercises.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldExercises.error.message)}
     if(oldExercises.data?.length){
-     const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,identity_id:e.identity_id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url,media_end_url:e.media_end_url,execution_instructions:e.execution_instructions,primary_muscles:e.primary_muscles,secondary_muscles:e.secondary_muscles}));
+     const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,identity_id:e.identity_id,catalog_exercise_id:e.catalog_exercise_id||null,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url,media_end_url:e.media_end_url,execution_instructions:e.execution_instructions,primary_muscles:e.primary_muscles,secondary_muscles:e.secondary_muscles}));
      const {error:exErr}=await db.from('training_exercises').insert(copied);
      if(await abortStaleVersion())return false;
      if(exErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+exErr.message)}
