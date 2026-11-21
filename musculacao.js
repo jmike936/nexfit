@@ -203,6 +203,18 @@
   #strengthPage .execution-actions{grid-template-columns:1fr 1fr}
 }
  `;
+ css+=`
+ body.workout-exercise-active .nav{display:none!important}
+ body.workout-exercise-active .app{padding-bottom:calc(18px + env(safe-area-inset-bottom))!important}
+ body.workout-exercise-active .page.active{padding-bottom:calc(18px + env(safe-area-inset-bottom))!important}
+ @media(max-width:760px){
+  body.workout-exercise-active .nav{display:none!important}
+  body.workout-exercise-active .app{padding-bottom:calc(16px + env(safe-area-inset-bottom))!important}
+  body.workout-exercise-active .page.active{padding-bottom:calc(22px + env(safe-area-inset-bottom))!important}
+  #strengthPage .execution-muscle-map details[open] .muscle-map-svg{max-height:none;height:auto;max-width:100%}
+  #strengthPage .execution-muscle-map details[open]{padding-bottom:8px}
+ }
+`;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
  const nav=document.querySelector('.nav');if(!nav){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Navegação principal não encontrada.';console.error('[NEXFIT] Módulo de musculação: navegação principal não encontrada.');return;}
  const tab=nav.querySelector('[data-page="strengthPage"]');if(!tab){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Botão Treinos não encontrado na navegação.';console.error('[NEXFIT] Módulo de musculação: botão Treinos não encontrado.');return;}
@@ -1414,7 +1426,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   return '<section class="execution-muscle-map"><h3>Grupos musculares</h3><p>Veja quais músculos recebem maior estímulo neste exercício.</p><div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><details><summary>Ver mapa ilustrativo do corpo</summary><svg class="muscle-map-svg" viewBox="0 0 320 190" role="img" aria-label="Mapa muscular frontal e posterior">'+body+'<g>'+muscleShapes+'</g><g fill="#a0a99c" font-size="9" text-anchor="middle"><text x="85" y="189">Frente</text><text x="248" y="189">Costas</text></g></svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div></details></section>';
  }
   function renderSessionStep(){
-  sessionView='exercise';
+  sessionView='exercise';document.body.classList.add('workout-exercise-active');
   const host=$('sessionExercises');if(!host)return;
   if(sessionIndex>=sessionPlan.length){renderExercisePicker();return}
   const item=sessionPlan[sessionIndex],e=item.exercise,set=item.set,setNo=item.setIndex+1,total=(e.sets||[]).length;
@@ -1579,6 +1591,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  }
  function renderExercisePicker(){
   if(!session)return;
+  document.body.classList.remove('workout-exercise-active');
   sessionView='picker';
   const sub=subworkouts.find(s=>s.id===session.subworkout_id);
   let cards=sessionExerciseRows.map((e,index)=>{
