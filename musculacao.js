@@ -1869,5 +1869,5 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
  };
  window.__nexfitStrengthLoaded=true;window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=null;
  home().catch(error=>{window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha ao abrir a tela inicial de musculação:',error)});
-} }catch(error){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha na inicialização do módulo de musculação:',error)}
+}catch(error){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha na inicialização do módulo de musculação:',error)}
 })();
