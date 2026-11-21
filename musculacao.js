@@ -237,7 +237,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,finishingSession=false,finishingSessionOwner=null,workoutSyncPromises=new Map();
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,skippingExercise=false,finishingSession=false,finishingSessionOwner=null,workoutSyncPromises=new Map();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -1294,7 +1294,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   restoreGeneration++;restoreAttempted=false;restoreUserId=null;restorePromise=null;
   if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;
   session=null;sessionPlan=[];sessionIndex=0;sessionExerciseRows=[];sessionLoads={};sessionSetLogs=[];
-  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;finishingSession=false;finishingSessionOwner=null;
+  skippedSetKeys.clear();skippedExerciseIndices.clear();current=null;version=null;subworkouts=[];editorSubworkoutId=null;previousLoadsByExercise={};savingSet=false;savingSetOwner=null;skippingExercise=false;finishingSession=false;finishingSessionOwner=null;
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
@@ -1572,12 +1572,33 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   setExecutionFeedback('Série marcada como não realizada.','success');advanceAfterSet(item);
  }
  async function skipCurrentExercise(){
-  if(!session)return;
-  const item=sessionPlan[sessionIndex];if(!item)return;
-  if(!await showWorkoutDialog({title:'Pular exercício?',message:'O exercício “'+item.exercise.name+'” será marcado como não realizado e você voltará à lista para escolher outro.',confirmLabel:'Sim, pular exercício',danger:true}))return;
-  skippedExerciseIndices.add(item.exerciseIndex);
-  for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
-  persistWorkoutState();renderExercisePicker();
+  if(savingSet){setExecutionFeedback('Aguarde o registro da série terminar antes de pular o exercício.');return}
+  if(skippingExercise||!session)return;
+  const sessionId=session.id,userId=userRef()?.id,item=sessionPlan[sessionIndex];
+  if(!item)return;
+  const isCurrent=()=>userRef()?.id===userId&&session?.id===sessionId;
+  skippingExercise=true;
+  try{
+   const confirmed=await showWorkoutDialog({title:'Pular exercício?',message:'O exercício “'+item.exercise.name+'” será marcado como não realizado e você voltará à lista para escolher outro.',confirmLabel:'Sim, pular exercício',danger:true});
+   if(!confirmed||!isCurrent())return;
+   if(savingSet){setExecutionFeedback('Aguarde o registro da série terminar antes de pular o exercício.');return}
+   const previousSkippedKeys=new Set(skippedSetKeys),previousSkippedExercises=new Set(skippedExerciseIndices),previousTimer=activeExerciseTimer?{...activeExerciseTimer}:null,previousView=sessionView;
+   skippedExerciseIndices.add(item.exerciseIndex);
+   for(const planItem of sessionPlan.filter(x=>x.exerciseIndex===item.exerciseIndex&&!hasSetLog(x.exercise.id,x.setIndex+1)))skippedSetKeys.add(planItem.exercise.id+':'+(planItem.setIndex+1));
+   // Encerrar o cronômetro da série pulada para que ele não continue ativo na lista
+   // nem seja reaproveitado acidentalmente pelo próximo exercício.
+   if(timer)clearInterval(timer);timer=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
+   if(activeRest){activeRest=null;restSnapshot=null}
+   sessionView='picker';
+   if(!persistWorkoutState()){
+    skippedSetKeys=previousSkippedKeys;skippedExerciseIndices=previousSkippedExercises;activeExerciseTimer=previousTimer;sessionView=previousView;
+    if(activeExerciseTimer?.running)timer=setInterval(tickExerciseTimer,200);
+    setExecutionFeedback('Não foi possível salvar a alteração neste aparelho. Libere espaço e tente novamente.','error');
+    return;
+   }
+   if(!isCurrent())return;
+   renderExercisePicker();
+  }finally{skippingExercise=false}
  }
  function hasSetLog(exerciseId,setNumber){
   return sessionSetLogs.some(x=>x.exercise_id===exerciseId&&Number(x.set_number)===Number(setNumber));
