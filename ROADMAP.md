@@ -34,6 +34,7 @@ Atualizado em 21/11/2026.
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [ ] Revisar transições entre séries, exercícios e descansos.
+- [ ] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
 - [ ] Substituir mensagens e confirmações nativas por telas amigáveis e consistentes, começando pela tela de conclusão do treino (resumo, status de sincronização e próximos passos).
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
