@@ -89,12 +89,12 @@
  #strengthPage .execution-muscle-summary .secondary strong{color:#e5b34e}
  #strengthPage .execution-muscle-map details{margin-top:9px;border-top:1px solid #29372b;padding-top:8px}
  #strengthPage .execution-muscle-map summary{color:#c8d2c4;font-size:12px;cursor:pointer}
- #strengthPage .muscle-map-svg{display:block;width:100%;max-height:175px;margin-top:8px}
- #strengthPage .muscle-map-svg .body-base{fill:#59645b;stroke:#89948a;stroke-width:1.2}
- #strengthPage .muscle-map-svg .muscle-region{fill:#313c32;stroke:#687568;stroke-width:.8;opacity:.95}
- #strengthPage .muscle-map-svg .muscle-region.primary{fill:#b7f34a;stroke:#d5ff8b}
- #strengthPage .muscle-map-svg .muscle-region.secondary{fill:#e5a83b;stroke:#ffd27d}
- #strengthPage .muscle-map-legend{display:flex;gap:12px;flex-wrap:wrap;color:#a0a99c;font-size:11px}
+ #strengthPage .muscle-map-svg{display:block;width:100%;max-height:260px;margin:10px auto 4px;object-fit:contain}
+ #strengthPage .muscle-map-svg .body-base{fill:#59645b;stroke:#89948a;stroke-width:1.25;stroke-linejoin:round}
+ #strengthPage .muscle-map-svg .muscle-region{fill:#313c32;stroke:#687568;stroke-width:1;stroke-linejoin:round;opacity:.98}
+ #strengthPage .muscle-map-svg .muscle-region.primary{fill:#b7f34a;stroke:#e0ff9e}
+ #strengthPage .muscle-map-svg .muscle-region.secondary{fill:#e5a83b;stroke:#ffda88}
+ #strengthPage .muscle-map-svg .body-labels{fill:#a0a99c;font-size:10px;text-anchor:middle}\n #strengthPage .muscle-map-legend{display:flex;gap:12px;flex-wrap:wrap;color:#a0a99c;font-size:12px}
  #strengthPage .muscle-map-legend span{display:inline-flex;align-items:center;gap:5px}
  #strengthPage .muscle-map-legend i{width:9px;height:9px;border-radius:50%;background:#b7f34a}
  #strengthPage .muscle-map-legend span+span i{background:#e5a83b}
@@ -1375,7 +1375,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  function renderExecutionMuscleMap(primary=[],secondary=[]){
   primary=Array.isArray(primary)?primary:[];secondary=Array.isArray(secondary)?secondary:[];
   const keyFor=value=>{
-   const key=String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+   const key=String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
    if(/peitoral|chest/.test(key))return 'chest';
    if(/ombro|deltoid|shoulder/.test(key))return 'shoulders';
    if(/triceps/.test(key))return 'triceps';
@@ -1395,36 +1395,35 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(/pescoco|neck/.test(key))return 'neck';
    return null;
   };
-  const p=new Set((Array.isArray(primary)?primary:[]).map(keyFor).filter(Boolean));
-  const s=new Set((Array.isArray(secondary)?secondary:[]).map(keyFor).filter(k=>k&&!p.has(k)));
+  const p=new Set(primary.map(keyFor).filter(Boolean));
+  const s=new Set(secondary.map(keyFor).filter(k=>k&&!p.has(k)));
   if(!p.size&&!s.size)return '';
   const cls=k=>'muscle-region '+(p.has(k)?'primary':s.has(k)?'secondary':'');
-  const shapes=[
-   ['chest','<ellipse cx="75" cy="62" rx="11" ry="8"/><ellipse cx="95" cy="62" rx="11" ry="8"/>'],
-   ['shoulders','<circle cx="54" cy="43" r="8"/><circle cx="116" cy="43" r="8"/>'],
-   ['biceps','<ellipse cx="50" cy="67" rx="5" ry="12"/><ellipse cx="120" cy="67" rx="5" ry="12"/>'],
-   ['triceps','<ellipse cx="218" cy="70" rx="5" ry="12"/><ellipse cx="278" cy="70" rx="5" ry="12"/>'],
-   ['forearms','<path d="M45 82 Q40 94 42 105 L49 107 Q52 95 53 83Z"/><path d="M125 82 Q130 94 128 105 L121 107 Q118 95 117 83Z"/>'],
-   ['core','<rect x="74" y="73" width="22" height="31" rx="8"/>'],
-   ['obliques','<path d="M68 73 Q62 84 68 101 L74 99 L74 76Z"/><path d="M102 73 Q108 84 102 101 L96 99 L96 76Z"/>'],
-   ['quads','<path d="M70 108 Q65 119 68 143 L78 144 L81 111Z"/><path d="M90 111 L93 144 L103 143 Q106 119 101 108Z"/>'],
-   ['calves','<path d="M69 148 Q65 160 70 176 L78 176 L80 148Z"/><path d="M90 148 L92 176 L100 176 Q105 160 101 148Z"/>'],
-   ['lats','<path d="M231 55 Q218 62 224 91 L239 101 L246 63Z"/><path d="M249 63 L256 101 L271 91 Q277 62 264 55Z"/>'],
-   ['back','<path d="M239 48 L249 48 L253 76 L235 76Z"/>'],
-   ['traps','<path d="M237 39 L249 39 L260 57 L249 63 L226 57Z"/>'],
-   ['lower_back','<rect x="239" y="77" width="10" height="22" rx="4"/>'],
-   ['glutes','<ellipse cx="239" cy="105" rx="9" ry="8"/><ellipse cx="257" cy="105" rx="9" ry="8"/>'],
-   ['hamstrings','<path d="M235 114 Q230 127 234 145 L244 145 L248 115Z"/><path d="M250 115 L254 145 L264 145 Q268 127 263 114Z"/>'],
-   ['tibialis','<path d="M234 148 L243 148 L241 176 L234 176Z"/><path d="M255 148 L264 148 L264 176 L257 176Z"/>'],
-   ['neck','<rect x="76" y="25" width="18" height="13" rx="5"/><rect x="239" y="25" width="18" height="13" rx="5"/>']
-  ];
-  const region=key=>shapes.filter(x=>x[0]===key).map(x=>x[1].replace(/<(ellipse|circle|rect|path)/g,'<$1 class="'+cls(key)+'"')).join('');
-  const labels=[...primary.map(x=>({name:x,role:'primary'})),...secondary.filter(x=>!primary.includes(x)).map(x=>({name:x,role:'secondary'}))];
-  const body='<g class="body-base"><circle cx="85" cy="16" r="10"/><rect x="76" y="26" width="18" height="12" rx="5"/><path d="M67 39 Q58 41 56 51 L63 99 Q70 106 85 106 Q100 106 107 99 L114 51 Q112 41 103 39Z"/><path d="M57 46 Q48 45 45 58 L36 99 Q35 106 42 108 Q49 109 51 101 L65 58Z"/><path d="M113 46 Q122 45 125 58 L134 99 Q135 106 128 108 Q121 109 119 101 L105 58Z"/><path d="M68 103 L81 105 L78 151 L72 183 L62 183 L64 149Z"/><path d="M89 105 L102 103 L106 149 L108 183 L98 183 L92 151Z"/><circle cx="248" cy="16" r="10"/><rect x="239" y="26" width="18" height="12" rx="5"/><path d="M230 39 Q221 41 219 51 L226 99 Q233 106 248 106 Q263 106 270 99 L277 51 Q275 41 266 39Z"/><path d="M220 46 Q211 45 208 58 L199 99 Q198 106 205 108 Q212 109 214 101 L228 58Z"/><path d="M276 46 Q285 45 288 58 L297 99 Q298 106 291 108 Q284 109 282 101 L268 58Z"/><path d="M231 103 L244 105 L241 151 L235 183 L225 183 L227 149Z"/><path d="M252 105 L265 103 L269 149 L271 183 L261 183 L255 151Z"/></g>';
-  const muscleShapes=['chest','shoulders','biceps','triceps','forearms','core','obliques','quads','calves','lats','back','traps','lower_back','glutes','hamstrings','tibialis','neck'].map(region).join('');
+  const shapes={
+   chest:'<path d="M78 61 Q88 55 96 62 Q104 55 114 61 L111 76 Q103 81 96 75 Q89 81 81 76Z"/>',
+   shoulders:'<path d="M66 48 Q56 49 57 61 Q60 69 70 66 L78 56Z"/><path d="M118 48 Q128 49 127 61 Q124 69 114 66 L106 56Z"/>',
+   biceps:'<path d="M59 68 Q55 77 58 89 L66 91 L70 72Z"/><path d="M133 68 Q137 77 134 89 L126 91 L122 72Z"/>',
+   triceps:'<path d="M226 68 Q222 78 225 91 L233 92 L237 72Z"/><path d="M300 68 Q304 78 301 91 L293 92 L289 72Z"/>',
+   forearms:'<path d="M54 93 L61 95 L55 121 Q52 126 47 123Z"/><path d="M138 93 L131 95 L137 121 Q140 126 145 123Z"/><path d="M221 93 L228 95 L222 121 Q219 126 214 123Z"/><path d="M305 93 L298 95 L304 121 Q307 126 312 123Z"/>',
+   core:'<path d="M84 80 Q96 76 108 80 L108 105 Q96 111 84 105Z"/>',
+   obliques:'<path d="M75 78 L84 81 L83 105 L76 101Z"/><path d="M117 78 L108 81 L109 105 L116 101Z"/>',
+   quads:'<path d="M78 120 Q73 132 76 158 L88 160 L92 123Z"/><path d="M100 123 L104 160 L116 158 Q119 132 114 120Z"/>',
+   calves:'<path d="M77 164 L89 164 L86 195 L77 195Z"/><path d="M103 164 L115 164 L115 195 L106 195Z"/>',
+   lats:'<path d="M244 57 Q231 62 235 91 L250 106 L258 66Z"/><path d="M272 57 Q285 62 281 91 L266 106 L258 66Z"/>',
+   back:'<path d="M250 54 L266 54 L272 83 L258 91 L244 83Z"/>',
+   traps:'<path d="M252 42 L264 42 L279 62 L258 69 L237 62Z"/>',
+   lower_back:'<path d="M250 92 L266 92 L267 111 L249 111Z"/>',
+   glutes:'<path d="M247 113 Q258 108 269 113 L268 127 Q258 133 248 127Z"/>',
+   hamstrings:'<path d="M247 131 L258 132 L256 160 L245 160Z"/><path d="M260 132 L271 131 L273 160 L262 160Z"/>',
+   tibialis:'<path d="M246 165 L256 165 L253 195 L245 195Z"/><path d="M263 165 L273 165 L274 195 L266 195Z"/>',
+   neck:'<rect x="88" y="31" width="16" height="13" rx="5"/><rect x="250" y="31" width="16" height="13" rx="5"/>'
+  };
+  const regions=Object.entries(shapes).map(([key,shape])=>'<g class="'+cls(key)+'">'+shape+'</g>').join('');
+  const base='<g class="body-base"><circle cx="96" cy="18" r="11"/><rect x="88" y="29" width="16" height="14" rx="5"/><path d="M77 44 Q66 44 62 55 L67 108 Q77 117 96 117 Q115 117 125 108 L130 55 Q126 44 115 44Z"/><path d="M64 50 Q55 48 51 62 L43 115 Q42 124 49 126 Q56 127 59 119 L74 63Z"/><path d="M128 50 Q137 48 141 62 L149 115 Q150 124 143 126 Q136 127 133 119 L118 63Z"/><path d="M78 112 L93 116 L89 160 L84 198 L73 198 L74 158Z"/><path d="M99 116 L114 112 L118 158 L119 198 L108 198 L103 160Z"/><circle cx="258" cy="18" r="11"/><rect x="250" y="29" width="16" height="14" rx="5"/><path d="M239 44 Q228 44 224 55 L229 108 Q239 117 258 117 Q277 117 287 108 L292 55 Q288 44 277 44Z"/><path d="M226 50 Q217 48 213 62 L205 115 Q204 124 211 126 Q218 127 221 119 L236 63Z"/><path d="M290 50 Q299 48 303 62 L311 115 Q312 124 305 126 Q298 127 295 119 L280 63Z"/><path d="M240 112 L255 116 L251 160 L246 198 L235 198 L236 158Z"/><path d="M261 116 L276 112 L280 158 L281 198 L270 198 L265 160Z"/></g>';
+  const labels='<g class="body-labels"><text x="96" y="216">Frente</text><text x="258" y="216">Costas</text></g>';
   const primaryNames=primary.length?primary.join(' · '):'—';
   const secondaryNames=secondary.length?secondary.join(' · '):'—';
-  return '<section class="execution-muscle-map"><h3>Grupos musculares</h3><p>Veja quais músculos recebem maior estímulo neste exercício.</p><div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><details><summary>Ver mapa ilustrativo do corpo</summary><svg class="muscle-map-svg" viewBox="0 0 320 190" role="img" aria-label="Mapa muscular frontal e posterior">'+body+'<g>'+muscleShapes+'</g><g fill="#a0a99c" font-size="9" text-anchor="middle"><text x="85" y="189">Frente</text><text x="248" y="189">Costas</text></g></svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div></details></section>';
+  return '<section class="execution-muscle-map"><h3>Grupos musculares</h3><p>Veja quais músculos recebem maior estímulo neste exercício.</p><div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><details><summary>Ver mapa ilustrativo do corpo</summary><svg class="muscle-map-svg" viewBox="0 0 354 224" role="img" aria-label="Mapa ilustrativo dos músculos trabalhados, com vista frontal e posterior">'+base+'<g>'+regions+'</g>'+labels+'</svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div></details></section>';
  }
   function renderSessionStep(){
   sessionView='exercise';
