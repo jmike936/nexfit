@@ -385,12 +385,12 @@
  async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const isSameAccount=()=>userRef()?.id===expectedUserId;
   if(!expectedUserId||!expectedDb||!isSameAccount())return false;
-  if(!confirm('Adicionar uma cópia independente deste programa ao seu perfil? A cópia poderá ser editada sem alterar o programa público original.'))return;
+  if(await showWorkoutDialog({title:'Adicionar cópia?',message:'Será criada uma cópia independente deste programa no seu perfil. Você poderá editá-la sem alterar o programa público original.',confirmLabel:'Adicionar cópia',cancelLabel:'Cancelar'})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await expectedDb.rpc('nexfit_copy_public_program',{p_program:id});
   if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message))return alert('A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.');return alert(message)}
-  activeTrainingTab='mine';alert('Cópia adicionada ao seu perfil. Você pode editá-la em Gerenciar Programas de Treino.');await home();
+  if(error){const message=error.message||String(error);await showWorkoutDialog({title:'Não foi possível copiar o programa',message:/nexfit_copy_public_program|function.*exist|schema cache|42883/i.test(message)?'A função de cópia ainda não está instalada no Supabase. Execute supabase-public-program-models.sql no SQL Editor.':message,confirmLabel:'Entendi',danger:true});return false}
+  activeTrainingTab='mine';await showWorkoutDialog({title:'Cópia adicionada',message:'O programa foi copiado para seu perfil. Você poderá editá-lo em Gerenciar Programas de Treino.',confirmLabel:'Continuar'});await home();
  }
 
  async function startOfflineWorkout(workoutId,expectedUserId=userRef()?.id){
@@ -502,11 +502,11 @@
   const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
   if(!db||!expectedUserId||!isSameAccount())return false;
   const makePublic=!p.is_public;
-  if(makePublic&&!confirm('Este programa ficará visível no menu Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original. Tornar público?'))return;
+  if(makePublic&&await showWorkoutDialog({title:'Tornar programa público?',message:'Este programa ficará visível em Treinos > Modelos para que outros usuários possam copiá-lo. Cada cópia será independente e não alterará o original.',confirmLabel:'Tornar público',cancelLabel:'Manter privado'})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await db.from('training_programs').update({is_public:makePublic}).eq('id',p.id);
   if(!isSameAccount())return false;
-  if(error){const message=error.message||String(error);if(/is_public|row.level security|42501/i.test(message))return alert('Não foi possível alterar a visibilidade. Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.');return alert(message)}
+  if(error){const message=error.message||String(error);await showWorkoutDialog({title:'Não foi possível alterar a visibilidade',message:/is_public|row.level security|42501/i.test(message)?'Confirme que supabase-public-program-models.sql foi executado no Supabase e que você pode gerenciar este programa.':message,confirmLabel:'Entendi',danger:true});return false}
   await home();
  }
  function renderProgramManagement(){
@@ -790,11 +790,11 @@
    const programVersion=version;
    if(!programVersion||programVersion.status!=='pending')return alert('Prepare uma nova versão antes de adicionar treinos.');
    const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
-   const title=normalizeHumanText(prompt('Nome do treino (ex.: A — Peito e tríceps):'));if(!title)return;
+   const titleValue=await showWorkoutDialog({title:'Adicionar treino',message:'Informe o nome do novo treino nesta versão do programa.',confirmLabel:'Adicionar treino',cancelLabel:'Cancelar',input:{type:'text',label:'Nome do treino',placeholder:'Ex.: A — Peito e tríceps',maxLength:100}});if(titleValue===null)return;const title=normalizeHumanText(titleValue);if(!title)return;
    if(!isCurrentEditor())return false;
    const {data,error}=await db.from('training_subworkouts').insert({version_id:programVersion.id,title,position:subworkouts.length+1}).select().single();
    if(!isCurrentEditor())return false;
-   if(error)return alert(error.message);
+   if(error){await showWorkoutDialog({title:'Não foi possível adicionar o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await openWorkoutEditor(data.id,userId,db);
   });
  }
@@ -1050,11 +1050,11 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
   const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
   if(!db||!expectedUserId||!isSameAccount())return false;
-  if(!confirm('Excluir este programa da lista de treinos? Ele será arquivado para preservar o histórico das sessões.'))return;
+  if(await showWorkoutDialog({title:'Arquivar programa?',message:'O programa sairá da lista de treinos ativos, mas será arquivado para preservar o histórico das sessões.',confirmLabel:'Arquivar programa',cancelLabel:'Manter programa',danger:true})!==true)return;
   if(!isSameAccount())return false;
   const {error}=await db.from('training_programs').update({status:'archived'}).eq('id',p.id);
   if(!isSameAccount())return false;
-  if(error)return alert('Não foi possível excluir o programa: '+error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível arquivar o programa',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   if(current?.id===p.id){current=null;version=null;subworkouts=[];editorSubworkoutId=null}
   await home();
  }
@@ -1845,11 +1845,12 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   return new Promise(resolve=>{
    const old=$('workoutActionDialog');if(old)old.remove();
    const overlay=document.createElement('div');overlay.id='workoutActionDialog';overlay.className='workout-dialog-backdrop';
-   overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input" type="number" min="'+input.min+'" step="'+input.step+'" placeholder="'+esc(input.placeholder)+'" inputmode="numeric">':'')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
+   const inputType=input?.type==='text'?'text':'number',inputAttrs=input?(' type="'+inputType+'"'+(inputType==='number'?' min="'+esc(input.min??'')+'" step="'+esc(input.step??'any')+'" inputmode="decimal"':' maxlength="'+esc(input.maxLength??160)+'" autocomplete="off"')+' placeholder="'+esc(input.placeholder||'')+'" value="'+esc(input.value??'')+'"'):'';
+   overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input"'+inputAttrs+' required>' : '')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
    section.append(overlay);
    const finish=value=>{overlay.remove();resolve(value)};
    overlay.querySelector('.workout-dialog-cancel').onclick=()=>finish(null);
-   overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min)){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}finish(value)};
+   overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(inputType==='number'&&(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min))){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}if(inputType==='text'&&!value&&!input.allowEmpty){field.setCustomValidity('Preencha este campo.');field.reportValidity();return}finish(value)};
    overlay.addEventListener('click',event=>{if(event.target===overlay)finish(null)});
    overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();finish(null)}if(event.key==='Enter'&&event.target.tagName==='INPUT'){event.preventDefault();overlay.querySelector('.workout-dialog-confirm').click()}};
    const field=overlay.querySelector('#workoutDialogInput');(field||overlay.querySelector('.workout-dialog-confirm')).focus();
