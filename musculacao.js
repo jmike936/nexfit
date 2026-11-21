@@ -1375,7 +1375,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  function renderExecutionMuscleMap(primary=[],secondary=[]){
   primary=Array.isArray(primary)?primary:[];secondary=Array.isArray(secondary)?secondary:[];
   const keyFor=value=>{
-   const key=String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+   const key=String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
    if(/peitoral|chest/.test(key))return 'chest';
    if(/ombro|deltoid|shoulder/.test(key))return 'shoulders';
    if(/triceps/.test(key))return 'triceps';
