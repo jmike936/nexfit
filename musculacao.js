@@ -527,12 +527,12 @@
   if(userRef()?.id!==userId||current?.id!==programId||!version)return false;
   if(version.status==='pending')return true;
   if(version.status!=='active'){
-   alert('Não é possível editar um programa sem uma versão vigente.');
+   await showWorkoutDialog({title:'Programa sem versão vigente',message:'Não é possível editar este programa porque ele não possui uma versão ativa.',confirmLabel:'Entendi',danger:true});
    return false;
   }
   await newVersion();
   if(userRef()?.id!==userId||current?.id!==programId||version?.status!=='pending'){
-   alert('Não foi possível preparar uma nova versão para a alteração. Nenhuma alteração foi aplicada.');
+   await showWorkoutDialog({title:'Não foi possível preparar a edição',message:'A nova versão não foi preparada. Nenhuma alteração foi aplicada ao programa vigente.',confirmLabel:'Entendi',danger:true});
    return false;
   }
   return true;
@@ -542,7 +542,7 @@
   if(!ready)return false;
   const workout=subworkouts.find(item=>String(item.identity_id||'')===String(identityId||''));
   if(!workout){
-   alert('Não foi possível localizar este treino na nova versão. Reabra o gerenciamento e tente novamente.');
+   await showWorkoutDialog({title:'Treino não encontrado',message:'Não foi possível localizar este treino na nova versão. Reabra o gerenciamento e tente novamente.',confirmLabel:'Entendi',danger:true});
    return false;
   }
   if(action==='delete')return deleteSubworkout(workout.id);
@@ -553,15 +553,15 @@
   const ready=await ensurePendingProgramVersion(programId,userId,db);
   if(!ready)return false;
   const workout=subworkouts.find(item=>String(item.identity_id||'')===String(subworkoutIdentity||''));
-  if(!workout){alert('Não foi possível localizar o treino na nova versão.');return false}
+  if(!workout){await showWorkoutDialog({title:'Treino não encontrado',message:'Não foi possível localizar o treino na nova versão.',confirmLabel:'Entendi',danger:true});return false}
   await openWorkoutEditor(workout.id,userId,db);
   if(userRef()?.id!==userId||current?.id!==programId||editorSubworkoutId!==workout.id)return false;
   if(action==='add')return addExercise(workout.id);
   const rows=await db.from('training_exercises').select('id,identity_id').eq('subworkout_id',workout.id);
   if(userRef()?.id!==userId||current?.id!==programId||editorSubworkoutId!==workout.id)return false;
-  if(rows.error){alert('Não foi possível localizar o exercício na nova versão: '+rows.error.message);return false}
+  if(rows.error){await showWorkoutDialog({title:'Não foi possível localizar o exercício',message:rows.error.message,confirmLabel:'Entendi',danger:true});return false}
   const exercise=(rows.data||[]).find(item=>String(item.identity_id||'')===String(exerciseIdentity||''));
-  if(!exercise){alert('O exercício não foi encontrado na nova versão.');return false}
+  if(!exercise){await showWorkoutDialog({title:'Exercício não encontrado',message:'O exercício não foi encontrado na nova versão.',confirmLabel:'Entendi',danger:true});return false}
   if(action==='delete')return deleteExercise(exercise.id);
   return editExercise(exercise.id);
  }
@@ -599,23 +599,23 @@
   const button=$('createWorkout');if(button)button.disabled=true;
   try{
    const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-   if(!db||!userId)return alert('Faça login para criar um treino.');
+   if(!db||!userId){await showWorkoutDialog({title:'Faça login',message:'Entre na sua conta para criar um treino.',confirmLabel:'Entendi'});return false}
    const selectedProgramId=String($('workoutProgram').value||'');
    const program=plans.find(p=>String(p.id)===selectedProgramId&&p.status==='active'&&canManageProgramLocally(p));
    const title=normalizeHumanText($('workoutTitle').value),description=normalizeHumanText($('workoutDescription').value)||null;
-   if(!program)return alert('Selecione um programa vigente.');
-   if(!title)return alert('Informe o nome do treino.');
+   if(!program){await showWorkoutDialog({title:'Selecione um programa',message:'Escolha um programa vigente antes de criar o treino.',confirmLabel:'Entendi'});return false}
+   if(!title){await showWorkoutDialog({title:'Nome do treino',message:'Informe o nome do treino para continuar.',confirmLabel:'Entendi'});return false}
    const isCurrentForm=()=>isSameAccount()&&String($('workoutProgram').value||'')===selectedProgramId&&plans.some(p=>String(p.id)===selectedProgramId&&p.status==='active'&&p.current_version_id===program.current_version_id&&canManageProgramLocally(p));
    const ready=await ensurePendingProgramVersion(selectedProgramId,userId,db);
    if(!isCurrentForm()||!ready)return false;
    const versionRow=version;
-   if(!versionRow?.id||versionRow.status!=='pending')return alert('Não foi possível preparar uma nova versão para adicionar o treino.');
+   if(!versionRow?.id||versionRow.status!=='pending'){await showWorkoutDialog({title:'Não foi possível preparar o treino',message:'A nova versão do programa não está pronta para receber alterações.',confirmLabel:'Entendi',danger:true});return false}
    const {data:existing,error:existingError}=await db.from('training_subworkouts').select('position').eq('version_id',versionRow.id).order('position',{ascending:false}).limit(1);
    if(!isCurrentForm())return false;
-   if(existingError)return alert('Não foi possível preparar o treino: '+existingError.message);
+   if(existingError){await showWorkoutDialog({title:'Não foi possível preparar o treino',message:existingError.message,confirmLabel:'Entendi',danger:true});return false}
    const {data,error}=await db.from('training_subworkouts').insert({version_id:versionRow.id,title,description,position:(existing?.[0]?.position||0)+1}).select().single();
    if(!isCurrentForm())return false;
-   if(error)return alert('Não foi possível criar o treino: '+error.message);
+   if(error){await showWorkoutDialog({title:'Não foi possível criar o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    $('workoutTitle').value='';$('workoutDescription').value='';
    current=program;
    await openWorkoutEditor(data.id,userId,db);
