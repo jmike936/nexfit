@@ -704,7 +704,7 @@
   const isAthlete=program.athlete_id===userId;
   shell(program.title,`<div class="panel"><p class="muted">${esc(program.description||'')} · Versão ${selectedVersion.version_number} · ${selectedVersion.status==='pending'?'Aguardando confirmação do atleta':selectedVersion.status==='active'?'Vigente':'Arquivada'}</p>${pending&&isAthlete?'<button class="btn" id="confirmVersion">Confirmar recebimento desta versão</button>':''}<button class="btn alt" id="newVersion">Criar nova versão</button><button class="icon-action" id="editCurrentProgram" title="Editar programa" aria-label="Editar programa">${editIcon}</button><button class="icon-action danger" id="archiveCurrentProgram" title="Excluir programa" aria-label="Excluir programa">${trashIcon}</button><button class="btn alt" id="newSub">＋ Adicionar treino</button></div><div id="subList"></div><div class="panel"><h3>Solicitar exclusão</h3><p class="muted">A exclusão depende da aprovação do atleta. O histórico de treinos nunca é apagado.</p><button class="btn alt" id="deleteRequest">Solicitar arquivamento</button></div>`);
   $('newVersion').onclick=()=>{if(isCurrentProgram())newVersion()};$('newSub').onclick=()=>{if(isCurrentProgram())addSubworkout()};$('deleteRequest').onclick=()=>{if(isCurrentProgram())requestDeletion(userId,db,program)};$('editCurrentProgram').onclick=()=>{if(isCurrentProgram())editProgram(program.id,userId,db)};$('archiveCurrentProgram').onclick=()=>{if(isCurrentProgram())archiveProgram(program.id,userId,db)};
-  if($('confirmVersion'))$('confirmVersion').onclick=()=>withProgramActionLock('confirmVersion',async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return false;if(result.error)alert(result.error.message);else await openProgram(id,userId,db)});
+  if($('confirmVersion'))$('confirmVersion').onclick=()=>withProgramActionLock('confirmVersion',async()=>{const result=await db.rpc('nexfit_confirm_program_version',{p_version:selectedVersion.id});if(!isCurrentProgram())return false;if(result.error){await showWorkoutDialog({title:'Não foi possível confirmar a versão',message:result.error.message,confirmLabel:'Entendi',danger:true});return false}await showWorkoutDialog({title:'Versão confirmada',message:'A nova versão do programa agora está vigente.',confirmLabel:'Continuar'});await openProgram(id,userId,db)});
   renderSubworkouts(userId,db,program.id,selectedVersion.id,subworkouts.slice());
  }
  async function newVersion(){
@@ -1184,17 +1184,17 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const db=expectedDb,program=expectedProgram,userId=expectedUserId;
    const isCurrentProgram=()=>!!db&&!!userId&&userRef()?.id===userId&&current?.id===program?.id;
    if(!isCurrentProgram())return false;
-   const reason=prompt('Motivo do pedido de arquivamento (opcional):')||null;
+   const reasonInput=await showWorkoutDialog({title:'Solicitar arquivamento',message:'Se desejar, informe o motivo do pedido. O atleta ainda precisará aprovar ou rejeitar a solicitação.',confirmLabel:'Enviar pedido',cancelLabel:'Cancelar',input:{type:'text',label:'Motivo (opcional)',placeholder:'Descreva o motivo do pedido',maxLength:240,allowEmpty:true}});if(reasonInput===null)return false;const reason=reasonInput.trim()||null;
    if(!isCurrentProgram())return false;
    const {error}=await db.from('training_program_deletion_requests').insert({program_id:program.id,requested_by:userId,reason});
    if(!isCurrentProgram())return false;
-   if(error)return alert(error.message);
+   if(error){await showWorkoutDialog({title:'Não foi possível enviar o pedido',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    const updated=await db.from('training_programs').update({status:'deletion_pending'}).eq('id',program.id);
    if(!isCurrentProgram())return false;
-   if(updated.error)return alert(updated.error.message);
+   if(updated.error){await showWorkoutDialog({title:'Pedido não concluído',message:updated.error.message,confirmLabel:'Entendi',danger:true});return false}
    await db.from('app_notifications').insert({user_id:program.athlete_id,type:'deletion_request',title:'Pedido de arquivamento',body:'Um profissional solicitou arquivar um programa. Aprove ou rejeite o pedido.',entity_id:program.id});
    if(!isCurrentProgram())return false;
-   alert('Pedido enviado ao atleta para aprovação.');
+   await showWorkoutDialog({title:'Pedido enviado',message:'O atleta receberá a solicitação e poderá aprovar ou rejeitar o arquivamento do programa.',confirmLabel:'Entendi'});
   });
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
