@@ -1,6 +1,7 @@
 /* NEXFIT | Musculação — programas versionados */
 (()=>{
  if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
+ try{
  const css=`
  #strengthPage .panel{background:linear-gradient(145deg,#202b37,#18212b);border:1px solid #2b3948;border-radius:18px;padding:18px;margin:14px 0}
  #strengthPage input,#strengthPage textarea,#strengthPage select{background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:11px;width:100%;min-width:0}
@@ -71,7 +72,32 @@
  #strengthPage .execution-exercise-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px}
  #strengthPage .execution-exercise-heading h2{margin:0;font-size:22px}
  #strengthPage .execution-exercise-heading p{margin:0;color:#a0a99c;font-size:13px;text-align:right}
- #strengthPage .execution-media{display:block;width:100%;height:clamp(180px,42vw,320px);object-fit:cover;background:#111610;border-radius:14px;margin:0 0 10px}
+ #strengthPage .execution-media{display:block;width:100%;height:clamp(180px,42vw,320px);object-fit:contain;background:#111610;border-radius:14px;margin:0 0 10px}
+ #strengthPage .execution-media-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}
+ #strengthPage .execution-media-pair figure{min-width:0;margin:0;padding:7px;border:1px solid #28342b;border-radius:12px;background:#111610}
+ #strengthPage .execution-media-pair img{display:block;width:100%;height:clamp(150px,38vw,240px);object-fit:contain}
+ #strengthPage .execution-media-pair figcaption{padding:5px 0 0;color:#a0a99c;text-align:center;font-size:11px}
+ #strengthPage .execution-image-unavailable{display:grid;place-items:center;min-height:120px;padding:12px;color:#a0a99c;text-align:center;font-size:12px}
+ #strengthPage .execution-muscle-map{margin:12px 0;padding:12px;border:1px solid #28342b;border-radius:14px;background:#121812}
+ #strengthPage .execution-muscle-map h3{margin:0 0 6px;font-size:14px}
+ #strengthPage .execution-muscle-map>p{margin:0 0 10px;color:#a0a99c;font-size:12px}
+ #strengthPage .execution-muscle-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #strengthPage .execution-muscle-summary>div{padding:10px;border:1px solid #29372b;border-radius:10px;background:#101610}
+ #strengthPage .execution-muscle-summary strong{display:block;margin-bottom:4px;font-size:12px}
+ #strengthPage .execution-muscle-summary p{margin:0;color:#e5ebdf;font-size:13px;line-height:1.45}
+ #strengthPage .execution-muscle-summary .primary strong{color:#b7f34a}
+ #strengthPage .execution-muscle-summary .secondary strong{color:#e5b34e}
+ #strengthPage .execution-muscle-map details{margin-top:9px;border-top:1px solid #29372b;padding-top:8px}
+ #strengthPage .execution-muscle-map summary{color:#c8d2c4;font-size:12px;cursor:pointer}
+ #strengthPage .muscle-map-svg{display:block;width:100%;max-height:175px;margin-top:8px}
+ #strengthPage .muscle-map-svg .body-base{fill:#59645b;stroke:#89948a;stroke-width:1.2}
+ #strengthPage .muscle-map-svg .muscle-region{fill:#313c32;stroke:#687568;stroke-width:.8;opacity:.95}
+ #strengthPage .muscle-map-svg .muscle-region.primary{fill:#b7f34a;stroke:#d5ff8b}
+ #strengthPage .muscle-map-svg .muscle-region.secondary{fill:#e5a83b;stroke:#ffd27d}
+ #strengthPage .muscle-map-legend{display:flex;gap:12px;flex-wrap:wrap;color:#a0a99c;font-size:11px}
+ #strengthPage .muscle-map-legend span{display:inline-flex;align-items:center;gap:5px}
+ #strengthPage .muscle-map-legend i{width:9px;height:9px;border-radius:50%;background:#b7f34a}
+ #strengthPage .muscle-map-legend span+span i{background:#e5a83b}
  #strengthPage .execution-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 12px}
  #strengthPage .execution-stat{display:flex;min-width:0;min-height:76px;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 5px;border:1px solid #202821;border-radius:13px;background:linear-gradient(145deg,#171d18,#111511);text-align:center}
  #strengthPage .execution-stat>span,#strengthPage .execution-stat>label{color:#a0a99c;font-size:12px}
@@ -135,7 +161,47 @@
  #strengthPage .completion-secondary{border:1px solid #354454;background:transparent;color:#f4f7fa}
  @media(max-width:420px){#strengthPage .completion-screen{padding:14px 4px 24px}#strengthPage .completion-stat{min-height:80px}}
 
- @media(max-width:600px){#strengthPage .execution-screen{padding:6px 0 12px}#strengthPage .execution-media{height:clamp(175px,52vw,270px)}#strengthPage .execution-stat{min-height:70px}#strengthPage .execution-stat>strong{font-size:21px}#strengthPage .execution-exercise-heading h2{font-size:20px}}
+ @media(max-width:600px){
+  #strengthPage .execution-screen{width:100%;max-width:100%;padding:8px 10px 18px}
+  #strengthPage .execution-header{grid-template-columns:40px minmax(0,1fr) 42px;gap:4px;min-height:44px}
+  #strengthPage .execution-header strong{font-size:16px}
+  #strengthPage .execution-header>span{font-size:12px}
+  #strengthPage .execution-back{width:40px;height:44px}
+  #strengthPage .execution-progress{margin:7px 0 14px}
+  #strengthPage .execution-exercise-heading{align-items:flex-start;gap:5px;margin-bottom:9px}
+  #strengthPage .execution-exercise-heading h2{font-size:19px;line-height:1.25}
+  #strengthPage .execution-exercise-heading p{max-width:42%;font-size:11px;line-height:1.35}
+  #strengthPage .execution-media-pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:10px}
+  #strengthPage .execution-media-pair figure{padding:5px;border-radius:11px}
+  #strengthPage .execution-media-pair img{height:clamp(138px,43vw,190px);max-width:100%;object-fit:contain}
+  #strengthPage .execution-media-pair figcaption{font-size:11px;padding:6px 0 2px}
+  #strengthPage .execution-muscle-map{margin:10px 0;padding:11px;border-radius:13px}
+  #strengthPage .execution-muscle-map h3{font-size:15px}
+  #strengthPage .execution-muscle-map>p{font-size:12px;line-height:1.45}
+  #strengthPage .execution-muscle-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  #strengthPage .execution-muscle-summary>div{padding:9px 8px}
+  #strengthPage .execution-muscle-summary strong{font-size:12px}
+  #strengthPage .execution-muscle-summary p{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+  #strengthPage .muscle-map-svg{max-height:210px}
+  #strengthPage .execution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 10px}
+  #strengthPage .execution-stat{min-height:74px;padding:8px 4px;border-radius:11px}
+  #strengthPage .execution-stat>span,#strengthPage .execution-stat>label{font-size:11px}
+  #strengthPage .execution-stat>strong{font-size:21px}
+  #strengthPage .execution-load-control{grid-template-columns:22px minmax(0,1fr) 22px}
+  #strengthPage .execution-load-control button{min-width:28px;min-height:34px;font-size:20px}
+  #strengthPage .execution-load-control input{font-size:18px}
+  #strengthPage .execution-actions{gap:7px;margin-top:9px}
+  #strengthPage .execution-primary,#strengthPage .execution-secondary{min-height:52px;padding:12px 8px;font-size:13px}
+  #strengthPage .execution-skip-exercise{min-height:40px;padding:10px}
+}
+@media(max-width:360px){
+  #strengthPage .execution-screen{padding-right:8px;padding-left:8px}
+  #strengthPage .execution-media-pair img{height:138px}
+  #strengthPage .execution-muscle-summary{grid-template-columns:1fr}
+  #strengthPage .execution-exercise-heading p{font-size:10px}
+  #strengthPage .execution-stat>strong{font-size:19px}
+  #strengthPage .execution-actions{grid-template-columns:1fr 1fr}
+}
  `;
  const st=document.createElement('style');st.textContent=css;document.head.append(st);
  const nav=document.querySelector('.nav');if(!nav){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Navegação principal não encontrada.';console.error('[NEXFIT] Módulo de musculação: navegação principal não encontrada.');return;}
@@ -677,7 +743,7 @@
     if(await abortStaleVersion())return false;
     if(oldExercises.error){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+oldExercises.error.message)}
     if(oldExercises.data?.length){
-     const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,identity_id:e.identity_id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url}));
+     const copied=oldExercises.data.map(e=>({subworkout_id:newSub.id,identity_id:e.identity_id,name:e.name,position:e.position,sets:e.sets,rest_seconds:e.rest_seconds,notes:e.notes,media_url:e.media_url,media_end_url:e.media_end_url,execution_instructions:e.execution_instructions,primary_muscles:e.primary_muscles,secondary_muscles:e.secondary_muscles}));
      const {error:exErr}=await db.from('training_exercises').insert(copied);
      if(await abortStaleVersion())return false;
      if(exErr){const discarded=await cleanupIncompleteVersion();return alert((discarded?'A versão incompleta foi arquivada. ':'Não foi possível arquivar a versão incompleta. ')+exErr.message)}
@@ -784,9 +850,13 @@
    host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
   }
 async function loadExerciseCatalog(expectedDb=dbRef()){
-  const {data,error}=await expectedDb.from('training_exercise_catalog').select('id,name,category').eq('is_active',true).order('name');
-  if(error)throw Error('Não foi possível carregar o banco de exercícios. Verifique se a atualização do catálogo foi aplicada no Supabase. '+error.message);
-  return data||[];
+  let query=await expectedDb.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles').eq('is_active',true).order('name');
+  if(query.error&&/column .* does not exist|could not find .* column|schema cache/i.test(query.error.message||'')){
+   query=await expectedDb.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,execution_instructions,primary_muscles').eq('is_active',true).order('name');
+   if(!query.error)return (query.data||[]).map(item=>({...item,demonstration_end_image_url:null,secondary_muscles:null,__visualFieldsAvailable:false}));
+  }
+  if(query.error)throw Error('Não foi possível carregar o banco de exercícios. '+query.error.message);
+  return (query.data||[]).map(item=>({...item,__visualFieldsAvailable:true}));
  }
  function exerciseCatalogOptions(items,selectedId=''){
   const grouped=new Map();
@@ -868,7 +938,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const {data,error}=await db.from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
    if(error){alert(error.message);return false}
-   const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600))});
+   const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600)),media_url:item.demonstration_image_url||null,execution_instructions:item.execution_instructions||null,primary_muscles:item.primary_muscles||null,...(item.__visualFieldsAvailable?{media_end_url:item.demonstration_end_image_url||null,secondary_muscles:item.secondary_muscles||null}:{})});
    if(!isCurrentEditor())return false;
    if(result.error){alert(result.error.message);return false}
    await refresh();return true;
@@ -1043,7 +1113,10 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){alert('Informe uma carga ou um valor por série.');return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){alert('Há uma carga inválida.');return false}}
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){alert(err.message);return false}
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
-   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest}).eq('id',id);
+   const sameCatalog=String(item.id)===String(e.catalog_exercise_id);
+   const visualUpdate={media_url:item.demonstration_image_url||(sameCatalog?e.media_url:null),execution_instructions:item.execution_instructions||(sameCatalog?e.execution_instructions:null),primary_muscles:item.primary_muscles||(sameCatalog?e.primary_muscles:null)};
+   if(item.__visualFieldsAvailable){visualUpdate.media_end_url=item.demonstration_end_image_url||(sameCatalog?e.media_end_url:null);visualUpdate.secondary_muscles=item.secondary_muscles||(sameCatalog?e.secondary_muscles:null)}
+   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest,...visualUpdate}).eq('id',id);
    if(!isCurrentEditor())return false;
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
    await refresh();return true;
@@ -1286,7 +1359,61 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  function startExerciseTimer(){const item=sessionPlan[sessionIndex];if(!item||!item.set?.mode||item.set.mode==='reps')return;if(!activeExerciseTimer)activeExerciseTimer={mode:item.set.mode,targetSeconds:Number(item.set.target_seconds)||0,elapsedSeconds:0,running:false,startedAt:null};if(activeExerciseTimer.running)return;activeExerciseTimer.startedAt=Date.now();activeExerciseTimer.running=true;persistWorkoutState();if(timer)clearInterval(timer);timer=setInterval(tickExerciseTimer,200);tickExerciseTimer()}
  function pauseExerciseTimer(){if(!activeExerciseTimer?.running)return;activeExerciseTimer.elapsedSeconds=exerciseTimerElapsed();activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null;if(timer)clearInterval(timer);timer=null;persistWorkoutState();tickExerciseTimer()}
  function tickExerciseTimer(){if(!activeExerciseTimer)return;const elapsed=exerciseTimerElapsed(),target=activeExerciseTimer.targetSeconds,remaining=Math.max(0,target-elapsed),clock=$('exerciseClock'),button=$('completeSet');if(clock)clock.textContent=formatWorkoutTime(activeExerciseTimer.mode==='countdown'?remaining:elapsed);const toggle=$('toggleExerciseTimer');if(toggle)toggle.textContent=activeExerciseTimer.running?'Pausar':'Continuar';if(activeExerciseTimer.mode==='countdown'&&target>0&&remaining===0&&activeExerciseTimer.running){activeExerciseTimer.elapsedSeconds=target;activeExerciseTimer.running=false;activeExerciseTimer.startedAt=null;if(timer)clearInterval(timer);timer=null;if(button)button.textContent='Registrando…';completeCurrentSet();return}if(button)button.textContent=activeExerciseTimer.mode==='countdown'?'Concluir série':'Registrar tempo';const second=Math.floor(elapsed);if(second!==lastExerciseTimerPersistedSecond){lastExerciseTimerPersistedSecond=second;persistWorkoutState()}}
- function renderSessionStep(){
+ function renderExecutionMuscleMap(primary=[],secondary=[]){
+  primary=Array.isArray(primary)?primary:[];secondary=Array.isArray(secondary)?secondary:[];
+  const keyFor=value=>{
+   const key=String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+   if(/peitoral|chest/.test(key))return 'chest';
+   if(/ombro|deltoid|shoulder/.test(key))return 'shoulders';
+   if(/triceps/.test(key))return 'triceps';
+   if(/biceps/.test(key))return 'biceps';
+   if(/antebraco|forearm/.test(key))return 'forearms';
+   if(/dorsal|latissimus|lats/.test(key))return 'lats';
+   if(/costas|upper back|rhomboid/.test(key))return 'back';
+   if(/trapezio|traps/.test(key))return 'traps';
+   if(/lombar|lower back|erector/.test(key))return 'lower_back';
+   if(/abdomen|core|abdominal/.test(key))return 'core';
+   if(/obliquo/.test(key))return 'obliques';
+   if(/glute/.test(key))return 'glutes';
+   if(/quadriceps|quad/.test(key))return 'quads';
+   if(/posterior|hamstring/.test(key))return 'hamstrings';
+   if(/panturrilha|calf|calves/.test(key))return 'calves';
+   if(/tibial/.test(key))return 'tibialis';
+   if(/pescoco|neck/.test(key))return 'neck';
+   return null;
+  };
+  const p=new Set((Array.isArray(primary)?primary:[]).map(keyFor).filter(Boolean));
+  const s=new Set((Array.isArray(secondary)?secondary:[]).map(keyFor).filter(k=>k&&!p.has(k)));
+  if(!p.size&&!s.size)return '';
+  const cls=k=>'muscle-region '+(p.has(k)?'primary':s.has(k)?'secondary':'');
+  const shapes=[
+   ['chest','<ellipse cx="75" cy="62" rx="11" ry="8"/><ellipse cx="95" cy="62" rx="11" ry="8"/>'],
+   ['shoulders','<circle cx="54" cy="43" r="8"/><circle cx="116" cy="43" r="8"/>'],
+   ['biceps','<ellipse cx="50" cy="67" rx="5" ry="12"/><ellipse cx="120" cy="67" rx="5" ry="12"/>'],
+   ['triceps','<ellipse cx="218" cy="70" rx="5" ry="12"/><ellipse cx="278" cy="70" rx="5" ry="12"/>'],
+   ['forearms','<path d="M45 82 Q40 94 42 105 L49 107 Q52 95 53 83Z"/><path d="M125 82 Q130 94 128 105 L121 107 Q118 95 117 83Z"/>'],
+   ['core','<rect x="74" y="73" width="22" height="31" rx="8"/>'],
+   ['obliques','<path d="M68 73 Q62 84 68 101 L74 99 L74 76Z"/><path d="M102 73 Q108 84 102 101 L96 99 L96 76Z"/>'],
+   ['quads','<path d="M70 108 Q65 119 68 143 L78 144 L81 111Z"/><path d="M90 111 L93 144 L103 143 Q106 119 101 108Z"/>'],
+   ['calves','<path d="M69 148 Q65 160 70 176 L78 176 L80 148Z"/><path d="M90 148 L92 176 L100 176 Q105 160 101 148Z"/>'],
+   ['lats','<path d="M231 55 Q218 62 224 91 L239 101 L246 63Z"/><path d="M249 63 L256 101 L271 91 Q277 62 264 55Z"/>'],
+   ['back','<path d="M239 48 L249 48 L253 76 L235 76Z"/>'],
+   ['traps','<path d="M237 39 L249 39 L260 57 L249 63 L226 57Z"/>'],
+   ['lower_back','<rect x="239" y="77" width="10" height="22" rx="4"/>'],
+   ['glutes','<ellipse cx="239" cy="105" rx="9" ry="8"/><ellipse cx="257" cy="105" rx="9" ry="8"/>'],
+   ['hamstrings','<path d="M235 114 Q230 127 234 145 L244 145 L248 115Z"/><path d="M250 115 L254 145 L264 145 Q268 127 263 114Z"/>'],
+   ['tibialis','<path d="M234 148 L243 148 L241 176 L234 176Z"/><path d="M255 148 L264 148 L264 176 L257 176Z"/>'],
+   ['neck','<rect x="76" y="25" width="18" height="13" rx="5"/><rect x="239" y="25" width="18" height="13" rx="5"/>']
+  ];
+  const region=key=>shapes.filter(x=>x[0]===key).map(x=>x[1].replace(/<(ellipse|circle|rect|path)/g,'<$1 class="'+cls(key)+'"')).join('');
+  const labels=[...primary.map(x=>({name:x,role:'primary'})),...secondary.filter(x=>!primary.includes(x)).map(x=>({name:x,role:'secondary'}))];
+  const body='<g class="body-base"><circle cx="85" cy="16" r="10"/><rect x="76" y="26" width="18" height="12" rx="5"/><path d="M67 39 Q58 41 56 51 L63 99 Q70 106 85 106 Q100 106 107 99 L114 51 Q112 41 103 39Z"/><path d="M57 46 Q48 45 45 58 L36 99 Q35 106 42 108 Q49 109 51 101 L65 58Z"/><path d="M113 46 Q122 45 125 58 L134 99 Q135 106 128 108 Q121 109 119 101 L105 58Z"/><path d="M68 103 L81 105 L78 151 L72 183 L62 183 L64 149Z"/><path d="M89 105 L102 103 L106 149 L108 183 L98 183 L92 151Z"/><circle cx="248" cy="16" r="10"/><rect x="239" y="26" width="18" height="12" rx="5"/><path d="M230 39 Q221 41 219 51 L226 99 Q233 106 248 106 Q263 106 270 99 L277 51 Q275 41 266 39Z"/><path d="M220 46 Q211 45 208 58 L199 99 Q198 106 205 108 Q212 109 214 101 L228 58Z"/><path d="M276 46 Q285 45 288 58 L297 99 Q298 106 291 108 Q284 109 282 101 L268 58Z"/><path d="M231 103 L244 105 L241 151 L235 183 L225 183 L227 149Z"/><path d="M252 105 L265 103 L269 149 L271 183 L261 183 L255 151Z"/></g>';
+  const muscleShapes=['chest','shoulders','biceps','triceps','forearms','core','obliques','quads','calves','lats','back','traps','lower_back','glutes','hamstrings','tibialis','neck'].map(region).join('');
+  const primaryNames=primary.length?primary.join(' · '):'—';
+  const secondaryNames=secondary.length?secondary.join(' · '):'—';
+  return '<section class="execution-muscle-map"><h3>Grupos musculares</h3><p>Veja quais músculos recebem maior estímulo neste exercício.</p><div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><details><summary>Ver mapa ilustrativo do corpo</summary><svg class="muscle-map-svg" viewBox="0 0 320 190" role="img" aria-label="Mapa muscular frontal e posterior">'+body+'<g>'+muscleShapes+'</g><g fill="#a0a99c" font-size="9" text-anchor="middle"><text x="85" y="189">Frente</text><text x="248" y="189">Costas</text></g></svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span></div></details></section>';
+ }
+  function renderSessionStep(){
   sessionView='exercise';
   const host=$('sessionExercises');if(!host)return;
   if(sessionIndex>=sessionPlan.length){renderExercisePicker();return}
@@ -1295,8 +1422,34 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const previousLoad=planned==='MR'?null:previousLoadsByExercise[identity]?.[planned];
   if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=previousLoad??set.load_kg??(item.setIndex>0?(sessionLoads[e.id+':'+(item.setIndex-1)]??''):'');
   const loadValue=sessionLoads[loadKey],loggedSets=sessionSetLogs.length,allSets=sessionPlan.length;
-  const media=e.media_url?'<img class="execution-media" src="'+esc(e.media_url)+'" alt="Demonstração de '+esc(normalizeHumanText(e.name))+'">':'';
-  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  const media=e.media_url?'<div class="execution-media-pair"><figure><img class="execution-media" src="'+esc(e.media_url)+'" alt="Posição inicial de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição inicial</figcaption></figure>'+(e.media_end_url&&e.media_end_url!==e.media_url?'<figure><img class="execution-media" src="'+esc(e.media_end_url)+'" alt="Posição final de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição final</figcaption></figure>':'')+'</div>':'';
+  const muscleMap=renderExecutionMuscleMap(e.primary_muscles,e.secondary_muscles);
+  const instructions=e.execution_instructions?'<div class="execution-feedback" style="margin:10px 0 12px"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(e.execution_instructions)+'</p></div>':'';
+  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Pular</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button><div class="execution-rest" id="restPanel" hidden><div class="execution-rest-heading">DESCANSO</div><div class="execution-rest-row"><div class="execution-rest-dial" id="restDial" style="--progress:100"><div><strong id="restClock">00:00</strong><span>Descanso</span></div></div><button class="execution-pause" type="button" id="pauseRest" aria-label="Pausar descanso" title="Pausar descanso"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div><p id="nextStepText"></p><button class="execution-secondary execution-skip-rest" type="button" id="skipRest">Pular descanso</button></div></div>';
+  host.querySelectorAll('.execution-media').forEach(img=>{
+   const initial=img.getAttribute('src')||img.src;
+   const pathMatch=initial.match(/images\/(.+?)(?:[?#].*)?$/);
+   const candidates=pathMatch?[
+    'https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
+    'https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
+    'https://fastly.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1]
+   ]:[];
+   img.dataset.fallbackIndex='0';
+   img.onerror=()=>{
+    const index=Number(img.dataset.fallbackIndex||'0');
+    if(index<candidates.length){
+     img.dataset.fallbackIndex=String(index+1);
+     if(candidates[index]!==img.src){img.src=candidates[index];return}
+     img.onerror();
+     return;
+    }
+    img.hidden=true;
+    const note=document.createElement('div');
+    note.className='execution-image-unavailable';
+    note.textContent='Demonstração visual indisponível no momento';
+    img.parentElement.insertBefore(note,img.nextSibling);
+   };
+  });
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   if($('sessionReps'))$('sessionReps').oninput=()=>{const actual=Number($('sessionReps').value),suggested=previousLoadsByExercise[identity]?.[actual],loadInput=$('sessionLoad');if(suggested!==undefined&&loadInput&&!loadInput.dataset.userEdited){loadInput.value=String(suggested);sessionLoads[loadKey]=String(suggested);const hint=$('previousLoadHint');if(hint)hint.textContent='Última carga registrada'}persistWorkoutState()};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
@@ -1758,4 +1911,5 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
  };
  window.__nexfitStrengthLoaded=true;window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=null;
  home().catch(error=>{window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha ao abrir a tela inicial de musculação:',error)});
+}catch(error){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError=error?.message||String(error);console.error('[NEXFIT] Falha na inicialização do módulo de musculação:',error)}
 })();
