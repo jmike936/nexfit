@@ -1567,7 +1567,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    }catch(error){
     if(!isCurrent())return;
     setExecutionFeedback('Não foi possível guardar a série: '+(error?.message||'verifique o armazenamento.'),'error');
-    alert('Não foi possível guardar a série. '+(error?.message||'Verifique o armazenamento do aparelho.'));
+    await showWorkoutDialog({title:'Não foi possível guardar a série',message:(error?.message||'Verifique o armazenamento do aparelho.'),confirmLabel:'Entendi',danger:true});
     return;
    }finally{if(savingSetOwner===sessionId){savingSet=false;savingSetOwner=null}}
    if(!isCurrent())return;
@@ -1886,7 +1886,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   $('completionGoHome').onclick=()=>{const homeTab=document.querySelector('.nav button[data-page="home"]');if(homeTab)homeTab.click();else home()};
  }
  async function finishSession(){
-  if(savingSet)return alert('Aguarde o registro das séries terminar antes de finalizar o treino.');
+  if(savingSet){await showWorkoutDialog({title:'Aguarde o registro',message:'Ainda estamos salvando uma série. Assim que terminar, você poderá finalizar o treino.',confirmLabel:'Entendi'});return}
   if(!session||finishingSession)return;
   const sessionId=session.id,userId=userRef()?.id,isCurrent=()=>userRef()?.id===userId&&session?.id===sessionId;
   finishingSession=true;finishingSessionOwner=sessionId;
@@ -1897,7 +1897,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    session.status='in_progress';session.finished_at=null;
    if(finishingSessionOwner===sessionId){finishingSession=false;finishingSessionOwner=null}
    if(finishButton)finishButton.disabled=false;
-   return alert('Não foi possível guardar a conclusão neste aparelho. Libere espaço e tente novamente.')
+   await showWorkoutDialog({title:'Não foi possível finalizar',message:'Não foi possível guardar a conclusão neste aparelho. Libere espaço no armazenamento e tente novamente.',confirmLabel:'Entendi',danger:true});return
   }
   const synced=await syncPendingWorkout();
   if(!isCurrent())return;
