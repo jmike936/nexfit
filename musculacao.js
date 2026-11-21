@@ -1484,7 +1484,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!activeRest)return false;
   const rest=activeRest,panel=$('restPanel'),actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
   if(!panel)return false;
-  rest.paused=false;rest.remaining=Math.max(0,Math.ceil((rest.deadline-Date.now())/1000));rest.deadline=Date.now()+rest.remaining*1000;
+  rest.remaining=rest.paused?Math.max(0,Number(rest.remaining)||0):Math.max(0,Math.ceil((rest.deadline-Date.now())/1000));rest.paused=false;rest.deadline=Date.now()+rest.remaining*1000;
   panel.hidden=false;panel.closest('.execution-screen')?.classList.add('is-resting');
   const nextText=$('nextStepText');if(nextText)nextText.textContent=rest.nextText;
   if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
