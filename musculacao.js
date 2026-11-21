@@ -1727,7 +1727,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const actions=document.querySelector('.execution-actions'),skipExercise=$('skipExercise');
   if(actions)actions.hidden=true;if(skipExercise)skipExercise.hidden=true;
   if(!rest){advanceAfterSet(item);return}
-  if(!panel){alert('Série registrada, mas não foi possível abrir o painel de descanso.');advanceAfterSet(item);return}
+  if(!panel){setExecutionFeedback('Série registrada, mas não foi possível abrir o painel de descanso. Avançando sem descanso.','error');advanceAfterSet(item);return}
   panel.hidden=false;panel.closest('.execution-screen')?.classList.add('is-resting');const deadline=Date.now()+rest*1000;
   const next=sessionPlan[sessionIndex+1],sameExercise=next&&next.exerciseIndex===item.exerciseIndex;
   const nextIdentity=sameExercise?exerciseIdentity(next.exercise.name):null,nextReps=sameExercise&&next.set.reps!=='MR'?Number(next.set.reps):null;
@@ -1777,7 +1777,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    if(!isCurrent())return;
    if(button)button.disabled=false;
    setExecutionFeedback('Não foi possível guardar a série neste aparelho: '+(error?.message||'verifique o armazenamento disponível.'),'error');
-   alert('Não foi possível guardar a série. '+(error?.message||'Verifique o armazenamento do aparelho.'));
+   await showWorkoutDialog({title:'Não foi possível guardar a série',message:error?.message||'Verifique o armazenamento disponível no aparelho e tente novamente.',confirmLabel:'Entendi',danger:true});
    return;
   }finally{if(savingSetOwner===sessionId){savingSet=false;savingSetOwner=null}}
   if(!isCurrent())return;
