@@ -559,13 +559,23 @@
   const renderUserId=userRef()?.id,renderDb=dbRef(),isSameAccount=()=>userRef()?.id===renderUserId;
   if(!renderUserId||!renderDb)return;
   const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id);
-  for(const p of programs){
-   const q=await renderDb.from('training_subworkouts').select('id,identity_id,title,description,position').eq('version_id',p.current_version_id).order('position');
+  const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
+  const programByVersion=new Map(programs.map(p=>[String(p.current_version_id),p]));
+  let workouts=[];
+  if(versionIds.length){
+   const query=await renderDb.from('training_subworkouts').select('id,version_id,identity_id,title,description,position').in('version_id',versionIds).order('position');
    if(!isSameAccount())return;
-   if(q.error)continue;
-   for(const w of q.data||[])rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Editar em uma nova versão" aria-label="Editar em uma nova versão">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Remover em uma nova versão" aria-label="Remover em uma nova versão">'+trashIcon+'</button></div></div>');
+   if(query.error){
+    host.innerHTML='<p class="muted">Não foi possível carregar os treinos para gerenciamento: '+esc(query.error.message)+'</p>';
+    return;
+   }
+   workouts=query.data||[];
   }
   if(!isSameAccount())return;
+  for(const w of workouts){
+   const p=programByVersion.get(String(w.version_id));if(!p)continue;
+   rows.push('<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(w.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(p.title))+' · '+esc(programCategory(p.description))+'</small></div><div class="training-row-actions"><button class="icon-action" data-edit-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Editar em uma nova versão" aria-label="Editar em uma nova versão">'+editIcon+'</button><button class="icon-action danger" data-delete-training="'+esc(p.id)+'" data-training-identity="'+esc(w.identity_id)+'" title="Remover em uma nova versão" aria-label="Remover em uma nova versão">'+trashIcon+'</button></div></div>');
+  }
   host.innerHTML=rows.length?'<p class="muted">As alterações são preparadas em uma nova versão. O programa vigente só muda após a confirmação do atleta.</p>'+rows.join(''):'<p class="muted">Nenhum treino nos programas vigentes.</p>';
   host.querySelectorAll('[data-edit-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openIsolatedWorkoutEdit(b.dataset.editTraining,b.dataset.trainingIdentity,'',renderUserId,renderDb,'edit')});
   host.querySelectorAll('[data-delete-training]').forEach(b=>b.onclick=async()=>{if(!isSameAccount())return;await openIsolatedWorkoutEdit(b.dataset.deleteTraining,b.dataset.trainingIdentity,'',renderUserId,renderDb,'delete')});
