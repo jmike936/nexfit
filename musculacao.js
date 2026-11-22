@@ -1152,9 +1152,14 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){alert(err.message);return false}
    const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const sameCatalog=String(item.id)===String(e.catalog_exercise_id);
+   // Trocar por outro exercício cria uma nova identidade lógica; renomear ou apenas
+   // vincular um registro legado ao mesmo item do catálogo preserva o histórico.
+   const sameLogicalExercise=sameCatalog||(!e.catalog_exercise_id&&exerciseCatalogKey(item.name)===exerciseCatalogKey(e.name));
+   const newExerciseIdentity=()=>window.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+   const identityUpdate=sameLogicalExercise?{}:{identity_id:newExerciseIdentity()};
    const visualUpdate={media_url:item.demonstration_image_url||(sameCatalog?e.media_url:null),execution_instructions:item.execution_instructions||(sameCatalog?e.execution_instructions:null),primary_muscles:item.primary_muscles||(sameCatalog?e.primary_muscles:null)};
    if(item.__visualFieldsAvailable){visualUpdate.media_end_url=item.demonstration_end_image_url||(sameCatalog?e.media_end_url:null);visualUpdate.secondary_muscles=item.secondary_muscles||(sameCatalog?e.secondary_muscles:null)}
-   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest,...visualUpdate}).eq('id',id);
+   const {error}=await db.from('training_exercises').update({name:normalizeHumanText(item.name),catalog_exercise_id:item.id,sets,rest_seconds:rest,...identityUpdate,...visualUpdate}).eq('id',id);
    if(!isCurrentEditor())return false;
    if(error){alert('Não foi possível salvar o exercício: '+error.message);return false}
    await refresh();return true;
