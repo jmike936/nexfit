@@ -52,3 +52,54 @@ Atualizado em 22/11/2026.
 - [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras.
 - [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
 - [x] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
+
+## Prioridade 6 — Qualidade e engenharia (transversal)
+
+- [ ] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, idempotentes (`IF NOT EXISTS`) e reproduzíveis do zero.
+- [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
+- [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
+- [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
+- [ ] Reescrever o README: o que é o app, arquitetura, como configurar o Supabase, ordem dos SQLs, como rodar e publicar.
+- [ ] Auditar RLS: toda tabela com política ativa; front-end usando apenas a chave `anon`; revisar a aba Security e os PRs abertos.
+- [ ] Separar o JS da raiz em módulos (`src/`), sem alterar o comportamento.
+
+## Prioridade 7 — Análise de evolução do atleta
+
+- [ ] Registrar RPE e/ou RIR opcional por série (com suporte offline e sincronização).
+- [ ] Calcular 1RM estimado (Epley/Brzycki) por exercício, exibindo que é uma estimativa.
+- [ ] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino.
+- [ ] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando o mapa do corpo.
+- [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
+- [ ] Detectar platô (sem progresso em N sessões) e sugerir ajuste ou deload.
+- [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa.
+
+## Prioridade 8 — Wellness e controle de carga
+
+- [ ] Questionário diário rápido (menos de 1 minuto): sono, fadiga, dor, humor, prontidão.
+- [ ] Carga interna por sessão (sRPE × duração) e acumulado semanal.
+- [ ] Indicadores de carga aguda x crônica, apresentados como apoio à decisão e não como verdade absoluta.
+- [ ] Mapa corporal de dor/lesão com histórico.
+- [ ] Sugestão de redução de carga/deload quando os indicadores piorarem, sempre com decisão final do atleta/personal.
+
+## Prioridade 9 — Painel do treinador
+
+- [ ] Painel com todos os atletas: aderência, última sessão, PRs recentes, alertas.
+- [ ] Feedback do atleta ao fim de cada sessão (nota, comentário, dor).
+- [ ] Comentários do personal por treino/exercício.
+- [ ] Níveis de permissão por perfil (atleta, personal) com RLS correspondente.
+- [ ] Relatório de evolução em PDF para compartilhar.
+
+## Prioridade 10 — Dados, privacidade e engajamento
+
+- [ ] Exportação dos dados do atleta (CSV/JSON) e importação de treinos.
+- [ ] LGPD: consentimento explícito para dados de saúde, política de privacidade, exclusão de conta e dos dados.
+- [ ] Notificações e lembretes de treino (PWA push).
+- [ ] Metas e conquistas leves (sequência de treinos, metas de carga).
+
+## Prioridade 11 — Medição avançada
+
+- [ ] Avaliações e testes (1RM, salto, medidas corporais, fotos de progresso) com histórico e reavaliação agendada.
+- [ ] Registro de velocidade da barra (VBT): velocidade média/pico por repetição, perfil carga-velocidade e perda de velocidade por série.
+- [ ] Integração com sensores de VBT (Bluetooth) ou medição por câmera.
+- [ ] Modalidades de resistência: distância, pace, FC e zonas, parciais.
+- [ ] Integrações: Apple Health, Health Connect, Garmin, Strava.
