@@ -635,39 +635,39 @@
  async function createProgram(){
   return withProgramActionLock('createProgram',async()=>{
    const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-   if(!db||!userId)return alert('Faça login para criar um programa.');
+   if(!db||!userId){await showWorkoutDialog({title:'Faça login',message:'Entre na sua conta para criar um programa.',confirmLabel:'Entendi'});return false}
    const title=normalizeHumanText($('programTitle').value);
-   if(!title)return alert('Informe o nome do programa.');
+   if(!title){await showWorkoutDialog({title:'Nome do programa obrigatório',message:'Informe o nome do programa.',confirmLabel:'Corrigir'});return false}
    const category=$('programCategory').value,description=normalizeHumanText($('programDesc').value)||null;
    const {data,error}=await db.rpc('nexfit_create_own_program',{p_title:title,p_category:category,p_description:description});
    if(!isSameAccount())return false;
-   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.');return alert(message)}
+   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message)){await showWorkoutDialog({title:'Permissão necessária no Supabase',message:'O Supabase bloqueou a criação deste programa. Execute supabase-own-program-creation.sql no SQL Editor do Supabase e tente novamente.',confirmLabel:'Entendi',danger:true});return false}await showWorkoutDialog({title:'Não foi possível criar o programa',message,confirmLabel:'Entendi',danger:true});return false}
    await home();
   });
  }
  async function createProgramForAthlete(){
   return withProgramActionLock('createForAthlete',async()=>{
    const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-   if(!db||!userId)return alert('Faça login para enviar um programa.');
+   if(!db||!userId){await showWorkoutDialog({title:'Faça login',message:'Entre na sua conta para enviar um programa.',confirmLabel:'Entendi'});return false}
    const email=$('athleteEmail').value.trim().toLowerCase(),title=normalizeHumanText($('programTitle').value);
-   if(!email)return alert('Informe o e-mail do atleta.');
-   if(!title)return alert('Informe o nome do programa.');
+   if(!email){await showWorkoutDialog({title:'E-mail obrigatório',message:'Informe o e-mail do atleta.',confirmLabel:'Corrigir'});return false}
+   if(!title){await showWorkoutDialog({title:'Nome do programa obrigatório',message:'Informe o nome do programa.',confirmLabel:'Corrigir'});return false}
    const category=$('programCategory').value,description='[MODALIDADE: '+category+'] '+normalizeHumanText($('programDesc').value);
    const {error}=await db.rpc('nexfit_create_program_for_athlete',{p_email:email,p_title:title,p_description:description});
    if(!isSameAccount())return false;
-   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message))return alert('O Supabase bloqueou a criação do programa para outro atleta. Execute o arquivo supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.');return alert(message)}
-   alert('Programa enviado ao atleta. Ele precisará confirmar o recebimento.');
+   if(error){const message=error.message||String(error);if(/row.level security|42501/i.test(message)){await showWorkoutDialog({title:'Permissão de gestão necessária',message:'O Supabase bloqueou a criação do programa para outro atleta. Execute supabase-program-management-policies.sql no SQL Editor do Supabase e confirme que sua autorização de gestão está ativa.',confirmLabel:'Entendi',danger:true});return false}await showWorkoutDialog({title:'Não foi possível enviar o programa',message,confirmLabel:'Entendi',danger:true});return false}
+   await showWorkoutDialog({title:'Programa enviado',message:'O atleta receberá o programa e precisará confirmar o recebimento.',confirmLabel:'Continuar'});
    await home();
   });
  }
  async function requestAccess(){
   return withProgramActionLock('requestAccess',async()=>{
    const db=dbRef(),userId=userRef()?.id,isSameAccount=()=>userRef()?.id===userId;
-   if(!db||!userId)return alert('Faça login para solicitar acesso.');
-   const email=$('professionalEmail').value.trim().toLowerCase();if(!email)return alert('Informe o e-mail do atleta.');
+   if(!db||!userId){await showWorkoutDialog({title:'Faça login',message:'Entre na sua conta para solicitar acesso.',confirmLabel:'Entendi'});return false}
+   const email=$('professionalEmail').value.trim().toLowerCase();if(!email){await showWorkoutDialog({title:'E-mail obrigatório',message:'Informe o e-mail do atleta.',confirmLabel:'Corrigir'});return false}
    const {error}=await db.rpc('nexfit_request_access_by_email',{p_email:email});
    if(!isSameAccount())return false;
-   if(error)return alert(error.message);alert('Solicitação enviada. O atleta precisa aprovar e escolher as permissões.');await home();
+   if(error){await showWorkoutDialog({title:'Não foi possível solicitar acesso',message:error.message,confirmLabel:'Entendi',danger:true});return false}await showWorkoutDialog({title:'Solicitação enviada',message:'O atleta precisa aprovar o pedido e escolher as permissões.',confirmLabel:'Continuar'});await home();
   });
  }
  async function decideAccess(id,approve){
@@ -693,9 +693,9 @@
   editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
   if(!isCurrentProgram())return false;
-  if(error)return alert(error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível carregar as versões',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   const pending=vers.find(v=>v.status==='pending'),active=vers.find(v=>v.status==='active'),selectedVersion=pending||active||vers[0];
-  if(!selectedVersion)return alert('Este programa ainda não possui versão.');
+  if(!selectedVersion){await showWorkoutDialog({title:'Programa sem versão',message:'Este programa ainda não possui uma versão para editar.',confirmLabel:'Entendi'});return false}
   version=selectedVersion;
   const sq=await db.from('training_subworkouts').select('*').eq('version_id',selectedVersion.id).order('position');
   if(!isCurrentProgram()||version?.id!==selectedVersion.id)return false;
@@ -788,7 +788,7 @@
     if(!ready)return false;
    }
    const programVersion=version;
-   if(!programVersion||programVersion.status!=='pending')return alert('Prepare uma nova versão antes de adicionar treinos.');
+   if(!programVersion||programVersion.status!=='pending'){await showWorkoutDialog({title:'Prepare uma nova versão',message:'É necessário preparar uma nova versão antes de adicionar treinos.',confirmLabel:'Entendi'});return false}
    const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
    const titleValue=await showWorkoutDialog({title:'Adicionar treino',message:'Informe o nome do novo treino nesta versão do programa.',confirmLabel:'Adicionar treino',cancelLabel:'Cancelar',input:{type:'text',label:'Nome do treino',placeholder:'Ex.: A — Peito e tríceps',maxLength:100}});if(titleValue===null)return;const title=normalizeHumanText(titleValue);if(!title)return;
    if(!isCurrentEditor())return false;
@@ -1039,10 +1039,10 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const description=(p.description||'').replace(/^\[MODALIDADE:\s*[^\]]+\]\s*/i,'');
   showProgramEditor('Editar programa',editorField('editorProgramTitle','Nome do programa',p.title)+editorArea('editorProgramDescription','Descrição',description),async()=>{
    if(!isSameAccount())return false;
-   const title=normalizeHumanText($('editorProgramTitle').value);if(!title)return alert('Informe um nome para o programa.');
+   const title=normalizeHumanText($('editorProgramTitle').value);if(!title){await showWorkoutDialog({title:'Nome do programa obrigatório',message:'Informe um nome para o programa.',confirmLabel:'Corrigir'});return false}
    const {error}=await db.from('training_programs').update({title,description:prefix+normalizeHumanText($('editorProgramDescription').value)}).eq('id',p.id);
    if(!isSameAccount())return false;
-   if(error){alert('Não foi possível salvar o programa: '+error.message);return false}
+   if(error){await showWorkoutDialog({title:'Não foi possível salvar o programa',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await home();return true;
   });
  }
@@ -1062,11 +1062,11 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const p=plans.find(x=>String(x.id)===String(id)),db=expectedDb;
   const isSameAccount=()=>userRef()?.id===expectedUserId&&!!p&&canManageProgramLocally(p);
   if(!db||!expectedUserId||!isSameAccount())return false;
-  try{await assertUniqueActiveCategory(programCategory(p.description),p.id)}catch(err){if(isSameAccount())alert(err.message);return false}
+  try{await assertUniqueActiveCategory(programCategory(p.description),p.id)}catch(err){if(isSameAccount())await showWorkoutDialog({title:'Não foi possível restaurar o programa',message:err.message,confirmLabel:'Entendi',danger:true});return false}
   if(!isSameAccount())return false;
   const {error}=await db.from('training_programs').update({status:'active'}).eq('id',p.id);
   if(!isSameAccount())return false;
-  if(error)return alert('Não foi possível restaurar o programa: '+error.message);
+  if(error){await showWorkoutDialog({title:'Não foi possível restaurar o programa',message:error.message,confirmLabel:'Entendi',danger:true});return false}
   showArchivedPlans=false;await home();
  }
 
@@ -1172,7 +1172,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
   const q=await db.from('training_exercises').select('*').eq('id',id).maybeSingle();
   if(!isCurrentEditor())return false;
-  if(q.error||!q.data)return alert('Não foi possível localizar o exercício.');
+  if(q.error||!q.data){await showWorkoutDialog({title:'Não foi possível localizar o exercício',message:q.error?.message||'O exercício não foi encontrado nesta versão.',confirmLabel:'Entendi',danger:true});return false}
   if(await showWorkoutDialog({title:'Excluir exercício?',message:'“'+q.data.name+'” será removido desta versão. Registros históricos não serão apagados.',confirmLabel:'Excluir exercício',cancelLabel:'Manter exercício',danger:true})!==true)return;
   if(!isCurrentEditor())return false;
   const used=await db.from('training_set_logs').select('id',{count:'exact',head:true}).eq('exercise_id',id);
@@ -1925,7 +1925,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const isSameAccount=()=>userRef()?.id===userId;
   const q=await db.from('training_programs').select('*').eq('athlete_id',userId).eq('status','active').order('updated_at',{ascending:false});
   if(!isSameAccount())return false;
-  if(q.error)return alert(q.error.message);
+  if(q.error){await showWorkoutDialog({title:'Não foi possível carregar os programas',message:q.error.message,confirmLabel:'Entendi',danger:true});return false}
   const available=(q.data||[]).filter(p=>{const match=(p.description||'').match(/\[MODALIDADE:\s*([^\]]+)\]/i);return !match||match[1].trim().toLowerCase()==='musculação'});
   if(!available.length){await showWorkoutDialog({title:'Nenhum programa ativo',message:'Você ainda não possui um programa de musculação ativo. Acesse a aba Musculação para criar seu programa.',confirmLabel:'Entendi'});return false}
   if(typeof window.go==='function')window.go('strengthPage');else{document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section))}
