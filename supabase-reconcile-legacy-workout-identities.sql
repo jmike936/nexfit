@@ -67,8 +67,10 @@ select
   w.position,
   w.title_key,
   w.signature,
-  (array_agg(w.identity_id order by w.version_number, w.position, w.subworkout_id)
-    over (partition by w.program_id, w.title_key, w.signature))[1] as canonical_identity_id
+  first_value(w.identity_id) over (
+    partition by w.program_id, w.title_key, w.signature
+    order by w.version_number, w.position, w.subworkout_id
+  ) as canonical_identity_id
 from workout_rows w
 join eligible_groups g
   on g.program_id = w.program_id
@@ -103,8 +105,10 @@ eligible_exercises as (
 )
 select
   e.exercise_id,
-  (array_agg(e.identity_id order by e.version_number, e.position, e.exercise_id)
-    over (partition by e.program_id, e.title_key, e.workout_signature, e.exercise_key))[1] as canonical_identity_id
+  first_value(e.identity_id) over (
+    partition by e.program_id, e.title_key, e.workout_signature, e.exercise_key
+    order by e.version_number, e.position, e.exercise_id
+  ) as canonical_identity_id
 from exercise_rows e
 join eligible_exercises x
   on x.program_id = e.program_id
