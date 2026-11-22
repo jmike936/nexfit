@@ -942,7 +942,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!db||!program||!programVersion||!userId)return false;
   const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===focusedSubworkoutId;
   const refresh=async()=>{if(!isCurrentEditor())return;if(focusedSubworkoutId)await openWorkoutEditor(focusedSubworkoutId,userId,db);else await openProgram(program.id,userId,db)};
-  let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())alert(err.message);return false}
+  let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())await showWorkoutDialog({title:'Não foi possível carregar o catálogo',message:err.message,confirmLabel:'Entendi',danger:true});return false}
   if(!isCurrentEditor())return false;
   const categories=['Peito','Costas','Ombros','Bíceps','Tríceps','Quadríceps','Posterior de coxa','Glúteos','Panturrilhas','Abdômen','Antebraços','Cardio','Funcional','Corpo inteiro'];
   const categoryOptions='<option value="">Selecione o grupo muscular</option>'+categories.map(x=>'<option>'+esc(x)+'</option>').join('');
@@ -963,22 +963,22 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   showProgramEditor('Adicionar exercício',fields,async()=>{
    if(!isCurrentEditor())return false;
    const exerciseMode=$('editorExerciseMode')?.value||'reps';
-   let reps=[];if(exerciseMode==='reps'){try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){alert(err.message);return false}}
-   let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){alert(err.message);return false}
+   let reps=[];if(exerciseMode==='reps'){try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){await showWorkoutDialog({title:'Séries ou repetições inválidas',message:err.message,confirmLabel:'Corrigir'});return false}}
+   let rest;try{rest=parseRestSeconds($('editorExerciseRest').value)}catch(err){await showWorkoutDialog({title:'Descanso inválido',message:err.message,confirmLabel:'Corrigir'});return false}
    let item=null;
    if($('newCatalogExerciseFields').style.display!=='none'){
-    try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value,db);if(!isCurrentEditor())return false;item=saved.item;if(saved.duplicate)alert('Esse exercício já existia no catálogo. Vamos reutilizar o cadastro existente.')}
-    catch(err){if(isCurrentEditor())alert('Não foi possível cadastrar o exercício: '+err.message);return false}
+    try{const saved=await saveNewCatalogExercise($('newCatalogExerciseName').value,$('newCatalogExerciseCategory').value,db);if(!isCurrentEditor())return false;item=saved.item;if(saved.duplicate)await showWorkoutDialog({title:'Exercício já cadastrado',message:'Esse exercício já existia no catálogo. O cadastro existente será reutilizado.',confirmLabel:'Continuar'} )}
+    catch(err){if(isCurrentEditor())await showWorkoutDialog({title:'Não foi possível cadastrar o exercício',message:err.message,confirmLabel:'Entendi',danger:true});return false}
    }else item=catalog.find(x=>String(x.id)===String($('editorCatalogExercise').value));
    if(!isCurrentEditor())return false;
-   if(!item){alert('Selecione um exercício ou cadastre um novo.');return false}
-   let sets;if(exerciseMode==='reps')sets=reps.map(value=>({reps:value,load_kg:null,mode:'reps'}));else{const count=Math.max(1,Math.min(30,Number($('editorTimedSetCount')?.value)||1));const target=Number($('editorTargetSeconds')?.value)||0;if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){alert('Informe uma duração-alvo entre 1 segundo e 24 horas.');return false}sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}))}
+   if(!item){await showWorkoutDialog({title:'Exercício não selecionado',message:'Selecione um exercício do catálogo ou cadastre um novo para continuar.',confirmLabel:'Entendi'});return false}
+   let sets;if(exerciseMode==='reps')sets=reps.map(value=>({reps:value,load_kg:null,mode:'reps'}));else{const count=Math.max(1,Math.min(30,Number($('editorTimedSetCount')?.value)||1));const target=Number($('editorTargetSeconds')?.value)||0;if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){await showWorkoutDialog({title:'Duração-alvo inválida',message:'Informe uma duração entre 1 segundo e 24 horas.',confirmLabel:'Corrigir'});return false}sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}))}
    const {data,error}=await db.from('training_exercises').select('position').eq('subworkout_id',subId).order('position',{ascending:false}).limit(1);
    if(!isCurrentEditor())return false;
-   if(error){alert(error.message);return false}
+   if(error){await showWorkoutDialog({title:'Não foi possível definir a posição do exercício',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    const result=await db.from('training_exercises').insert({subworkout_id:subId,name:normalizeHumanText(item.name),catalog_exercise_id:item.id,position:(data?.[0]?.position||0)+1,sets,rest_seconds:Math.max(0,Math.min(rest,3600)),media_url:item.demonstration_image_url||null,execution_instructions:item.execution_instructions||null,primary_muscles:item.primary_muscles||null,...(item.__visualFieldsAvailable?{media_end_url:item.demonstration_end_image_url||null,secondary_muscles:item.secondary_muscles||null}:{})});
    if(!isCurrentEditor())return false;
-   if(result.error){alert(result.error.message);return false}
+   if(result.error){await showWorkoutDialog({title:'Não foi possível adicionar o exercício',message:result.error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
   $('editorExerciseMode').onchange=()=>{$('timedExerciseFields').style.display=$('editorExerciseMode').value==='reps'?'none':'block';$('editorExerciseReps').parentElement.style.display=$('editorExerciseMode').value==='reps'?'block':'none';$('targetSecondsField').style.display=$('editorExerciseMode').value==='countdown'?'block':'none'};
