@@ -67,8 +67,8 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const subworkoutMap=new Map((subworkoutsQ.data||[]).map(x=>[x.id,x.version_id]));
  const versionMap=new Map((versionsQ.data||[]).map(x=>[x.id,x.program_id]));
  const exerciseMap=new Map(exerciseRows.map(x=>[x.id,{name:x.name,identityId:x.identity_id||null,catalogId:x.catalog_exercise_id||null,versionId:subworkoutMap.get(x.subworkout_id)||null,programId:versionMap.get(subworkoutMap.get(x.subworkout_id))||null}]));
- // Para exercícios antigos sem identidade estável, só usa o nome como ponte entre versões
- // quando ele aparece uma única vez em cada versão do mesmo programa.
+ // Para exercícios antigos com identidades diferentes entre versões, usa o nome como ponte
+ // somente quando ele aparece uma única vez em cada versão do mesmo programa.
  const legacyVersionCounts=new Map();
  for(const exercise of exerciseMap.values()){
   if(exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
@@ -93,7 +93,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
   // Sem identidade estável, mantém cada registro isolado para não juntar exercícios distintos com o mesmo nome.
   const legacyNameKey=exercise.programId&&exercise.versionId?'legacy-name:'+exercise.programId+'|'+normalize(name):null;
   const canBridgeLegacy=!exercise.catalogId&&legacyNameKey&&legacyVersionCounts.get(exercise.programId+'|'+exercise.versionId+'|'+normalize(name))===1&&legacyProgramCounts.get(exercise.programId+'|'+normalize(name))>1;
-  const identityKey=exercise.identityId?'identity:'+exercise.identityId:exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:canBridgeLegacy?legacyNameKey:'legacy-exercise:'+log.exercise_id;
+  const identityKey=exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:canBridgeLegacy?legacyNameKey:exercise.identityId?'identity:'+exercise.identityId:'legacy-exercise:'+log.exercise_id;
   const key=identityKey+'|'+metricType;
   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
   const group=grouped.get(key);
