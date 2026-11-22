@@ -71,13 +71,13 @@ async function load(expectedUserId,expectedClient,isCurrent){
  // quando ele aparece uma única vez em cada versão do mesmo programa.
  const legacyVersionCounts=new Map();
  for(const exercise of exerciseMap.values()){
-  if(exercise.identityId||exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
+  if(exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
   const nameKey=normalize(exercise.name),key=exercise.programId+'|'+exercise.versionId+'|'+nameKey;
   legacyVersionCounts.set(key,(legacyVersionCounts.get(key)||0)+1);
  }
  const legacyProgramCounts=new Map();
  for(const exercise of exerciseMap.values()){
-  if(exercise.identityId||exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
+  if(exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
   const nameKey=normalize(exercise.name),versionKey=exercise.programId+'|'+exercise.versionId+'|'+nameKey;
   if(legacyVersionCounts.get(versionKey)!==1)continue;
   const key=exercise.programId+'|'+nameKey;
@@ -92,7 +92,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
   // Exercícios copiados entre versões mantêm identity_id, mesmo quando são renomeados.
   // Sem identidade estável, mantém cada registro isolado para não juntar exercícios distintos com o mesmo nome.
   const legacyNameKey=exercise.programId&&exercise.versionId?'legacy-name:'+exercise.programId+'|'+normalize(name):null;
-  const canBridgeLegacy=!exercise.identityId&&!exercise.catalogId&&legacyNameKey&&legacyVersionCounts.get(exercise.programId+'|'+exercise.versionId+'|'+normalize(name))===1&&legacyProgramCounts.get(exercise.programId+'|'+normalize(name))>1;
+  const canBridgeLegacy=!exercise.catalogId&&legacyNameKey&&legacyVersionCounts.get(exercise.programId+'|'+exercise.versionId+'|'+normalize(name))===1&&legacyProgramCounts.get(exercise.programId+'|'+normalize(name))>1;
   const identityKey=exercise.identityId?'identity:'+exercise.identityId:exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:canBridgeLegacy?legacyNameKey:'legacy-exercise:'+log.exercise_id;
   const key=identityKey+'|'+metricType;
   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
