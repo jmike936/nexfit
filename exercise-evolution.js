@@ -65,8 +65,8 @@ async function load(expectedUserId,expectedClient,isCurrent){
   const session=sessionMap.get(log.session_id);if(!session)continue;
   const date=activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at;
   // Exercícios copiados entre versões mantêm identity_id, mesmo quando são renomeados.
-  // Registros anteriores à identidade estável continuam agrupados pelo nome normalizado.
-  const identityKey=exercise.identityId?'identity:'+exercise.identityId:'legacy-name:'+normalized;
+  // Sem identidade estável, mantém cada registro isolado para não juntar exercícios distintos com o mesmo nome.
+  const identityKey=exercise.identityId?'identity:'+exercise.identityId:'legacy-exercise:'+log.exercise_id;
   const key=identityKey+'|'+metricType;
   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
   const group=grouped.get(key);
