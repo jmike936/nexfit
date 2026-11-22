@@ -140,19 +140,19 @@
  #strengthPage .execution-skip-rest{min-width:150px}
 
 
- #strengthPage .workout-dialog-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:#05090dcc;backdrop-filter:blur(5px)}
- #strengthPage .workout-dialog{width:min(100%,440px);padding:24px 20px 20px;border:1px solid #354454;border-radius:20px;background:linear-gradient(145deg,#202b37,#121a22);box-shadow:0 24px 80px #0009;color:#f4f7fa;text-align:center}
- #strengthPage .workout-dialog-mark{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid #526b32;border-radius:50%;color:#b7f34a;font-size:24px;font-weight:800}
- #strengthPage .workout-dialog-mark.danger{border-color:#814747;color:#ff8989}
- #strengthPage .workout-dialog h2{margin:0;font-size:21px}
- #strengthPage .workout-dialog p{margin:10px 0 18px;color:#aeb9c5;font-size:14px;line-height:1.55}
- #strengthPage .workout-dialog-input-label{display:block;margin:0 0 6px;color:#aeb9c5;text-align:left;font-size:12px}
- #strengthPage .workout-dialog .workout-dialog-input{width:100%;margin-bottom:12px;padding:12px;border:1px solid #526b32;border-radius:11px;background:#111922;color:#fff;font-size:18px}
- #strengthPage .workout-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
- #strengthPage .workout-dialog-actions button{min-height:46px;padding:10px;border-radius:11px;font-weight:800;cursor:pointer}
- #strengthPage .workout-dialog-cancel{border:1px solid #435365;background:transparent;color:#f4f7fa}
- #strengthPage .workout-dialog-confirm{border:0;background:#b7f34a;color:#141a0d}
- #strengthPage .workout-dialog-confirm.danger{background:#ff8585;color:#241010}
+ .workout-dialog-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:#05090dcc;backdrop-filter:blur(5px)}
+ .workout-dialog{width:min(100%,440px);padding:24px 20px 20px;border:1px solid #354454;border-radius:20px;background:linear-gradient(145deg,#202b37,#121a22);box-shadow:0 24px 80px #0009;color:#f4f7fa;text-align:center}
+ .workout-dialog-mark{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid #526b32;border-radius:50%;color:#b7f34a;font-size:24px;font-weight:800}
+ .workout-dialog-mark.danger{border-color:#814747;color:#ff8989}
+ .workout-dialog h2{margin:0;font-size:21px}
+ .workout-dialog p{margin:10px 0 18px;color:#aeb9c5;font-size:14px;line-height:1.55}
+ .workout-dialog-input-label{display:block;margin:0 0 6px;color:#aeb9c5;text-align:left;font-size:12px}
+ .workout-dialog .workout-dialog-input{width:100%;margin-bottom:12px;padding:12px;border:1px solid #526b32;border-radius:11px;background:#111922;color:#fff;font-size:18px}
+ .workout-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
+ .workout-dialog-actions button{min-height:46px;padding:10px;border-radius:11px;font-weight:800;cursor:pointer}
+ .workout-dialog-cancel{border:1px solid #435365;background:transparent;color:#f4f7fa}
+ .workout-dialog-confirm{border:0;background:#b7f34a;color:#141a0d}
+ .workout-dialog-confirm.danger{background:#ff8585;color:#241010}
 
  #strengthPage .completion-screen{max-width:620px;margin:18px auto;padding:24px 18px 30px;text-align:center;color:#f4f7fa}
  #strengthPage .completion-mark{width:82px;height:82px;display:grid;place-items:center;margin:8px auto 18px;border:1px solid #526b32;border-radius:50%;background:radial-gradient(circle,#b7f34a24,#b7f34a08);color:#b7f34a;box-shadow:0 0 42px #b7f34a18}
@@ -1847,7 +1847,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    const overlay=document.createElement('div');overlay.id='workoutActionDialog';overlay.className='workout-dialog-backdrop';
    const inputType=input?.type==='text'?'text':'number',inputAttrs=input?(' type="'+inputType+'"'+(inputType==='number'?' min="'+esc(input.min??'')+'" step="'+esc(input.step??'any')+'" inputmode="decimal"':' maxlength="'+esc(input.maxLength??160)+'" autocomplete="off"')+' placeholder="'+esc(input.placeholder||'')+'" value="'+esc(input.value??'')+'"'):'';
    overlay.innerHTML='<section class="workout-dialog" role="dialog" aria-modal="true" aria-labelledby="workoutDialogTitle" aria-describedby="workoutDialogMessage"><div class="workout-dialog-mark '+(danger?'danger':'')+'">'+(danger?'!':'✓')+'</div><h2 id="workoutDialogTitle">'+esc(title)+'</h2><p id="workoutDialogMessage">'+esc(message)+'</p>'+(input?'<label class="workout-dialog-input-label" for="workoutDialogInput">'+esc(input.label)+'</label><input id="workoutDialogInput" class="workout-dialog-input"'+inputAttrs+' required>' : '')+'<div class="workout-dialog-actions"><button type="button" class="workout-dialog-cancel">'+esc(cancelLabel)+'</button><button type="button" class="workout-dialog-confirm '+(danger?'danger':'')+'">'+esc(confirmLabel)+'</button></div></section>';
-   section.append(overlay);
+   document.body.append(overlay);
    const finish=value=>{overlay.remove();resolve(value)};
    overlay.querySelector('.workout-dialog-cancel').onclick=()=>finish(null);
    overlay.querySelector('.workout-dialog-confirm').onclick=()=>{if(!input)return finish(true);const field=overlay.querySelector('#workoutDialogInput'),value=field.value.trim();if(inputType==='number'&&(!value||!Number.isFinite(Number(value))||Number(value)<Number(input.min))){field.setCustomValidity('Informe um número válido.');field.reportValidity();return}if(inputType==='text'&&!value&&!input.allowEmpty){field.setCustomValidity('Preencha este campo.');field.reportValidity();return}finish(value)};
