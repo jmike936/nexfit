@@ -1,6 +1,6 @@
 # Roadmap NEXFIT
 
-Atualizado em 21/11/2026.
+Atualizado em 22/11/2026.
 
 ## Prioridade 1 — Integridade dos programas e histórico
 
@@ -41,6 +41,10 @@ Atualizado em 21/11/2026.
 - [x] Exibir tela amigável de conclusão do treino com resumo, status de sincronização e próximos passos; continuar a substituição de mensagens nativas nas demais etapas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
+- [ ] Modernizar a barra de navegação inferior com visual inspirado no Liquid Glass do iPhone: formato mais arredondado e contínuo (estilo cápsula), transparência, desfoque e acabamento translúcido, mantendo contraste e boa área de toque.
+  - [ ] No atalho de Perfil da barra, exibir a foto de perfil do usuário quando cadastrada.
+  - [ ] Quando não houver foto, exibir o ícone atual de perfil centralizado dentro de um avatar circular, com o mesmo tratamento visual da foto.
+  - [ ] Garantir que tocar no avatar abra diretamente a tela Perfil e que a imagem respeite o recorte circular sem distorção.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
 
 ## Prioridade 5 — Comunicação e orientação visual
