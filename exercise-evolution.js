@@ -67,33 +67,16 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const subworkoutMap=new Map((subworkoutsQ.data||[]).map(x=>[x.id,x.version_id]));
  const versionMap=new Map((versionsQ.data||[]).map(x=>[x.id,x.program_id]));
  const exerciseMap=new Map(exerciseRows.map(x=>[x.id,{name:x.name,identityId:x.identity_id||null,catalogId:x.catalog_exercise_id||null,versionId:subworkoutMap.get(x.subworkout_id)||null,programId:versionMap.get(subworkoutMap.get(x.subworkout_id))||null}]));
- // Para exercícios antigos com identidades diferentes entre versões, usa o nome como ponte
- // somente quando ele aparece uma única vez em cada versão do mesmo programa.
- const legacyVersionCounts=new Map();
- for(const exercise of exerciseMap.values()){
-  if(exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
-  const nameKey=normalize(exercise.name),key=exercise.programId+'|'+exercise.versionId+'|'+nameKey;
-  legacyVersionCounts.set(key,(legacyVersionCounts.get(key)||0)+1);
- }
- const legacyProgramCounts=new Map();
- for(const exercise of exerciseMap.values()){
-  if(exercise.catalogId||!exercise.name||!exercise.versionId||!exercise.programId)continue;
-  const nameKey=normalize(exercise.name),versionKey=exercise.programId+'|'+exercise.versionId+'|'+nameKey;
-  if(legacyVersionCounts.get(versionKey)!==1)continue;
-  const key=exercise.programId+'|'+nameKey;
-  legacyProgramCounts.set(key,(legacyProgramCounts.get(key)||0)+1);
- }
  const grouped=new Map();
  for(const log of logs){
   const exercise=exerciseMap.get(log.exercise_id);if(!exercise?.name)continue;
   const name=exercise.name,metricType=Number(log.duration_seconds)>0?'time':'load',normalized=normalize(name);if(!normalized)continue;
   const session=sessionMap.get(log.session_id);if(!session)continue;
   const date=activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at;
-  // Exercícios copiados entre versões mantêm identity_id, mesmo quando são renomeados.
-  // Sem identidade estável, mantém cada registro isolado para não juntar exercícios distintos com o mesmo nome.
-  const legacyNameKey=exercise.programId&&exercise.versionId?'legacy-name:'+exercise.programId+'|'+normalize(name):null;
-  const canBridgeLegacy=!exercise.catalogId&&legacyNameKey&&legacyVersionCounts.get(exercise.programId+'|'+exercise.versionId+'|'+normalize(name))===1&&legacyProgramCounts.get(exercise.programId+'|'+normalize(name))>1;
-  const identityKey=exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:canBridgeLegacy?legacyNameKey:exercise.identityId?'identity:'+exercise.identityId:'legacy-exercise:'+log.exercise_id;
+  // A identidade lógica é a fonte principal: o mesmo exercício do catálogo pode
+  // aparecer em treinos diferentes e não deve fundir históricos de ocorrências distintas.
+  // O catálogo só serve como fallback para registros antigos sem identity_id.
+  const identityKey=exercise.identityId?'identity:'+exercise.identityId:exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:'legacy-exercise:'+log.exercise_id;
   const key=identityKey+'|'+metricType;
   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
   const group=grouped.get(key);
