@@ -1856,6 +1856,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    const field=overlay.querySelector('#workoutDialogInput');(field||overlay.querySelector('.workout-dialog-confirm')).focus();
   });
  }
+ window.nexfitShowWorkoutDialog=showWorkoutDialog;
  function renderWorkoutCompletion(summary){
   const duration=formatWorkoutTime(summary.durationSeconds);
   const subtitle=summary.allExercisesDone

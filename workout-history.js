@@ -2,6 +2,7 @@
 const normalizeHumanText=s=>{const text=String(s??'').normalize('NFC').replace(/\s+/gu,' ').trim();if(!text)return '';const acronyms=new Set(['NEXFIT','HIIT','AMRAP','BCAA','TRX','MR','RM','PR','PB','ABC']);let first=true;return text.toLocaleLowerCase('pt-BR').replace(/[\p{L}\p{M}]+/gu,word=>{const upper=word.toLocaleUpperCase('pt-BR');if(acronyms.has(upper))return upper;if(first){first=false;return word.charAt(0).toLocaleUpperCase('pt-BR')+word.slice(1)}return word})};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const client=()=>window.db||db,user=()=>window.currentUser||currentUser;
+async function notify(message,title='Não foi possível salvar as alterações',danger=true){const dialog=window.nexfitShowWorkoutDialog;if(typeof dialog==='function')return dialog({title,message,confirmLabel:'Entendi',danger});console.error('[NEXFIT] Diálogo de treino indisponível:',message);return false}
 let activeActivity=null,activeSession=null,activeEntries=[],showGeneration=0;
 function activityDateLabel(value){const raw=String(value||'');const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:'—'}
 function saoPauloDateKey(value){if(!value)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(value))return value;const d=new Date(value);if(Number.isNaN(d.getTime()))return '';const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);const get=k=>parts.find(x=>x.type===k)?.value||'';return get('year')+'-'+get('month')+'-'+get('day')}
@@ -71,18 +72,18 @@ async function show(id,editing=false){
    for(const x of entries){
     if(!isCurrent()||activeSession?.id!==session.id)return;
     const done=m.querySelector('[data-wh-done="'+x.key+'"]')?.checked;
-    if(done===undefined){alert('O formulário de edição não está mais disponível.');return}
+    if(done===undefined){await notify('O formulário de edição não está mais disponível.');return}
     if(done){
      const timed=x.plan.mode&&x.plan.mode!=='reps';let vals;
-     if(timed){const duration=Number(m.querySelector('[data-wh-duration="'+x.key+'"]').value);if(!Number.isInteger(duration)||duration<1||duration>86400){alert('Informe o tempo realizado entre 1 segundo e 24 horas.');return}vals={reps_completed:0,load_kg:null,duration_seconds:duration}}
-     else{const reps=Number(m.querySelector('[data-wh-reps="'+x.key+'"]').value),raw=m.querySelector('[data-wh-load="'+x.key+'"]').value;if(!Number.isFinite(reps)||reps<1){alert('Informe as repetições para toda série marcada como executada.');return}const load=raw===''?null:Number(raw);if(load!==null&&(!Number.isFinite(load)||load<0)){alert('Informe uma carga válida.');return}vals={reps_completed:reps,load_kg:load,duration_seconds:null}}
+     if(timed){const duration=Number(m.querySelector('[data-wh-duration="'+x.key+'"]').value);if(!Number.isInteger(duration)||duration<1||duration>86400){await notify('Informe o tempo realizado entre 1 segundo e 24 horas.','Tempo inválido',false);return}vals={reps_completed:0,load_kg:null,duration_seconds:duration}}
+     else{const reps=Number(m.querySelector('[data-wh-reps="'+x.key+'"]').value),raw=m.querySelector('[data-wh-load="'+x.key+'"]').value;if(!Number.isFinite(reps)||reps<1){await notify('Informe as repetições para toda série marcada como executada.','Repetições inválidas',false);return}const load=raw===''?null:Number(raw);if(load!==null&&(!Number.isFinite(load)||load<0)){await notify('Informe uma carga válida.','Carga inválida',false);return}vals={reps_completed:reps,load_kg:load,duration_seconds:null}}
      const result=x.log?await dbx.from('training_set_logs').update(vals).eq('session_id',session.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1):await dbx.from('training_set_logs').insert({session_id:session.id,exercise_id:x.exercise.id,set_number:x.index+1,...vals});
      if(!isCurrent())return;
-     if(result.error){alert(result.error.message);return}
+     if(result.error){await notify(result.error.message,'Não foi possível salvar a série');return}
     }else if(x.log){
      const result=await dbx.from('training_set_logs').delete().eq('session_id',session.id).eq('exercise_id',x.exercise.id).eq('set_number',x.index+1);
      if(!isCurrent())return;
-     if(result.error){alert(result.error.message);return}
+     if(result.error){await notify(result.error.message,'Não foi possível salvar a série');return}
     }
    }
    if(isCurrent())await show(id,false);
