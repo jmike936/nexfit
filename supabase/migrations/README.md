@@ -1,0 +1,54 @@
+# Supabase migrations — NEXFIT
+
+Esta pasta contém cópias versionadas dos SQLs de evolução do schema e dos backfills gerais do NEXFIT. Os arquivos originais na raiz foram preservados nesta primeira etapa para manter compatibilidade com o histórico operacional.
+
+## Regras
+
+- Aplicar os arquivos em ordem lexicográfica pelo prefixo `YYYYMMDDHHMMSS`.
+- Não executar novamente um arquivo já aplicado em produção apenas porque ele foi copiado para esta pasta.
+- Antes de aplicar qualquer migração em banco existente, conferir o histórico de execução no SQL Editor e fazer backup.
+- As cópias desta entrega são byte a byte equivalentes aos arquivos originais; não houve alteração intencional do schema nem dos dados.
+- A pasta ainda não configura um executor automático. A aplicação permanece manual pelo Supabase SQL Editor até a próxima tarefa definir CI/testes e o fluxo operacional.
+- Migrações que fazem backfill ou consolidação de catálogo devem ser avaliadas com os critérios descritos no cabeçalho do próprio SQL.
+- Não criar migrações retroativas com timestamp anterior às já aplicadas. Novas alterações recebem novo timestamp crescente.
+
+## Ordem de instalação do schema
+
+Para um projeto Supabase novo, aplicar nesta ordem:
+
+1. `20261122000100_activities_schema.sql` — tabela de atividades e RLS inicial.
+2. `20261122000200_training_core_schema.sql` — estrutura principal de programas, versões, treinos, exercícios, sessões, séries, notificações e políticas.
+3. `20261122000300_activities_rls_isolation.sql` — reforça isolamento de atividades por usuário.
+4. `20261122000400_program_management_policies.sql` — permissões e RPCs para gestão de programas.
+5. `20261122000500_workout_edit_policies.sql` — permissões de edição de programas, treinos, exercícios e séries.
+6. `20261122000600_own_program_creation_rpc.sql` — RPC de criação própria de programa.
+7. `20261122000700_public_program_models.sql` — modelos públicos e cópia independente.
+8. `20261122000800_single_pending_version.sql` — consolidação de versões pendentes e índice único.
+9. `20261122000900_exercise_catalog.sql` — catálogo compartilhado e vínculo dos exercícios existentes.
+10. `20261122001000_exercise_library_seed.sql` — biblioteca inicial e normalização do catálogo.
+11. `20261122001100_exercise_visual_guidance.sql` — instruções e metadados visuais.
+12. `20261122001200_stable_training_identities.sql` — identidade estável de treinos e exercícios.
+13. `20261122001300_workout_cancel_policies.sql` — cancelamento de sessões pelo próprio atleta.
+14. `20261122001400_private_profile_photo_storage.sql` — bucket privado e políticas de fotos.
+15. `20261122001500_sync_deleted_workout_activities.sql` — trigger de sincronização entre atividade e sessão.
+16. `20261122001600_unify_exercise_aliases.sql` — unificação explícita de aliases do catálogo.
+17. `20261122001700_reconcile_legacy_workout_identities.sql` — reconciliação conservadora de identidades antigas.
+18. `20261122001800_exercise_image_library_seed.sql` — imagens e grupos musculares da biblioteca visual.
+
+### Observações importantes
+
+- O primeiro e o segundo arquivos são as bases de schema. As demais migrações pressupõem as tabelas criadas por eles.
+- O arquivo de biblioteca visual é extenso (415 exercícios) e atualiza metadados do catálogo; aguarde sua conclusão antes de validar a interface.
+- A reconciliação de identidades antigas não apaga sessões ou séries. Em produção, ela já foi executada anteriormente pelo SQL original; não a reaplique sem confirmar o histórico.
+- O SQL de integridade de séries, que pode remover duplicatas idênticas após validar que não existem divergências, foi separado em `supabase/operations/` e não integra a sequência automática.
+- `supabase-musculacao.sql` cria um schema legado separado, não usado como base da estrutura atual de programas. Foi arquivado em `supabase/legacy/` e não deve ser aplicado em uma instalação nova do NEXFIT atual sem necessidade explícita.
+
+## Idempotência e rollback
+
+Os scripts foram preservados sem reescrita nesta etapa. Muitos usam `IF NOT EXISTS`, `CREATE OR REPLACE` ou substituição explícita de políticas; scripts de dados usam chaves de conflito ou verificações para evitar duplicação. Isso não significa que todo script seja seguro para execução repetida em qualquer estado: conferir os comentários e pré-condições antes de reexecutar.
+
+Não executar rollback destrutivo automaticamente. Para mudanças aditivas de schema, o rollback preferencial é manter as colunas/tabelas e reverter o código consumidor. Remover colunas, identidades, relações ou dados históricos pode destruir compatibilidade e exige plano específico, backup e aprovação. Esta entrega não inclui comandos de rollback que apaguem dados.
+
+## Origem
+
+Os arquivos de origem correspondentes permanecem na raiz do repositório. Esta duplicação temporária permite comparar o conteúdo e migrar a operação sem quebrar instruções ou referências já existentes.
