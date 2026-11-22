@@ -397,7 +397,7 @@
   const user=userRef();if(!user||user.id!==expectedUserId)return false;let cached=[];
   try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(expectedUserId))||'[]')}catch(_){}
   const snapshot=cached.find(x=>String(x.subworkout?.id)===String(workoutId));
-  if(!snapshot||!snapshot.exercises?.length)return alert('Este treino não está disponível offline. Abra-o com internet antes de iniciar.');
+  if(!snapshot||!snapshot.exercises?.length){await showWorkoutDialog({title:'Treino indisponível offline',message:'Este treino não está salvo neste aparelho. Abra-o com internet antes de iniciar para preparar a cópia offline.',confirmLabel:'Entendi'});return false}
   current=snapshot.program;version=snapshot.version;subworkouts=snapshot.subworkouts||[snapshot.subworkout];
   await startSession(workoutId,snapshot.exercises,expectedUserId,dbRef());
  }
@@ -405,7 +405,7 @@
  async function startListedWorkout(programId,versionId,workoutId){
   const db=dbRef(),user=userRef(),userId=user?.id,isSameAccount=()=>userRef()?.id===userId;
   const program=plans.find(p=>String(p.id)===String(programId)&&canManageProgramLocally(p)&&p.status==='active');
-  if(!db||!userId||!program)return alert('Este programa não está ativo.');
+  if(!db||!userId||!program){await showWorkoutDialog({title:'Programa não está ativo',message:'Não foi possível localizar um programa ativo para iniciar este treino.',confirmLabel:'Entendi'});return false}
   if(!navigator.onLine||window.__nexfitOfflineMode)return startOfflineWorkout(workoutId,userId);
   const key='nexfit-offline-workouts:'+String(userId);let cached=[];
   try{cached=JSON.parse(localStorage.getItem(key)||'[]')}catch(_){}
@@ -414,11 +414,11 @@
   try{
    vq=await db.from('training_program_versions').select('*').eq('id',versionId).maybeSingle();
    if(!isSameAccount())return false;
-   if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId,userId);return alert('Não foi possível carregar a versão deste programa.')}
+   if(vq.error||!vq.data){if(snapshot)return startOfflineWorkout(workoutId,userId);await showWorkoutDialog({title:'Não foi possível carregar a versão',message:vq.error?.message||'A versão deste programa não foi encontrada.',confirmLabel:'Entendi',danger:true});return false}
    sq=await db.from('training_subworkouts').select('*').eq('version_id',versionId).order('position');
    if(!isSameAccount())return false;
-   if(sq.error){if(snapshot)return startOfflineWorkout(workoutId,userId);return alert(sq.error.message)}
-  }catch(error){if(!isSameAccount())return false;if(snapshot)return startOfflineWorkout(workoutId,userId);return alert('Sem conexão e sem cópia offline deste treino.')}
+   if(sq.error){if(snapshot)return startOfflineWorkout(workoutId,userId);await showWorkoutDialog({title:'Não foi possível carregar os treinos',message:sq.error.message,confirmLabel:'Entendi',danger:true});return false}
+  }catch(error){if(!isSameAccount())return false;if(snapshot)return startOfflineWorkout(workoutId,userId);await showWorkoutDialog({title:'Sem conexão',message:'Não foi possível iniciar este treino e não há uma cópia offline disponível. Conecte-se à internet e tente novamente.',confirmLabel:'Entendi'});return false}
   if(!isSameAccount())return false;
   current=program;version=vq.data;subworkouts=sq.data||[];
   await startSession(workoutId,snapshot?.exercises||null,userId,db);
@@ -1658,13 +1658,13 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   if(localOnly){if(resetCancelledSession())home();return}
   const {error:logsError}=await cancelDb.from('training_set_logs').delete().eq('session_id',sessionId);
   if(!isSameAccount()){
-   if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
+   if(!queueAndClearCapturedSession())await showWorkoutDialog({title:'Não foi possível concluir o cancelamento',message:'A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador até resolver essa pendência.',confirmLabel:'Entendi',danger:true});
    return;
   }
   if(logsError){await showWorkoutDialog({title:'Não foi possível cancelar',message:'Não conseguimos apagar as séries registradas: '+logsError.message,confirmLabel:'Entendi',danger:true});return;}
   const {error:sessionError}=await cancelDb.from('training_sessions').delete().eq('id',sessionId).eq('athlete_id',cancelUserId);
   if(!isSameAccount()){
-   if(!queueAndClearCapturedSession())alert('A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador.');
+   if(!queueAndClearCapturedSession())await showWorkoutDialog({title:'Não foi possível concluir o cancelamento',message:'A conta mudou durante o cancelamento e não foi possível guardar a exclusão pendente. Não limpe os dados deste navegador até resolver essa pendência.',confirmLabel:'Entendi',danger:true});
    return;
   }
   if(sessionError){await showWorkoutDialog({title:'Cancelamento incompleto',message:'As séries foram apagadas, mas não foi possível remover a sessão. Tente novamente ou contate o suporte: '+sessionError.message,confirmLabel:'Entendi',danger:true});return;}
