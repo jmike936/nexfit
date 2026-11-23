@@ -24,7 +24,7 @@
  #strengthPage .training-programs{margin-bottom:14px}
  #strengthPage .training-list{display:grid;gap:12px}
  #strengthPage .training-card{position:relative;background:linear-gradient(145deg,#1d271f,#151b17);border:1px solid #303a30;border-radius:16px;padding:6px 12px}
- #strengthPage .training-card-main{display:flex;align-items:center;gap:13px;width:100%;border:0;background:transparent;color:#f5f7f2;text-align:left;padding:7px 0;cursor:pointer}
+ #strengthPage .training-card-main[aria-busy="true"]{opacity:.72;cursor:progress}\n #strengthPage .training-card-main{display:flex;align-items:center;gap:13px;width:100%;border:0;background:transparent;color:#f5f7f2;text-align:left;padding:7px 0;cursor:pointer}
  #strengthPage .training-card-main>img,#strengthPage .training-card-placeholder{width:78px;height:78px;flex:0 0 78px;object-fit:cover;border-radius:12px;background:#101410}
  #strengthPage .training-card-placeholder{display:grid;place-items:center;background:radial-gradient(circle at 65% 30%,#39492c,#111610 70%);color:#b7f34a;font-size:25px}
  #strengthPage .training-card-copy{display:grid;gap:4px;min-width:0;flex:1}
@@ -297,7 +297,7 @@
    let cached=[];try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(renderUserId))||'[]')}catch(_){}
    if(!cached.length){host.innerHTML='<div class="training-empty"><h3>Treinos disponíveis offline</h3><p class="muted">Abra esta tela com internet pelo menos uma vez para guardar seus programas neste aparelho.</p></div>';return}
    host.innerHTML='<p class="muted">Modo offline · programas guardados neste aparelho</p><div class="training-list">'+cached.map(x=>'<article class="training-card"><button class="training-card-main" data-offline-workout="'+esc(x.subworkout.id)+'"><div class="training-card-placeholder">↻</div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(x.subworkout.title||'Treino'))+'</strong><small>'+esc(normalizeHumanText(x.program.title||'Programa'))+' · '+(x.exercises||[]).length+' exercícios</small></span><span class="training-chevron">›</span></button></article>').join('')+'</div>';
-   host.querySelectorAll('[data-offline-workout]').forEach(b=>b.onclick=()=>startOfflineWorkout(b.dataset.offlineWorkout,renderUserId));
+   host.querySelectorAll('[data-offline-workout]').forEach(b=>b.onclick=()=>runWorkoutStart(b,()=>startOfflineWorkout(b.dataset.offlineWorkout,renderUserId)));
    return;
   }
   window.__nexfitOfflineMode=false;
@@ -395,7 +395,7 @@
    return '<article class="training-card" data-training-card><button class="training-card-main" data-start-training="'+esc(p.id)+'" data-version="'+esc(p.current_version_id)+'" data-workout="'+esc(workout.id)+'">'+image+'<span class="training-card-copy"><strong>'+esc(normalizeHumanText(workout.title||'Treino'))+executionInfo+'</strong><small>'+esc((normalizeHumanText(p.title)||category)+(workout.description?' · '+normalizeHumanText(workout.description):''))+' · '+exercises.length+' '+(exercises.length===1?'exercício':'exercícios')+'</small></span><span class="training-chevron" aria-label="Registrar atividade">›</span></button></article>';
   });
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
-  host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout));
+  host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>runWorkoutStart(button,()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout)));
  }
  async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const isSameAccount=()=>userRef()?.id===expectedUserId;
@@ -408,6 +408,20 @@
   activeTrainingTab='mine';await showWorkoutDialog({title:'Cópia adicionada',message:'O programa foi copiado para seu perfil. Você poderá editá-lo em Gerenciar Programas de Treino.',confirmLabel:'Continuar'});await home();
  }
 
+ async function runWorkoutStart(button,start){
+  if(!button||button.disabled)return false;
+  const expectedUserId=userRef()?.id,copy=button.querySelector('.training-card-copy small'),originalText=copy?.textContent;
+  button.disabled=true;button.setAttribute('aria-busy','true');button.classList.add('is-loading');
+  if(copy)copy.textContent='Carregando treino…';
+  try{return await start()}
+  catch(error){
+   console.error('[NEXFIT] Falha inesperada ao iniciar treino',error);
+   if(userRef()?.id===expectedUserId)await showWorkoutDialog({title:'Não foi possível iniciar o treino',message:error?.message||'Ocorreu uma falha inesperada ao preparar o treino. Tente novamente.',confirmLabel:'Entendi',danger:true});
+   return false;
+  }finally{
+   if(button.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.classList.remove('is-loading');if(copy?.isConnected)copy.textContent=originalText||'Toque para iniciar'}
+  }
+ }
  async function startOfflineWorkout(workoutId,expectedUserId=userRef()?.id){
   const user=userRef();if(!user||user.id!==expectedUserId)return false;let cached=[];
   try{cached=JSON.parse(localStorage.getItem('nexfit-offline-workouts:'+String(expectedUserId))||'[]')}catch(_){}
@@ -1799,7 +1813,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   }
   if(!isSameAccount())return false;
   if(!exercises?.length){await showWorkoutDialog({title:'Treino sem exercícios',message:'Este treino não possui exercícios disponíveis neste aparelho.',confirmLabel:'Entendi'});return false}
-  await enableWorkoutNotifications();
+  if(typeof enableWorkoutNotifications==='function'){try{await enableWorkoutNotifications()}catch(error){console.warn('Notificações de treino indisponíveis; seguindo sem bloquear a sessão',error)}}
   if(!isSameAccount())return false;
   try{if(navigator.storage?.persist)await navigator.storage.persist()}catch(_){}
   if(!isSameAccount())return false;
