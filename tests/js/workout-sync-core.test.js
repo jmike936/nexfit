@@ -87,3 +87,93 @@ test('sync coordinator coalesces concurrent calls and allows retry after failure
  assert.equal(coordinator.size(),0);
  assert.equal(await coordinator.run('athlete-a',async()=> 'retry-ok'),'retry-ok');
 });
+
+
+function makeSyncAdapter(options={}){
+ const state={sessions:new Map(),logs:new Map(),activities:new Map(),calls:{session:0,logs:0,complete:0,lookup:0,insert:0,raceLookup:0}};
+ let failLogOnce=!!options.failLogOnce;
+ return {
+  state,
+  async upsertSession(payload){state.calls.session++;state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {data:null,error:null}},
+  async upsertSetLogs(rows){state.calls.logs++;if(failLogOnce){failLogOnce=false;return {data:null,error:new Error('temporary offline')}}for(const row of rows)state.logs.set(row.exercise_id+':'+row.set_number,row);return {data:null,error:null}},
+  async completeSession(payload){state.calls.complete++;state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {data:null,error:null}},
+  async findActivityByMarker(userId,notes){state.calls.lookup++;const found=[...state.activities.values()].find(x=>x.user_id===userId&&x.notes===notes);return {data:found?{id:found.id}:null,error:null}},
+  async insertActivity(payload){state.calls.insert++;if(options.insertRace)return {data:null,error:new Error('duplicate race')};state.activities.set(payload.id,payload);return {data:{id:payload.id},error:null}},
+  async findActivityByIdAndMarker(id,userId,notes){state.calls.raceLookup++;const found=state.activities.get(id);return {data:found&&found.user_id===userId&&found.notes===notes?{id:found.id}:null,error:null}}
+ };
+}
+function completedSnapshot(){
+ return {
+  userId:'athlete-a',sessionId:'session-flow-1',programId:'program-1',versionId:'version-1',subworkoutId:'workout-1',
+  session:{id:'session-flow-1',started_at:'2026-11-23T10:00:00Z',finished_at:'2026-11-23T10:45:00Z',status:'completed'},
+  sessionSetLogs:[{exercise_id:'exercise-1',set_number:1,reps_completed:10,load_kg:60,completed_at:'2026-11-23T10:30:00Z'}],
+  subworkouts:[{id:'workout-1',title:'Treino A'}],current:{title:'Hipertrofia'}
+ };
+}
+
+test('offline completion retry is idempotent and creates one activity',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter({failLogOnce:true}),isCurrent=()=>true;
+ const first=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent,now:()=> '2026-11-23T10:45:00Z'});
+ assert.equal(first.ok,false);
+ assert.equal(first.reason,'set_log_upsert');
+ assert.equal(db.state.sessions.size,1);
+ assert.equal(db.state.logs.size,0);
+ assert.equal(db.state.activities.size,0);
+
+ const second=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent,now:()=> '2026-11-23T10:45:00Z'});
+ assert.equal(second.ok,true);
+ assert.equal(second.completed,true);
+ assert.equal(db.state.sessions.size,1);
+ assert.equal(db.state.logs.size,1);
+ assert.equal(db.state.activities.size,1);
+ assert.equal(second.activityPayload.duration_minutes,45);
+
+ const third=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent,now:()=> '2026-11-23T10:45:00Z'});
+ assert.equal(third.ok,true);
+ assert.equal(db.state.activities.size,1);
+ assert.equal(db.state.calls.insert,1);
+});
+
+test('completed sync reuses an existing activity marker instead of inserting a duplicate',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter();
+ const expected=sync.buildCompletedActivityPayload({pendingSession:saved.session,saved,userId:'athlete-a',finishedAt:saved.session.finished_at});
+ db.state.activities.set(expected.id,expected);
+ const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>true});
+ assert.equal(result.ok,true);
+ assert.equal(result.activityId,expected.id);
+ assert.equal(db.state.calls.insert,0);
+ assert.equal(db.state.activities.size,1);
+});
+
+test('insert race is recovered by looking up the deterministic session marker',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter({insertRace:true});
+ const expected=sync.buildCompletedActivityPayload({pendingSession:saved.session,saved,userId:'athlete-a',finishedAt:saved.session.finished_at});
+ db.state.activities.set(expected.id,expected);
+ const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>true});
+ assert.equal(result.ok,true);
+ assert.equal(result.activityId,expected.id);
+ assert.equal(db.state.calls.insert,1);
+ assert.equal(db.state.calls.raceLookup,1);
+});
+
+test('account change during upload stops before set logs or activity writes',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter();
+ let checks=0;
+ const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>++checks===1});
+ assert.equal(result.ok,false);
+ assert.equal(result.reason,'account_changed');
+ assert.equal(db.state.calls.session,1);
+ assert.equal(db.state.calls.logs,0);
+ assert.equal(db.state.calls.insert,0);
+});
+
+test('in-progress session sync does not create a completion activity',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter();
+ saved.session.status='in_progress';saved.session.finished_at=null;
+ const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>true});
+ assert.equal(result.ok,true);
+ assert.equal(result.completed,false);
+ assert.equal(db.state.sessions.size,1);
+ assert.equal(db.state.logs.size,1);
+ assert.equal(db.state.activities.size,0);
+});
