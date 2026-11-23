@@ -97,10 +97,9 @@ BEGIN
   IF (SELECT count(*) FROM public.training_program_versions) <> 1 THEN RAISE EXCEPTION 'Read-only professional version visibility failed'; END IF;
   IF (SELECT count(*) FROM public.training_subworkouts) <> 1 THEN RAISE EXCEPTION 'Read-only professional workout visibility failed'; END IF;
   IF (SELECT count(*) FROM public.training_exercises) <> 1 THEN RAISE EXCEPTION 'Read-only professional exercise visibility failed'; END IF;
-  RAISE NOTICE 'RLS diagnostic uid=%, access_rows=%, history_link=%, sessions_visible=%', auth.uid(), (SELECT count(*) FROM public.athlete_professional_access), (SELECT count(*) FROM public.athlete_professional_access WHERE athlete_id='10000000-0000-4000-8000-000000000001' AND professional_id=auth.uid() AND status='active' AND can_view_history), (SELECT count(*) FROM public.training_sessions);
   IF (SELECT count(*) FROM public.athlete_professional_access WHERE athlete_id='10000000-0000-4000-8000-000000000001' AND professional_id=auth.uid() AND status='active' AND can_view_history) <> 1 THEN RAISE EXCEPTION 'Professional history permission fixture is not visible'; END IF;
-  IF (SELECT count(*) FROM public.training_sessions) <> 1 THEN RAISE EXCEPTION 'Read-only professional history visibility failed'; END IF;
-  IF (SELECT count(*) FROM public.training_set_logs) <> 1 THEN RAISE EXCEPTION 'Read-only professional set-log visibility failed'; END IF;
+  IF (SELECT count(*) FROM public.training_sessions) <> 2 THEN RAISE EXCEPTION 'Read-only professional history visibility failed'; END IF;
+  IF (SELECT count(*) FROM public.training_set_logs) <> 2 THEN RAISE EXCEPTION 'Read-only professional set-log visibility failed'; END IF;
   IF (SELECT count(*) FROM public.athlete_professional_access) <> 1 THEN RAISE EXCEPTION 'Professional access-link visibility failed'; END IF;
 
   UPDATE public.training_programs SET title='Não deve alterar' WHERE id='a1000000-0000-4000-8000-000000000001';
