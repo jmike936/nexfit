@@ -321,7 +321,7 @@ function showFeedback(title,message){$('feedbackTitle').textContent=title;$('fee
 function closeFeedback(){$('feedbackModal').classList.remove('show');if(authMode==='signup'&&!currentUser)setAuthMode('signin')}
 let deferredInstallPrompt=null,pwaInstalled=false,pwaInstallPending=false;
 // Ao publicar: atualize estas versões, o version.json e as URLs dos scripts abaixo.
-const APP_VERSION='1.1.3',APP_BUILD = '20261122.118';
+const APP_VERSION='1.1.3',APP_BUILD = '20261122.119';
 function paintAppVersion(){
  $('aboutAppVersion').textContent=APP_VERSION+' · build '+APP_BUILD;
  $('loginAppVersion').textContent=APP_VERSION;$('loginAppBuild').textContent=APP_BUILD;
