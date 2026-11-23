@@ -1,6 +1,6 @@
 # Roadmap NEXFIT
 
-Atualizado em 22/11/2026.
+Atualizado em 23/11/2026.
 
 ## Prioridade 1 — Integridade dos programas e histórico
 
@@ -58,6 +58,7 @@ Atualizado em 22/11/2026.
 - [x] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, preservando os originais e documentando dependências, pré-requisitos e operações manuais.
 - [x] Fazer auditoria estática individual das 18 migrações, classificando reexecução, operações sensíveis, dependências e riscos de rollback em `supabase/migrations/AUDIT.md`.
 - [ ] Validar reprodução do zero e reexecução em PostgreSQL/Supabase descartável; conferir FKs do catálogo e políticas RLS com identidades distintas.
+  - [x] Adicionar smoke test de instalação das 18 migrações em PostgreSQL 16 descartável, com camada mínima de compatibilidade Supabase e verificação inicial do isolamento RLS de `activities` (não substitui testes no Supabase local/real).
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
