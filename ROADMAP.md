@@ -55,7 +55,9 @@ Atualizado em 22/11/2026.
 
 ## Prioridade 6 — Qualidade e engenharia (transversal)
 
-- [x] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, preservando os originais e documentando dependências, pré-requisitos e operações manuais. As cópias foram mantidas sem reescrita; a auditoria individual de idempotência e a validação de reprodução do zero permanecem na sequência desta prioridade.
+- [x] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, preservando os originais e documentando dependências, pré-requisitos e operações manuais.
+- [x] Fazer auditoria estática individual das 18 migrações, classificando reexecução, operações sensíveis, dependências e riscos de rollback em `supabase/migrations/AUDIT.md`.
+- [ ] Validar reprodução do zero e reexecução em PostgreSQL/Supabase descartável; conferir FKs do catálogo e políticas RLS com identidades distintas.
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
