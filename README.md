@@ -9,7 +9,7 @@ A estrutura atual e suas evoluções estão organizadas em `supabase/migrations/
 - Para uma instalação nova, siga a sequência numerada descrita no README das migrações.
 - Para bancos existentes, **não reaplique todos os arquivos**: confira o histórico de execução e aplique somente migrações ainda não executadas.
 - Faça backup antes de aplicar alterações no banco.
-- SQLs pontuais e operações que exigem revisão manual ficam em [supabase/operations/README.md](supabase/operations/README.md).
+- SQLs pontuais e operações que exigem revisão manual ficam em [supabase/operations/README.md](supabase/operations/README.md). O diagnóstico `audit-rls-storage-readonly.sql` contém apenas SELECT e permite revisar o estado real de RLS, policies, grants, funções SECURITY DEFINER, buckets e triggers de Auth sem alterar o banco.
 - O schema antigo de musculação foi preservado em [supabase/legacy/README.md](supabase/legacy/README.md) e não faz parte da instalação atual.
 - Os SQLs originais da raiz foram preservados nesta etapa para manter compatibilidade com o histórico e permitir comparação das cópias.
 
