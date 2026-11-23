@@ -49,7 +49,7 @@ A auditoria estática arquivo a arquivo está em [AUDIT.md](AUDIT.md). Ela class
 
 Em especial, 010 e 016 consolidam e excluem aliases do catálogo; 017 altera identidades históricas; 008 arquiva versões pendentes duplicadas; 015 instala um trigger cujo comportamento de runtime remove logs/sessão ao excluir uma atividade vinculada. Essas operações exigem prévia, backup e validação conforme a auditoria.
 
-Não executar rollback destrutivo automaticamente. Para mudanças aditivas de schema, o rollback preferencial é manter colunas/tabelas e reverter o código consumidor. Remover colunas, identidades, relações, aliases ou dados históricos pode destruir compatibilidade e exige plano específico, backup e aprovação. A sequência ainda não está aprovada para execução automática nem foi reproduzida do zero em banco descartável.
+Não executar rollback destrutivo automaticamente. Para mudanças aditivas de schema, o rollback preferencial é manter colunas/tabelas e reverter o código consumidor. Remover colunas, identidades, relações, aliases ou dados históricos pode destruir compatibilidade e exige plano específico, backup e aprovação. A sequência ainda não está aprovada para execução automática. O workflow inclui fixtures sintéticas para exercitar 008, 010, 016 e 017 sobre dados legados representativos; isso não substitui validação em Supabase real nem autoriza reaplicação em produção.
 
 ## Origem
 
@@ -59,4 +59,4 @@ Os arquivos de origem correspondentes permanecem na raiz do repositório. Esta d
 
 O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 18 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`).
 
-Esse teste verifica sintaxe, dependências de criação, reexecução estrutural e cenários de isolamento RLS entre atletas e personais com permissões distintas nas tabelas de programas, treinos e histórico. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reaplica migrações sensíveis sobre dados existentes. A validação completa de RLS por atleta/personal e a reexecução controlada continuam pendentes.
+Esse teste verifica sintaxe, dependências de criação, reexecução estrutural e cenários de isolamento RLS entre atletas e personais com permissões distintas nas tabelas de programas, treinos e histórico. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reproduz todos os formatos de dados históricos reais. A auditoria completa de RLS e a validação em Supabase local/real continuam pendentes.
