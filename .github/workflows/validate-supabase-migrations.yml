@@ -1,0 +1,69 @@
+name: Validate Supabase migrations (PostgreSQL smoke test)
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'tests/sql/**'
+      - '.github/workflows/validate-supabase-migrations.yml'
+jobs:
+  postgres-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nexfit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nexfit_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: nexfit_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare minimal Supabase compatibility layer
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/supabase-bootstrap.sql
+      - name: Apply all 18 migrations to an empty database
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' ! -name 'AUDIT.md' | sort)
+          test "${#migrations[@]}" -eq 18
+          for migration in "${migrations[@]}"; do
+            echo "::group::${migration}"
+            psql -v ON_ERROR_STOP=1 -f "${migration}"
+            echo "::endgroup::"
+          done
+      - name: Verify schema objects and activity RLS isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO auth.users(id,email) VALUES
+            ('00000000-0000-4000-8000-000000000001','athlete-a@example.test'),
+            ('00000000-0000-4000-8000-000000000002','athlete-b@example.test');
+          INSERT INTO public.activities(user_id,sport,activity_date,duration_minutes)
+          VALUES
+            ('00000000-0000-4000-8000-000000000001','Corrida',CURRENT_DATE,30),
+            ('00000000-0000-4000-8000-000000000002','Corrida',CURRENT_DATE,40);
+          GRANT SELECT ON public.activities TO authenticated;
+          SET ROLE authenticated;
+          SET request.jwt.claim.sub = '00000000-0000-4000-8000-000000000001';
+          DO $$
+          BEGIN
+            IF (SELECT count(*) FROM public.activities) <> 1 THEN
+              RAISE EXCEPTION 'RLS isolation failed: athlete A can see rows outside their account';
+            END IF;
+          END
+          $$;
+          RESET ROLE;
+          SQL
+          psql -v ON_ERROR_STOP=1 -Atc "SELECT to_regclass('public.training_programs') IS NOT NULL AND to_regclass('public.training_exercise_catalog') IS NOT NULL AND to_regclass('public.training_sessions') IS NOT NULL" | grep -qx t
