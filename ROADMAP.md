@@ -55,7 +55,7 @@ Atualizado em 22/11/2026.
 
 ## Prioridade 6 — Qualidade e engenharia (transversal)
 
-- [ ] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, idempotentes (`IF NOT EXISTS`) e reproduzíveis do zero.
+- [x] Organizar os `.sql` da raiz em `supabase/migrations/` com ordem versionada, preservando os originais e documentando dependências, pré-requisitos e operações manuais. As cópias foram mantidas sem reescrita; a auditoria individual de idempotência e a validação de reprodução do zero permanecem na sequência desta prioridade.
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
