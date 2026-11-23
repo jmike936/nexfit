@@ -80,3 +80,5 @@ jobs:
           RESET ROLE;
           SQL
           psql -v ON_ERROR_STOP=1 -Atc "SELECT to_regclass('public.training_programs') IS NOT NULL AND to_regclass('public.training_exercise_catalog') IS NOT NULL AND to_regclass('public.training_sessions') IS NOT NULL" | grep -qx t
+      - name: Verify sensitive backfills with representative legacy fixtures
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/backfill-migration-fixtures.sql
