@@ -28,3 +28,7 @@ A associação e os metadados estão incluídos nas migrações `20261122001000`
 ## Validação de banco em CI
 
 A cada alteração nas migrações, o GitHub Actions executa uma instalação de smoke test em PostgreSQL 16 descartável. O ambiente simula somente as interfaces mínimas de Auth e Storage necessárias para compilar/aplicar os SQLs; não substitui um projeto Supabase local nem autoriza aplicar migrações em produção. Consulte [o guia de migrações](supabase/migrations/README.md#teste-automatizado-de-instalação).
+
+## Biblioteca de Exercícios (planejada)
+
+O roadmap prevê uma biblioteca consultável por atletas e personais, com instruções e imagens de execução vinculadas ao catálogo canônico. Durante o treino, a orientação ficará recolhida atrás de um indicador acionável e abrirá sob demanda, reutilizando o conteúdo pré-carregado no dispositivo para evitar duplicação e dependência de rede.

@@ -49,7 +49,15 @@ Atualizado em 23/11/2026.
 
 ## Prioridade 5 — Comunicação e orientação visual
 - [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.
-- [ ] Ao iniciar um exercício, exibir uma orientação visual simples de como executá-lo, com imagens ilustrativas e instruções claras.
+- [ ] Criar uma Biblioteca de Exercícios, acessível em área própria e fácil de encontrar, para consulta por atletas e personais.
+  - [ ] Organizar a biblioteca por nome, grupo muscular e/ou equipamento, com busca e filtros.
+  - [ ] Cada exercício deve ter orientação de execução correta, imagens ilustrativas e instruções objetivas; relacionar o conteúdo à identidade canônica do exercício no catálogo existente, sem criar cópias de exercícios.
+  - [ ] Pré-carregar e manter os conteúdos essenciais da biblioteca no dispositivo, com cache offline e atualização controlada quando houver conexão.
+  - [ ] Reutilizar a mesma referência/conteúdo da biblioteca em todos os pontos do app; não duplicar imagens nem registros de exercícios.
+- [ ] Simplificar a tela durante a execução do treino: não exibir a imagem de execução permanentemente junto ao exercício.
+  - [ ] Exibir apenas um indicador discreto/ação “Ver execução” ou ícone equivalente, deixando claro que há orientação disponível ao tocar.
+  - [ ] Ao tocar, abrir a imagem e as instruções do exercício em modal ou painel apropriado, usando a referência da Biblioteca de Exercícios e o conteúdo já pré-carregado no dispositivo.
+  - [ ] Garantir abertura offline, sem novo download durante a sessão quando o conteúdo já estiver em cache, e apresentar fallback claro quando algum material ainda não estiver disponível.
 - [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
 - [x] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
 
