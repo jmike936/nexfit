@@ -32,6 +32,7 @@ CREATE TABLE storage.objects (
   bucket_id text NOT NULL,
   name text NOT NULL
 );
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION storage.foldername(object_name text)
 RETURNS text[]
 LANGUAGE sql IMMUTABLE
