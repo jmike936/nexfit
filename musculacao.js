@@ -1357,13 +1357,13 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
     const activity=await syncDb.from('activities').insert(activityPayload).select('id').single();
     if(!isSameAccount())return false;
     if(activity.error){
-     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',notes).maybeSingle();
+     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',activityPayload.notes).maybeSingle();
      if(raced.error||!raced.data||!isSameAccount())return false;
      activityId=raced.data.id;
     }else activityId=activity.data.id;
    }
    if(!isSameAccount())return false;
-   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
+   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date:activityPayload.activity_date,duration:activityPayload.duration_minutes,distance:0,notes:activityPayload.notes});
    try{localStorage.removeItem(storageKey)}catch(_){}
    if(typeof window.render==='function')window.render();
    return true;
