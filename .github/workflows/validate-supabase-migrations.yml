@@ -42,6 +42,17 @@ jobs:
             psql -v ON_ERROR_STOP=1 -f "${migration}"
             echo "::endgroup::"
           done
+      - name: Reapply all 18 migrations to verify schema-level idempotency
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' ! -name 'AUDIT.md' | sort)
+          test "${#migrations[@]}" -eq 18
+          for migration in "${migrations[@]}"; do
+            echo "::group::Reapplying ${migration}"
+            psql -v ON_ERROR_STOP=1 -f "${migration}"
+            echo "::endgroup::"
+          done
       - name: Verify schema objects and activity RLS isolation
         shell: bash
         run: |

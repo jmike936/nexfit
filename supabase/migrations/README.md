@@ -57,6 +57,6 @@ Os arquivos de origem correspondentes permanecem na raiz do repositório. Esta d
 
 ## Teste automatizado de instalação
 
-O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 18 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`).
+O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 18 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`).
 
 Esse teste verifica sintaxe, dependências de criação e um cenário básico de isolamento RLS em `activities`. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reaplica migrações sensíveis sobre dados existentes. A validação completa de RLS por atleta/personal e a reexecução controlada continuam pendentes.
