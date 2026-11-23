@@ -12,6 +12,9 @@ VALUES ('90000000-0000-4000-8000-000000000010',
         '90000000-0000-4000-8000-000000000001',
         '90000000-0000-4000-8000-000000000001','Fixture program','active');
 
+-- Allow the legacy duplicate-pending state that existed before migration 008.
+DROP INDEX IF EXISTS public.training_program_versions_one_pending_uidx;
+
 INSERT INTO public.training_program_versions
  (id,program_id,version_number,created_by,status,created_at)
 VALUES
@@ -21,9 +24,6 @@ VALUES
 UPDATE public.training_programs
 SET current_version_id='90000000-0000-4000-8000-000000000012'
 WHERE id='90000000-0000-4000-8000-000000000010';
-
--- Allow the legacy duplicate-pending state that existed before migration 008.
-DROP INDEX IF EXISTS public.training_program_versions_one_pending_uidx;
 
 -- Catalog duplicates exercise migration 010's canonical selection by created_at.
 DROP INDEX IF EXISTS public.training_exercise_catalog_normalized_name_uidx;
