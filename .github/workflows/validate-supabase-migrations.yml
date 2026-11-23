@@ -53,6 +53,8 @@ jobs:
             psql -v ON_ERROR_STOP=1 -f "${migration}"
             echo "::endgroup::"
           done
+      - name: Verify athlete and professional RLS isolation
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/rls-isolation.sql
       - name: Verify schema objects and activity RLS isolation
         shell: bash
         run: |
