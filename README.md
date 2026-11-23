@@ -40,6 +40,10 @@ A estrutura atual e suas evoluções estão organizadas em `supabase/migrations/
 
 As migrações foram organizadas sem reescrever seu conteúdo nesta entrega. Portanto, a organização não representa uma nova aplicação de SQL nem altera o banco Supabase já existente.
 
+## Inicialização de treinos
+
+O fluxo de início não depende de notificações: o app verifica se o recurso opcional está disponível e nunca bloqueia a criação da sessão quando ele não existe ou falha. A seleção do treino apresenta estado de carregamento e converte falhas inesperadas em mensagem visível, sem deixar o botão preso.
+
 ## Cancelamento de treinos
 
 A política de cancelamento está versionada em `supabase/migrations/20261122001300_workout_cancel_policies.sql`. Ela permite ao atleta cancelar uma sessão e remover somente seus próprios registros relacionados, respeitando o RLS.
