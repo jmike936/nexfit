@@ -1,6 +1,6 @@
 # Auditoria estática das migrações Supabase
 
-Atualizada em 22/11/2026. Esta revisão inspeciona SQL e ordem de dependências; **não substitui** reprodução em PostgreSQL/Supabase temporário, testes com dados representativos ou auditoria completa de RLS. Nenhum SQL foi executado nesta tarefa.
+Atualizada em 23/11/2026. Esta revisão inspeciona SQL, ordem de dependências, políticas e privilégios; **não substitui** validação em Supabase real. Nenhum SQL foi executado no banco de produção nesta tarefa.
 
 ## Classificação por arquivo
 
@@ -33,7 +33,7 @@ Atualizada em 22/11/2026. Esta revisão inspeciona SQL e ordem de dependências;
 - 011 depende de catálogo e exercícios; 012 depende de subtreinos e exercícios.
 - 013 depende de sessões e logs; 014 depende dos schemas de Storage do Supabase.
 - 015 depende de `activities`, sessões/logs e do campo `activities.notes` com o marcador de sessão.
-- 016 depende do catálogo e do vínculo de exercícios (009); 017 depende das identidades (012) e do catálogo (009); 018 depende do catálogo e dos exercícios.
+- 016 depende do catálogo e do vínculo de exercícios (009); 017 depende das identidades (012) e do catálogo (009); 018 depende do catálogo e dos exercícios; 019 depende das funções definidas em 002/007.
 
 ## Pontos transversais encontrados
 
@@ -41,7 +41,7 @@ Atualizada em 22/11/2026. Esta revisão inspeciona SQL e ordem de dependências;
 2. **RLS não deve ser auditado arquivo a arquivo isoladamente:** políticas permissivas para a mesma operação podem ser combinadas por OR. A presença de uma política restritiva num arquivo não garante, sozinha, isolamento final.
 3. **Consolidação do catálogo:** 010 e 016 apagam linhas do catálogo após redirecionar `training_exercises`. É necessário inventariar todas as FKs/referências externas antes de aprovar uma execução em qualquer banco com dados.
 4. **Identidades históricas:** 017 altera chaves de identidade, mas não as sessões/séries. Rollback automático pode romper a continuidade do histórico; preservar snapshot das identidades anteriores para eventual reversão controlada.
-5. **Trigger de exclusão:** 015 instala uma rotina que apaga séries e sessão vinculadas quando a atividade relacionada é excluída. Testar o fluxo de exclusão e as garantias de propriedade antes de habilitar em produção.
+5. **Trigger de exclusão:** 015 instala uma rotina que apaga séries e sessão vinculadas quando a atividade relacionada é excluída. Testar o fluxo de exclusão e as garantias de propriedade antes de habilitar em produção.\n6. **Privilégios SECURITY DEFINER:** 002/007 deixavam `nexfit_can_manage_program`, `nexfit_can_read_program` e `nexfit_request_access_by_email` executáveis por PUBLIC por padrão. A migração 019 restringe execução a `authenticated` e `service_role`; validar integrações antes de aplicá-la em projeto existente.\n7. **Storage:** 014 cria políticas específicas de avatar, mas não remove outras políticas permissivas preexistentes de `storage.objects`. O teste efêmero verifica somente as quatro políticas NEXFIT e não prova ausência de políticas adicionais no projeto Supabase real.
 
 ## Política de aplicação e rollback
 
