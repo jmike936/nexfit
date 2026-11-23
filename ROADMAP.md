@@ -44,6 +44,8 @@ Atualizado em 23/11/2026.
 
 ## Prioridade 3 — Confiabilidade do treino
 
+- [x] Corrigir falha silenciosa ao iniciar treino causada por chamada a helper opcional de notificações inexistente; adicionar estado de carregamento e tratamento visível de exceções no toque de início.
+
 - [x] Iniciar e retomar sessões offline.
 - [x] Persistir séries pendentes localmente e sincronizá-las quando houver conexão.
 - [x] Proteger o histórico e a evolução contra troca de conta.
