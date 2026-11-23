@@ -16,6 +16,17 @@ Regras operacionais:
 
 Para testar uma interface sem Preview, usar CI automatizado e revisão de código; teste visual em dispositivo deve ocorrer depois da publicação controlada.
 
+### Economia de builds
+
+A Vercel usa um comando de Ignore Build Step para comparar o commit anterior com o atual. Alterações exclusivamente em documentação Markdown, migrações/arquivos Supabase, testes e workflows do GitHub Actions não geram build/deploy. Se não houver SHA anterior disponível, o comando falha de forma segura e permite o build.
+
+Regras para preservar a cota:
+- Não atualizar `version.json`, o identificador de build no HTML ou o cache do Service Worker em tarefas exclusivamente documentais/testes/banco.
+- Atualizar versão/cache somente quando houver mudança executável ou de assets servidos pelo app.
+- Agrupar melhorias de interface em entregas maiores; evitar publicar cada ajuste pequeno isoladamente.
+- Manter previews desativados e usar CI do GitHub para validar PRs.
+- Mudanças em arquivos da aplicação continuam disparando deploy normalmente.
+
 ## Banco de dados e SQL
 
 A estrutura atual e suas evoluções estão organizadas em `supabase/migrations/`, com prefixos de versão e ordem de aplicação documentada em [supabase/migrations/README.md](supabase/migrations/README.md).
