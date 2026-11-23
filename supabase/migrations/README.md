@@ -34,6 +34,7 @@ Para um projeto Supabase novo, aplicar nesta ordem:
 16. `20261122001600_unify_exercise_aliases.sql` — unificação explícita de aliases do catálogo.
 17. `20261122001700_reconcile_legacy_workout_identities.sql` — reconciliação conservadora de identidades antigas.
 18. `20261122001800_exercise_image_library_seed.sql` — imagens e grupos musculares da biblioteca visual.
+19. `20261123001900_harden_rls_helper_function_grants.sql` — restringe execução de helpers `SECURITY DEFINER` a `authenticated` e `service_role`.
 
 ### Observações importantes
 
