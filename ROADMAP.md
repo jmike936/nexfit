@@ -2,6 +2,12 @@
 
 Atualizado em 23/11/2026.
 
+## Publicação e cota da Vercel
+
+- [x] Desativar deploys de Preview do projeto para evitar consumo da cota por PR/branches; CI do GitHub permanece como validação.
+- [x] Documentar política de publicação: agrupar alterações, não forçar/repetir deploys, reservar produção para merges revisados e confirmar estado READY antes de declarar publicado.
+- [ ] Confirmar no painel Vercel que a opção de Preview desativado permanece ativa e validar que pushes em branches/PRs não criam deploys.
+
 ## Infraestrutura PWA e atualizações
 
 - [x] Corrigir o aviso recorrente de atualização causado por divergência entre `APP_BUILD` no HTML e `version.json`.

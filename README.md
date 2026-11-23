@@ -2,6 +2,20 @@
 
 PWA de acompanhamento de treinos, cargas, repetições, duração e evolução, com Supabase como backend, suporte a sessões offline e navegação inferior com acabamento translúcido estilo Liquid Glass e avatar de perfil. O CI também valida a consistência dos identificadores de versão entre o HTML, `version.json` e o Service Worker para evitar avisos recorrentes de atualização.
 
+## Publicação e proteção da cota da Vercel
+
+O projeto mantém os deploys de Preview desativados na Vercel para evitar que cada atualização de branch/PR consuma a cota de builds. O GitHub Actions continua executando as validações automatizadas nos pull requests. A publicação é reservada à branch `main`, após revisão e merge; não criar deploys manuais/repetidos para testar mudanças pequenas.
+
+Regras operacionais:
+- Não disparar deploy manual de Preview como etapa padrão de PR.
+- Agrupar alterações relacionadas em uma única PR, validar pelo CI e mesclar somente quando estiverem prontas para publicação.
+- Evitar commits sucessivos em `main`; consolidar mudanças antes do merge sempre que possível.
+- Não tentar contornar bloqueios/limites da Vercel com deploys repetidos ou forçados.
+- Considerar uma versão publicada somente quando o deployment de Production estiver em estado `READY` e servir o commit esperado.
+- Se a cota estiver esgotada, manter as alterações no GitHub, não aumentar o número de build do app nem alterar os identificadores do PWA até a publicação efetiva. Após a liberação, realizar uma única publicação e conferir `version.json`, HTML e Service Worker em produção.
+
+Para testar uma interface sem Preview, usar CI automatizado e revisão de código; teste visual em dispositivo deve ocorrer depois da publicação controlada.
+
 ## Banco de dados e SQL
 
 A estrutura atual e suas evoluções estão organizadas em `supabase/migrations/`, com prefixos de versão e ordem de aplicação documentada em [supabase/migrations/README.md](supabase/migrations/README.md).
