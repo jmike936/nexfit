@@ -660,13 +660,25 @@ function openProfileSection(action){
  panel.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function profileAge(date){if(!date)return null;const d=new Date(date+'T00:00:00'),now=new Date();if(Number.isNaN(d.getTime())||d>now)return null;let age=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))age--;return age}
+let profilePhotoState={userId:null,path:null,url:null,loadedAt:0,pending:false,token:0};
 async function loadProfilePhoto(){
  const userId=currentUser?.id,path=currentUser?.user_metadata?.avatar_path,photoDb=db;
- for(const id of ['profilePhoto','dashboardAvatar','navProfilePhoto']){const image=$(id);if(image){image.hidden=true;image.removeAttribute('src')}}
- for(const id of ['profilePhotoFallback','dashboardAvatarFallback','navProfileFallback']){const fallback=$(id);if(fallback)fallback.hidden=false}
+ const changed=profilePhotoState.userId!==userId||profilePhotoState.path!==path;
+ if(changed){
+  profilePhotoState={userId,path,url:null,loadedAt:0,pending:false,token:profilePhotoState.token+1};
+  for(const id of ['profilePhoto','dashboardAvatar','navProfilePhoto']){const image=$(id);if(image){image.hidden=true;image.removeAttribute('src')}}
+  for(const id of ['profilePhotoFallback','dashboardAvatarFallback','navProfileFallback']){const fallback=$(id);if(fallback)fallback.hidden=false}
+ }
  if(!path||!photoDb||!userId)return;
+ if(profilePhotoState.pending)return;
+ if(profilePhotoState.url&&Date.now()-profilePhotoState.loadedAt<50*60*1000)return;
+ profilePhotoState.pending=true;
+ const token=++profilePhotoState.token;
  const {data,error}=await photoDb.storage.from('athlete-avatars').createSignedUrl(path,3600);
- if(error||!data?.signedUrl||currentUser?.id!==userId||db!==photoDb)return;
+ if(token!==profilePhotoState.token||currentUser?.id!==userId||db!==photoDb)return;
+ profilePhotoState.pending=false;
+ if(error||!data?.signedUrl)return;
+ profilePhotoState.url=data.signedUrl;profilePhotoState.loadedAt=Date.now();
  for(const id of ['profilePhoto','dashboardAvatar','navProfilePhoto']){const image=$(id);if(image){image.src=data.signedUrl;image.hidden=false}}
  for(const id of ['profilePhotoFallback','dashboardAvatarFallback','navProfileFallback']){const fallback=$(id);if(fallback)fallback.hidden=true}
 }
