@@ -34,6 +34,7 @@ Para um projeto Supabase novo, aplicar nesta ordem:
 16. `20261122001600_unify_exercise_aliases.sql` — unificação explícita de aliases do catálogo.
 17. `20261122001700_reconcile_legacy_workout_identities.sql` — reconciliação conservadora de identidades antigas.
 18. `20261122001800_exercise_image_library_seed.sql` — imagens e grupos musculares da biblioteca visual.
+19. `20261123001900_harden_rls_helper_function_grants.sql` — restringe execução de helpers `SECURITY DEFINER` a `authenticated` e `service_role`.
 
 ### Observações importantes
 
@@ -57,6 +58,6 @@ Os arquivos de origem correspondentes permanecem na raiz do repositório. Esta d
 
 ## Teste automatizado de instalação
 
-O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 18 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`).
+O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 19 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`). Os testes `rls-policy-inventory.sql` e `storage-rls-isolation.sql` verificam cobertura RLS em todas as tabelas públicas, privilégios dos helpers `SECURITY DEFINER` e isolamento dos avatares.
 
-Esse teste verifica sintaxe, dependências de criação, reexecução estrutural e cenários de isolamento RLS entre atletas e personais com permissões distintas nas tabelas de programas, treinos e histórico. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reproduz todos os formatos de dados históricos reais. A auditoria completa de RLS e a validação em Supabase local/real continuam pendentes.
+Esse teste verifica sintaxe, dependências de criação, reexecução estrutural e cenários de isolamento RLS entre atletas e personais com permissões distintas nas tabelas de programas, treinos e histórico. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reproduz todos os formatos de dados históricos reais nem todas as permissões internas do Storage/Auth/PostgREST gerenciados pelo Supabase. A auditoria completa de RLS e a validação em Supabase local/real continuam pendentes.
