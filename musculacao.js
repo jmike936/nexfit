@@ -1336,41 +1336,25 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   let saved;try{saved=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(_){saved=null}
   if(!saved||saved.userId!==syncUserId||!saved.session)return false;
   try{
-  const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
-  const sessionPayload=workoutSyncCore.buildSessionPayload(pendingSession,saved,syncUserId);
-  const created=await syncDb.from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
-  if(created.error||!isSameAccount())return false;
-  if(logs.length){
-   const rows=workoutSyncCore.buildSetLogPayloads(pendingSession.id,logs);
-   const savedLogs=await syncDb.from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
-   if(savedLogs.error||!isSameAccount())return false;
-  }
-  if(pendingSession.status==='completed'||pendingSession.finished_at){
-   const finishedAt=pendingSession.finished_at||new Date().toISOString();
-   const updated=await syncDb.from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',syncUserId);
-   if(updated.error||!isSameAccount())return false;
-   const activityPayload=workoutSyncCore.buildCompletedActivityPayload({pendingSession,saved,userId:syncUserId,finishedAt});
-    const existing=await syncDb.from('activities').select('id').eq('user_id',syncUserId).eq('notes',activityPayload.notes).maybeSingle();
-   if(existing.error||!isSameAccount())return false;
-   let activityId=existing.data?.id;
-   if(!existing.data){
-    const activity=await syncDb.from('activities').insert(activityPayload).select('id').single();
-    if(!isSameAccount())return false;
-    if(activity.error){
-     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',activityPayload.notes).maybeSingle();
-     if(raced.error||!raced.data||!isSameAccount())return false;
-     activityId=raced.data.id;
-    }else activityId=activity.data.id;
-   }
-   if(!isSameAccount())return false;
+  const adapter={
+   upsertSession:payload=>syncDb.from('training_sessions').upsert(payload,{onConflict:'id',ignoreDuplicates:true}),
+   upsertSetLogs:rows=>syncDb.from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true}),
+   completeSession:payload=>syncDb.from('training_sessions').update({status:payload.status,finished_at:payload.finished_at}).eq('id',payload.id).eq('athlete_id',payload.athlete_id),
+   findActivityByMarker:(userId,notes)=>syncDb.from('activities').select('id').eq('user_id',userId).eq('notes',notes).maybeSingle(),
+   insertActivity:payload=>syncDb.from('activities').insert(payload).select('id').single(),
+   findActivityByIdAndMarker:(id,userId,notes)=>syncDb.from('activities').select('id').eq('id',id).eq('user_id',userId).eq('notes',notes).maybeSingle()
+  };
+  const result=await workoutSyncCore.syncWorkoutSnapshot({saved,userId:syncUserId,db:adapter,isCurrent:isSameAccount});
+  if(!result.ok||!isSameAccount())return false;
+  if(result.completed){
+   const {activityId,activityPayload}=result;
    if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date:activityPayload.activity_date,duration:activityPayload.duration_minutes,distance:0,notes:activityPayload.notes});
    try{localStorage.removeItem(storageKey)}catch(_){}
    if(typeof window.render==='function')window.render();
    return true;
   }
-  if(!isSameAccount())return false;
   saved.localOnly=false;saved.session.localOnly=false;try{localStorage.setItem(storageKey,JSON.stringify(saved))}catch(_){}
-  if(isSameAccount()&&session?.id===pendingSession.id){session.localOnly=false;persistWorkoutState()}
+  if(isSameAccount()&&session?.id===saved.session.id){session.localOnly=false;persistWorkoutState()}
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
   };
