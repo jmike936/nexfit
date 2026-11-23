@@ -15,6 +15,8 @@ jobs:
           node-version: 22
       - name: Check JavaScript syntax
         run: |
+          node --check workout-sync-core.js
           node --check musculacao.js
+          node --test tests/js/workout-sync-core.test.js
           node --check workout-history.js
           node --check exercise-evolution.js
