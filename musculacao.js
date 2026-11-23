@@ -2,6 +2,8 @@
 (()=>{
  if(window.__nexfitStrengthLoaded||window.__nexfitStrengthLoading)return;window.__nexfitStrengthLoading=true;
  try{
+ const workoutSyncCore=window.NexfitWorkoutSyncCore;
+ if(!workoutSyncCore){window.__nexfitStrengthLoading=false;window.__nexfitStrengthError='Não foi possível preparar o módulo de sincronização offline.';return}
  const css=`
  #strengthPage .panel{background:linear-gradient(145deg,#202b37,#18212b);border:1px solid #2b3948;border-radius:18px;padding:18px;margin:14px 0}
  #strengthPage input,#strengthPage textarea,#strengthPage select{background:#111922;border:1px solid #354454;color:#f4f7fa;border-radius:10px;padding:11px;width:100%;min-width:0}
@@ -248,7 +250,7 @@
  });
 }
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,skippingSet=false,skippingExercise=false,finishingSession=false,finishingSessionOwner=null,workoutSyncPromises=new Map();
+ let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,skippingSet=false,skippingExercise=false,finishingSession=false,finishingSessionOwner=null,workoutSyncCoordinator=workoutSyncCore.createSyncCoordinator();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
@@ -1241,8 +1243,8 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!sessionId||!userId)return false;
   try{
    const key='nexfit-pending-workout-cancellations:'+String(userId),pending=JSON.parse(localStorage.getItem(key)||'[]');
-   const queue=Array.isArray(pending)?pending:[];
-   if(!queue.some(item=>item.sessionId===sessionId))queue.push({userId,sessionId,queuedAt:new Date().toISOString()});
+   const queue=workoutSyncCore.queueCancellation(pending,sessionId,userId,new Date().toISOString());
+   if(!queue)return false;
    localStorage.setItem(key,JSON.stringify(queue));return true;
   }catch(error){console.warn('Não foi possível guardar o cancelamento pendente',error);return false}
  }
@@ -1257,7 +1259,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(logs.error||userRef()?.id!==syncUserId)return false;
    const removed=await syncDb.from('training_sessions').delete().eq('id',item.sessionId).eq('athlete_id',syncUserId);
    if(removed.error||userRef()?.id!==syncUserId)return false;
-   pending=pending.filter(row=>row.sessionId!==item.sessionId);
+   pending=workoutSyncCore.removePendingCancellation(pending,item.sessionId,syncUserId);
    try{localStorage.setItem(key,JSON.stringify(pending))}catch(error){console.warn('Cancelamento concluído, mas não foi possível atualizar a fila local',error);return false}
   }
   return true;
@@ -1265,7 +1267,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  async function restoreWorkoutState(){
   if(session)return true;const u=userRef(),db=dbRef(),generation=restoreGeneration;if(!u||!db)return false;
   let saved;try{saved=JSON.parse(localStorage.getItem(sessionStorageKey())||'null')}catch(_){saved=null}
-  if(!saved||saved.userId!==u.id||!saved.sessionId)return false;
+  if(!workoutSyncCore.isOwnedSessionSnapshot(saved,u.id))return false;
   if(saved.session?.status==='completed'||saved.session?.finished_at){await syncPendingWorkout();return false}
   let remoteSession=null,remoteLogs=null;
   if(navigator.onLine&&!saved.localOnly){
@@ -1294,10 +1296,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   sessionExerciseRows.forEach((exercise,exerciseIndex)=>(exercise.sets||[]).forEach((set,setIndex)=>sessionPlan.push({exercise,exerciseIndex,set,setIndex})));
   const localLogs=Array.isArray(saved.sessionSetLogs)?saved.sessionSetLogs:[],serverLogs=Array.isArray(remoteLogs)?remoteLogs:null;
   if(serverLogs){
-   const mergedLogs=new Map();
-   for(const row of serverLogs)if(row?.exercise_id!=null&&row?.set_number!=null)mergedLogs.set(String(row.exercise_id)+':'+String(row.set_number),row);
-   for(const row of localLogs)if(row?.exercise_id!=null&&row?.set_number!=null){const key=String(row.exercise_id)+':'+String(row.set_number);if(!mergedLogs.has(key))mergedLogs.set(key,row)}
-   sessionSetLogs=[...mergedLogs.values()];
+   sessionSetLogs=workoutSyncCore.mergeSetLogs(serverLogs,localLogs);
   }else sessionSetLogs=localLogs;sessionIndex=Math.max(0,Math.min(Number(saved.sessionIndex)||0,Math.max(0,sessionPlan.length-1)));
   sessionLoads=saved.sessionLoads||{};skippedSetKeys=new Set(saved.skippedSetKeys||[]);skippedExerciseIndices=new Set(saved.skippedExerciseIndices||[]);sessionView=saved.view||'picker';restSnapshot=saved.rest||null;activeExerciseTimer=saved.exerciseTimer?{...saved.exerciseTimer}:null;
   if(sessionView==='exercise'){
@@ -1328,8 +1327,8 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  };
  async function syncPendingWorkout(){
   const syncUserId=userRef()?.id,syncDb=dbRef();if(!syncUserId||!syncDb)return false;
-  const existingSync=workoutSyncPromises.get(syncUserId);if(existingSync)return existingSync;
-  const isSameAccount=()=>userRef()?.id===syncUserId;
+    const isSameAccount=()=>userRef()?.id===syncUserId;
+   return workoutSyncCoordinator.run(syncUserId,async()=>{
   const runSync=async()=>{
   if(!navigator.onLine||!isSameAccount())return false;
   if(!await syncPendingWorkoutCancellations(syncUserId,syncDb)||!isSameAccount())return false;
@@ -1338,11 +1337,11 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(!saved||saved.userId!==syncUserId||!saved.session)return false;
   try{
   const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
-  const sessionPayload={id:pendingSession.id,athlete_id:syncUserId,program_id:saved.programId,version_id:saved.versionId,subworkout_id:saved.subworkoutId,started_at:pendingSession.started_at,status:'in_progress'};
+  const sessionPayload=workoutSyncCore.buildSessionPayload(pendingSession,saved,syncUserId);
   const created=await syncDb.from('training_sessions').upsert(sessionPayload,{onConflict:'id',ignoreDuplicates:true});
   if(created.error||!isSameAccount())return false;
   if(logs.length){
-   const rows=logs.map(row=>({session_id:pendingSession.id,exercise_id:row.exercise_id,set_number:row.set_number,reps_completed:row.reps_completed,load_kg:row.load_kg??null,duration_seconds:row.duration_seconds??null,distance_m:row.distance_m??null,notes:row.notes??null,completed_at:row.completed_at||new Date().toISOString()}));
+   const rows=workoutSyncCore.buildSetLogPayloads(pendingSession.id,logs);
    const savedLogs=await syncDb.from('training_set_logs').upsert(rows,{onConflict:'session_id,exercise_id,set_number',ignoreDuplicates:true});
    if(savedLogs.error||!isSameAccount())return false;
   }
@@ -1350,26 +1349,21 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    const finishedAt=pendingSession.finished_at||new Date().toISOString();
    const updated=await syncDb.from('training_sessions').update({status:'completed',finished_at:finishedAt}).eq('id',pendingSession.id).eq('athlete_id',syncUserId);
    if(updated.error||!isSameAccount())return false;
-   const started=new Date(pendingSession.started_at||Date.now()),finished=new Date(finishedAt);
-   const minutes=Math.max(1,Math.round((finished.getTime()-started.getTime())/60000));
-   const sub=(saved.subworkouts||[]).find(x=>x.id===saved.subworkoutId)||{title:'Treino'};
-   const title=saved.current?.title||'Treino';
-   const notes=title+' · '+(sub.title||'Treino')+' [NEXFIT_SESSION:'+pendingSession.id+']';
-   const now=new Date(finishedAt),date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-   const existing=await syncDb.from('activities').select('id').eq('user_id',syncUserId).eq('notes',notes).maybeSingle();
+   const activityPayload=workoutSyncCore.buildCompletedActivityPayload({pendingSession,saved,userId:syncUserId,finishedAt});
+    const existing=await syncDb.from('activities').select('id').eq('user_id',syncUserId).eq('notes',activityPayload.notes).maybeSingle();
    if(existing.error||!isSameAccount())return false;
    let activityId=existing.data?.id;
    if(!existing.data){
-    const activity=await syncDb.from('activities').insert({id:pendingSession.id,user_id:syncUserId,sport:'Musculação',activity_date:date,duration_minutes:minutes,distance_km:null,notes}).select('id').single();
+    const activity=await syncDb.from('activities').insert(activityPayload).select('id').single();
     if(!isSameAccount())return false;
     if(activity.error){
-     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',notes).maybeSingle();
+     const raced=await syncDb.from('activities').select('id').eq('id',pendingSession.id).eq('user_id',syncUserId).eq('notes',activityPayload.notes).maybeSingle();
      if(raced.error||!raced.data||!isSameAccount())return false;
      activityId=raced.data.id;
     }else activityId=activity.data.id;
    }
    if(!isSameAccount())return false;
-   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date,duration:minutes,distance:0,notes});
+   if(typeof activities!=='undefined'&&!activities.some(item=>item.id===activityId))activities.unshift({id:activityId,sport:'Musculação',date:activityPayload.activity_date,duration:activityPayload.duration_minutes,distance:0,notes:activityPayload.notes});
    try{localStorage.removeItem(storageKey)}catch(_){}
    if(typeof window.render==='function')window.render();
    return true;
@@ -1380,17 +1374,14 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   return true;
   }catch(error){console.warn('Falha ao sincronizar treino offline',error);return false}
   };
-  const syncPromise=(async()=>{
-   if(navigator.locks?.request){
-    return navigator.locks.request('nexfit-workout-sync:'+syncUserId,async()=>{
-     if(!isSameAccount())return false;
-     return runSync();
-    });
-   }
-   return runSync();
-  })();
-  workoutSyncPromises.set(syncUserId,syncPromise);
-  try{return await syncPromise}finally{if(workoutSyncPromises.get(syncUserId)===syncPromise)workoutSyncPromises.delete(syncUserId)}
+  if(navigator.locks?.request){
+   return navigator.locks.request('nexfit-workout-sync:'+syncUserId,async()=>{
+    if(!isSameAccount())return false;
+    return runSync();
+   });
+  }
+  return runSync();
+  });
  }
 
  window.addEventListener('online',()=>{syncPendingWorkout().then(ok=>{if(ok&&session?.status==='completed'){session=null;home()}}).catch(error=>console.warn('Falha ao sincronizar treino pendente',error))});
