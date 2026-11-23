@@ -274,12 +274,16 @@
   if(activeTrainingTab==='models'){
    const models=plans.filter(p=>!canManageProgramLocally(p)&&p.status==='active'&&p.is_public===true&&p.current_version_id);
    if(!models.length){host.innerHTML='<div class="training-empty"><div class="training-empty-icon">✦</div><h3>Explore programas públicos</h3><p class="muted">Ainda não há programas públicos disponíveis. Quando alguém compartilhar um programa, ele aparecerá aqui.</p></div>';return}
+   const versionIds=[...new Set(models.map(p=>p.current_version_id).filter(Boolean))];
+   const q=await renderDb.from('training_subworkouts').select('id,title,version_id,position,training_exercises(id)').in('version_id',versionIds).order('position');
+   if(!isSameAccount())return;
+   if(q.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar os modelos</h3><p class="muted">'+esc(q.error.message)+'</p></div>';return}
+   const workoutsByVersion=new Map();
+   for(const workout of q.data||[]){const key=String(workout.version_id);if(!workoutsByVersion.has(key))workoutsByVersion.set(key,[]);workoutsByVersion.get(key).push(workout)}
    const cards=[];
    for(const p of models){
-    const q=await renderDb.from('training_subworkouts').select('id,title,training_exercises(id)').eq('version_id',p.current_version_id).order('position');
-    if(!isSameAccount())return;
-    if(q.error)continue;
-    const workouts=q.data||[],exerciseCount=workouts.reduce((n,w)=>n+(w.training_exercises||[]).length,0);
+    const workouts=workoutsByVersion.get(String(p.current_version_id))||[];
+    const exerciseCount=workouts.reduce((n,w)=>n+(w.training_exercises||[]).length,0);
     const category=programCategory(p.description);
     const description=(p.description||'').replace(/\[MODALIDADE:[^\]]+\]\s*/i,'').trim();
     cards.push('<article class="training-card model-program-card"><div class="training-card-main"><div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div><span class="training-card-copy"><strong>'+esc(normalizeHumanText(p.title))+'</strong><span>'+esc(category)+(description?' · '+esc(description):'')+'</span><small>'+workouts.length+' '+(workouts.length===1?'treino':'treinos')+' · '+exerciseCount+' '+(exerciseCount===1?'exercício':'exercícios')+'</small></span></div><div class="model-workout-preview">'+workouts.slice(0,4).map((w,i)=>'<span>'+esc(w.title||'Treino '+(i+1))+'</span>').join('')+'</div><button class="btn model-copy-button" data-copy-public="'+esc(p.id)+'">Adicionar ao meu perfil</button></article>');
@@ -298,29 +302,38 @@
   }
   window.__nexfitOfflineMode=false;
   const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
-  if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
-  const workouts=[];
-  for(const p of programs){
-   const q=await renderDb.from('training_subworkouts').select('id,title,description,position,training_exercises(*)').eq('version_id',p.current_version_id).order('position');
+   if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
+   const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
+   const [workoutsQuery,versionsQuery]=await Promise.all([
+    renderDb.from('training_subworkouts').select('id,title,description,position,version_id,identity_id,training_exercises(*)').in('version_id',versionIds).order('position'),
+    renderDb.from('training_program_versions').select('*').in('id',versionIds)
+   ]);
    if(!isSameAccount())return;
-   if(q.error)continue;
-   const versionQuery=await renderDb.from('training_program_versions').select('*').eq('id',p.current_version_id).maybeSingle();
-   if(!isSameAccount())return;
-   if(versionQuery.error||!versionQuery.data)continue;
-   for(const workout of q.data||[]){
-    const exercises=workout.training_exercises||[];
-    workouts.push({program:p,workout,exercises});
-    try{
-     const key='nexfit-offline-workouts:'+String(renderUserId);
-     const snapshots=JSON.parse(localStorage.getItem(key)||'[]');
-     const snapshot={program:p,version:versionQuery.data,subworkouts:q.data.map(({training_exercises,...sub})=>sub),subworkout:{id:workout.id,title:workout.title,description:workout.description,position:workout.position},exercises};
-     const next=snapshots.filter(x=>String(x.subworkout?.id)!==String(workout.id));next.push(snapshot);
-     localStorage.setItem(key,JSON.stringify(next));
-    }catch(error){console.warn('Não foi possível atualizar o cache offline do treino',error)}
+   if(workoutsQuery.error||versionsQuery.error){
+    const error=workoutsQuery.error||versionsQuery.error;
+    host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar os treinos</h3><p class="muted">'+esc(error.message)+'</p></div>';return;
    }
-  }
-  if(!isSameAccount())return;
-  const activitiesQ=await renderDb.from('activities').select('activity_date,notes').eq('user_id',renderUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
+   const workoutsByVersion=new Map(),versionById=new Map((versionsQuery.data||[]).map(row=>[String(row.id),row]));
+   for(const workout of workoutsQuery.data||[]){const key=String(workout.version_id);if(!workoutsByVersion.has(key))workoutsByVersion.set(key,[]);workoutsByVersion.get(key).push(workout)}
+   const workouts=[];
+   const offlineKey='nexfit-offline-workouts:'+String(renderUserId);
+   let offlineSnapshots=[];try{const cached=JSON.parse(localStorage.getItem(offlineKey)||'[]');if(Array.isArray(cached))offlineSnapshots=cached}catch(_){}
+   for(const p of programs){
+    const versionRow=versionById.get(String(p.current_version_id));
+    if(!versionRow)continue;
+    const programWorkouts=workoutsByVersion.get(String(p.current_version_id))||[];
+    const cachedSubworkouts=programWorkouts.map(({training_exercises,...sub})=>sub);
+    for(const workout of programWorkouts){
+     const exercises=workout.training_exercises||[];
+     workouts.push({program:p,workout,exercises});
+     const snapshot={program:p,version:versionRow,subworkouts:cachedSubworkouts,subworkout:{id:workout.id,title:workout.title,description:workout.description,position:workout.position},exercises};
+     offlineSnapshots=offlineSnapshots.filter(x=>String(x.subworkout?.id)!==String(workout.id));
+     offlineSnapshots.push(snapshot);
+    }
+   }
+   try{localStorage.setItem(offlineKey,JSON.stringify(offlineSnapshots))}catch(error){console.warn('Não foi possível atualizar o cache offline do treino',error)}
+   if(!isSameAccount())return;
+   const activitiesQ=await renderDb.from('activities').select('activity_date,notes').eq('user_id',renderUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
   if(!isSameAccount())return;
   if(activitiesQ.error){host.innerHTML='<div class="training-empty"><h3>Não foi possível carregar as últimas execuções</h3><p class="muted">'+esc(activitiesQ.error.message)+'</p></div>';return}
   const activityDateBySession=new Map((activitiesQ.data||[]).map(activity=>({

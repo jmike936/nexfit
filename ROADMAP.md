@@ -50,6 +50,8 @@ Atualizado em 23/11/2026.
   - [x] Manter o toque no avatar direcionando à tela Perfil e aplicar recorte circular sem distorção.
   - [ ] Validar o acabamento visual em iPhone/iOS Safari e Android após a próxima publicação.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
+  - [x] Agrupar em lote as consultas de treinos e versões dos programas ativos e modelos públicos; gravar o cache offline uma vez por renderização.
+  - [ ] Revisar consultas restantes do gerenciador e histórico para eliminar N+1 sem alterar regras de acesso.
 
 ## Prioridade 5 — Comunicação e orientação visual
 - [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.
