@@ -33,15 +33,6 @@ VALUES
  ('90000000-0000-4000-8000-000000000020','Fixture Leg Press','fixturelegpress','Quadríceps','2025-01-01T00:00:00Z'),
  ('90000000-0000-4000-8000-000000000021','Fixture Leg-Press','fixturelegpress','Quadríceps','2025-02-01T00:00:00Z');
 
--- Alias rows exercise migration 016 independently of the workout signature pair.
-INSERT INTO public.training_exercise_catalog
- (id,name,normalized_name,category)
-VALUES
- ('90000000-0000-4000-8000-000000000022','Leg Press 45°','legpress45','Quadríceps'),
- ('90000000-0000-4000-8000-000000000023','Leg 45','leg45','Quadríceps'),
- ('90000000-0000-4000-8000-000000000024','Agachamento Livre','agachamentolivre','Quadríceps'),
- ('90000000-0000-4000-8000-000000000025','Agachamento','agachamento','Quadríceps');
-
 INSERT INTO public.training_subworkouts(id,version_id,title,position,identity_id)
 VALUES
  ('90000000-0000-4000-8000-000000000030','90000000-0000-4000-8000-000000000011','Treino A',1,'90000000-0000-4000-8000-000000000040'),
@@ -53,8 +44,7 @@ INSERT INTO public.training_exercises
 VALUES
  ('90000000-0000-4000-8000-000000000050','90000000-0000-4000-8000-000000000030','Fixture Leg Press',1,'90000000-0000-4000-8000-000000000020','90000000-0000-4000-8000-000000000060'),
  ('90000000-0000-4000-8000-000000000051','90000000-0000-4000-8000-000000000031','Fixture Leg-Press',1,'90000000-0000-4000-8000-000000000021','90000000-0000-4000-8000-000000000061'),
- ('90000000-0000-4000-8000-000000000052','90000000-0000-4000-8000-000000000032','Leg 45',1,'90000000-0000-4000-8000-000000000023','90000000-0000-4000-8000-000000000062'),
- ('90000000-0000-4000-8000-000000000053','90000000-0000-4000-8000-000000000032','Agachamento',2,'90000000-0000-4000-8000-000000000025','90000000-0000-4000-8000-000000000063');
+ ('90000000-0000-4000-8000-000000000051','90000000-0000-4000-8000-000000000031','Fixture Leg-Press',1,'90000000-0000-4000-8000-000000000021','90000000-0000-4000-8000-000000000061');
 
 INSERT INTO public.training_sessions
  (id,athlete_id,program_id,version_id,subworkout_id,status,started_at,finished_at)
@@ -72,6 +62,27 @@ VALUES
 -- Re-run the exact production migrations against the synthetic legacy state.
 \ir ../../supabase/migrations/20261122000800_single_pending_version.sql
 \ir ../../supabase/migrations/20261122001000_exercise_library_seed.sql
+
+-- Add only the aliases after 010 so that this fixture isolates migration 016.
+INSERT INTO public.training_exercise_catalog(id,name,normalized_name,category)
+VALUES
+ ('90000000-0000-4000-8000-000000000023','Leg 45','leg45','Quadríceps'),
+ ('90000000-0000-4000-8000-000000000025','Agachamento','agachamento','Quadríceps');
+
+INSERT INTO public.training_exercises
+ (id,subworkout_id,name,position,catalog_exercise_id,identity_id)
+VALUES
+ ('90000000-0000-4000-8000-000000000052','90000000-0000-4000-8000-000000000032','Leg 45',1,'90000000-0000-4000-8000-000000000023','90000000-0000-4000-8000-000000000062'),
+ ('90000000-0000-4000-8000-000000000053','90000000-0000-4000-8000-000000000032','Agachamento',2,'90000000-0000-4000-8000-000000000025','90000000-0000-4000-8000-000000000063');
+
+CREATE TEMP TABLE expected_alias_canonicals AS
+SELECT
+ (SELECT id FROM public.training_exercise_catalog
+  WHERE normalized_name IN ('legpress45','legpress45grau','legpress45graus')
+  ORDER BY CASE WHEN normalized_name='legpress45' THEN 0 ELSE 1 END,created_at,id LIMIT 1) AS leg_press_id,
+ (SELECT id FROM public.training_exercise_catalog
+  WHERE normalized_name='agachamentolivre' ORDER BY created_at,id LIMIT 1) AS squat_id;
+
 \ir ../../supabase/migrations/20261122001600_unify_exercise_aliases.sql
 \ir ../../supabase/migrations/20261122001700_reconcile_legacy_workout_identities.sql
 
@@ -111,14 +122,14 @@ BEGIN
   THEN RAISE EXCEPTION '016 failed: alias catalog rows remain'; END IF;
   IF (SELECT catalog_exercise_id FROM public.training_exercises
       WHERE id='90000000-0000-4000-8000-000000000052')
-      <> '90000000-0000-4000-8000-000000000022'
+      <> (SELECT leg_press_id FROM expected_alias_canonicals)
   THEN RAISE EXCEPTION '016 failed: Leg 45 exercise was not redirected'; END IF;
   IF (SELECT name FROM public.training_exercises
       WHERE id='90000000-0000-4000-8000-000000000052') <> 'Leg Press 45°'
   THEN RAISE EXCEPTION '016 failed: Leg 45 exercise name was not normalized'; END IF;
   IF (SELECT catalog_exercise_id FROM public.training_exercises
       WHERE id='90000000-0000-4000-8000-000000000053')
-      <> '90000000-0000-4000-8000-000000000024'
+      <> (SELECT squat_id FROM expected_alias_canonicals)
   THEN RAISE EXCEPTION '016 failed: squat alias exercise was not redirected'; END IF;
 
   IF (SELECT identity_id FROM public.training_subworkouts
