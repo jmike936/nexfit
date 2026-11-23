@@ -177,3 +177,42 @@ test('in-progress session sync does not create a completion activity',async()=>{
  assert.equal(db.state.logs.size,1);
  assert.equal(db.state.activities.size,0);
 });
+
+
+test('two independent tabs racing to sync one completed session create only one activity',async()=>{
+ const saved=completedSnapshot();
+ const state={sessions:new Map(),logs:new Map(),activities:new Map()};
+ let lookupCount=0,releaseLookups;
+ const lookupBarrier=new Promise(resolve=>{releaseLookups=resolve});
+ let insertCalls=0,duplicateInsertCalls=0;
+ const db={
+  async upsertSession(payload){state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {error:null}},
+  async upsertSetLogs(rows){for(const row of rows)state.logs.set(row.exercise_id+':'+row.set_number,row);return {error:null}},
+  async completeSession(payload){state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {error:null}},
+  async findActivityByMarker(userId,notes){
+   lookupCount++;if(lookupCount===2)releaseLookups();await lookupBarrier;
+   const found=[...state.activities.values()].find(x=>x.user_id===userId&&x.notes===notes);
+   return {data:found?{id:found.id}:null,error:null};
+  },
+  async insertActivity(payload){
+   insertCalls++;
+   if(state.activities.has(payload.id)){duplicateInsertCalls++;return {data:null,error:new Error('duplicate key')}}
+   state.activities.set(payload.id,payload);return {data:{id:payload.id},error:null};
+  },
+  async findActivityByIdAndMarker(id,userId,notes){
+   const found=state.activities.get(id);
+   return {data:found&&found.user_id===userId&&found.notes===notes?{id:found.id}:null,error:null};
+  }
+ };
+ // Separate coordinators represent separate tabs when Web Locks are unavailable.
+ const tabA=sync.createSyncCoordinator(),tabB=sync.createSyncCoordinator();
+ const run=coordinator=>coordinator.run('athlete-a',()=>sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>true}));
+ const [a,b]=await Promise.all([run(tabA),run(tabB)]);
+ assert.equal(a.ok,true);
+ assert.equal(b.ok,true);
+ assert.equal(state.sessions.size,1);
+ assert.equal(state.logs.size,1);
+ assert.equal(state.activities.size,1);
+ assert.equal(insertCalls,2);
+ assert.equal(duplicateInsertCalls,1);
+});
