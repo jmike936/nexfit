@@ -31,7 +31,10 @@ Atualizado em 23/11/2026.
 - [x] Iniciar e retomar sessões offline.
 - [x] Persistir séries pendentes localmente e sincronizá-las quando houver conexão.
 - [x] Proteger o histórico e a evolução contra troca de conta.
-- [ ] Continuar testando reconexão, retomada e concorrência entre abas/dispositivos.\n  - [x] Extrair e testar as primitivas determinísticas de sincronização offline: isolamento por conta, merge de séries, payloads idempotentes, fila de cancelamento e single-flight por atleta.\n  - [x] Testar o fluxo de sincronização com banco simulado: falha/retry, conclusão idempotente, corrida de criação de atividade e troca de conta durante upload.\n  - [x] Simular duas abas sincronizando a mesma sessão concluída sem Web Locks: preservar uma sessão, uma série e uma única atividade mesmo com corrida de inserção.
+- [ ] Continuar testando reconexão, retomada e concorrência entre abas/dispositivos.
+  - [x] Extrair e testar as primitivas determinísticas de sincronização offline: isolamento por conta, merge de séries, payloads idempotentes, fila de cancelamento e single-flight por atleta.
+  - [x] Testar o fluxo de sincronização com banco simulado: falha/retry, conclusão idempotente, corrida de criação de atividade e troca de conta durante upload.
+  - [x] Simular duas abas sincronizando a mesma sessão concluída sem Web Locks: preservar uma sessão, uma série e uma única atividade mesmo com corrida de inserção.
 
 ## Prioridade 4 — Experiência e desempenho
 
@@ -67,8 +70,11 @@ Atualizado em 23/11/2026.
 - [x] Fazer auditoria estática individual das 19 migrações, classificando reexecução, operações sensíveis, dependências e riscos de rollback em `supabase/migrations/AUDIT.md`.
 - [ ] Validar reprodução do zero e reexecução em PostgreSQL/Supabase descartável; conferir FKs do catálogo e políticas RLS com identidades distintas.
   - [x] Adicionar smoke test de instalação das 19 migrações em PostgreSQL 16 descartável, com camada mínima de compatibilidade Supabase e verificação inicial do isolamento RLS de `activities` (não substitui testes no Supabase local/real).
-  - [x] Reaplicar as 18 migrações no mesmo banco descartável para verificar idempotência estrutural; validar separadamente os backfills com dados representativos.
-  - [x] Testar isolamento RLS de programas, versões, treinos, exercícios, sessões e séries entre dois atletas, personal com leitura, personal com gestão e profissional sem vínculo.\n  - [x] Auditar estaticamente as tabelas públicas e restringir EXECUTE de helpers SECURITY DEFINER; testar isolamento de fotos no PostgreSQL descartável.\n  - [ ] Executar `supabase/operations/audit-rls-storage-readonly.sql` no projeto Supabase real e revisar policies extras/permissivas, grants, Auth e Storage antes de declarar a auditoria completa.\n  - [x] Validar os backfills sensíveis 008, 010, 016 e 017 com fixtures sintéticas, incluindo preservação de sessões/séries e integridade das referências do catálogo (PostgreSQL 16 descartável; fixtures representativas aprovadas no CI).
+  - [x] Reaplicar as 19 migrações no mesmo banco descartável para verificar idempotência estrutural; validar separadamente os backfills com dados representativos.
+  - [x] Testar isolamento RLS de programas, versões, treinos, exercícios, sessões e séries entre dois atletas, personal com leitura, personal com gestão e profissional sem vínculo.
+  - [x] Auditar estaticamente as tabelas públicas e restringir EXECUTE de helpers SECURITY DEFINER; testar isolamento de fotos no PostgreSQL descartável.
+  - [ ] Executar `supabase/operations/audit-rls-storage-readonly.sql` no projeto Supabase real e revisar policies extras/permissivas, grants, Auth e Storage antes de declarar a auditoria completa.
+  - [x] Validar os backfills sensíveis 008, 010, 016 e 017 com fixtures sintéticas, incluindo preservação de sessões/séries e integridade das referências do catálogo (PostgreSQL 16 descartável; fixtures representativas aprovadas no CI).
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
