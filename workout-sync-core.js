@@ -76,5 +76,42 @@
    size(){return pending.size}
   };
  }
- return {mergeSetLogs,isOwnedSessionSnapshot,buildSessionPayload,buildSetLogPayloads,buildCompletedActivityPayload,queueCancellation,removePendingCancellation,createSyncCoordinator};
+ async function syncWorkoutSnapshot({saved,userId,db,isCurrent=()=>true,now=()=>new Date().toISOString()}={}){
+  if(!isOwnedSessionSnapshot(saved,userId)||!saved.session||!db)return {ok:false,reason:'invalid_snapshot'};
+  const current=()=>typeof isCurrent!=='function'||isCurrent();
+  if(!current())return {ok:false,reason:'account_changed'};
+  const pendingSession=saved.session,logs=saved.sessionSetLogs||[];
+  const created=await db.upsertSession(buildSessionPayload(pendingSession,saved,userId));
+  if(created?.error)return {ok:false,reason:'session_upsert',error:created.error};
+  if(!current())return {ok:false,reason:'account_changed'};
+  const rows=buildSetLogPayloads(pendingSession.id,logs,now());
+  if(rows.length){
+   const savedLogs=await db.upsertSetLogs(rows);
+   if(savedLogs?.error)return {ok:false,reason:'set_log_upsert',error:savedLogs.error};
+   if(!current())return {ok:false,reason:'account_changed'};
+  }
+  if(!(pendingSession.status==='completed'||pendingSession.finished_at))return {ok:true,completed:false};
+  const finishedAt=pendingSession.finished_at||now();
+  const updated=await db.completeSession({id:pendingSession.id,athlete_id:userId,status:'completed',finished_at:finishedAt});
+  if(updated?.error)return {ok:false,reason:'session_complete',error:updated.error};
+  if(!current())return {ok:false,reason:'account_changed'};
+  const activityPayload=buildCompletedActivityPayload({pendingSession,saved,userId,finishedAt});
+  const existing=await db.findActivityByMarker(userId,activityPayload.notes);
+  if(existing?.error)return {ok:false,reason:'activity_lookup',error:existing.error};
+  if(!current())return {ok:false,reason:'account_changed'};
+  let activityId=existing?.data?.id;
+  if(!activityId){
+   const inserted=await db.insertActivity(activityPayload);
+   if(!current())return {ok:false,reason:'account_changed'};
+   if(inserted?.error){
+    const raced=await db.findActivityByIdAndMarker(pendingSession.id,userId,activityPayload.notes);
+    if(raced?.error||!raced?.data?.id)return {ok:false,reason:'activity_insert',error:inserted.error};
+    if(!current())return {ok:false,reason:'account_changed'};
+    activityId=raced.data.id;
+   }else activityId=inserted?.data?.id;
+  }
+  if(!activityId)return {ok:false,reason:'activity_missing_id'};
+  return {ok:true,completed:true,activityId,activityPayload};
+ }
+  return {mergeSetLogs,isOwnedSessionSnapshot,buildSessionPayload,buildSetLogPayloads,buildCompletedActivityPayload,queueCancellation,removePendingCancellation,createSyncCoordinator,syncWorkoutSnapshot};
 });
