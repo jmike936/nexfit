@@ -4,6 +4,9 @@ on:
     paths:
       - '**.js'
       - '**.html'
+      - '**.json'
+      - 'sw.js'
+      - 'tests/js/**'
       - '.github/workflows/validate-js.yml'
 jobs:
   syntax:
@@ -18,5 +21,6 @@ jobs:
           node --check workout-sync-core.js
           node --check musculacao.js
           node --test tests/js/workout-sync-core.test.js
+          node --test tests/js/release-version.test.js
           node --check workout-history.js
           node --check exercise-evolution.js

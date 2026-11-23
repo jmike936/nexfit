@@ -2,6 +2,12 @@
 
 Atualizado em 23/11/2026.
 
+## Infraestrutura PWA e atualizações
+
+- [x] Corrigir o aviso recorrente de atualização causado por divergência entre `APP_BUILD` no HTML e `version.json`.
+- [x] Validar automaticamente a consistência entre versão exibida, `version.json`, URLs dos scripts e assets do Service Worker no CI.
+- [ ] Validar a atualização de ponta a ponta em iOS/Android após a publicação, incluindo instalação já existente e retorno do app em segundo plano.
+
 ## Prioridade 1 — Integridade dos programas e histórico
 
 - [x] Impedir que versões concorrentes sejam criadas com o mesmo número.
