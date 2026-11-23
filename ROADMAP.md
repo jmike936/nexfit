@@ -4,6 +4,10 @@ Atualizado em 23/11/2026.
 
 ## Publicação e cota da Vercel
 
+- [x] Configurar Ignore Build Step na Vercel para pular deploy quando a alteração for somente Markdown, Supabase, testes ou workflows do GitHub Actions.
+- [x] Definir que tarefas sem alteração executável do app não incrementam build PWA nem invalidam cache do Service Worker.
+- [ ] Confirmar no primeiro push elegível que a Vercel marca o build como ignorado e que alterações reais de app continuam publicando.
+
 - [x] Desativar deploys de Preview do projeto para evitar consumo da cota por PR/branches; CI do GitHub permanece como validação.
 - [x] Documentar política de publicação: agrupar alterações, não forçar/repetir deploys, reservar produção para merges revisados e confirmar estado READY antes de declarar publicado.
 - [ ] Confirmar no painel Vercel que a opção de Preview desativado permanece ativa e validar que pushes em branches/PRs não criam deploys.
