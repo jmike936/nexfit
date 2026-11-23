@@ -1,6 +1,6 @@
 # NEXFIT
 
-PWA de acompanhamento de treinos, cargas, repetições, duração e evolução, com Supabase como backend, suporte a sessões offline e navegação inferior com acabamento translúcido estilo Liquid Glass e avatar de perfil.
+PWA de acompanhamento de treinos, cargas, repetições, duração e evolução, com Supabase como backend, suporte a sessões offline e navegação inferior com acabamento translúcido estilo Liquid Glass e avatar de perfil. O CI também valida a consistência dos identificadores de versão entre o HTML, `version.json` e o Service Worker para evitar avisos recorrentes de atualização.
 
 ## Banco de dados e SQL
 
