@@ -44,10 +44,11 @@ Atualizado em 23/11/2026.
 - [x] Exibir tela amigável de conclusão do treino com resumo, status de sincronização e próximos passos; continuar a substituição de mensagens nativas nas demais etapas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
 - [ ] Revisar indicadores de evolução e desempenho no celular.
-- [ ] Modernizar a barra de navegação inferior com visual inspirado no Liquid Glass do iPhone: formato mais arredondado e contínuo (estilo cápsula), transparência, desfoque e acabamento translúcido, mantendo contraste e boa área de toque.
-  - [ ] No atalho de Perfil da barra, exibir a foto de perfil do usuário quando cadastrada.
-  - [ ] Quando não houver foto, exibir o ícone atual de perfil centralizado dentro de um avatar circular, com o mesmo tratamento visual da foto.
-  - [ ] Garantir que tocar no avatar abra diretamente a tela Perfil e que a imagem respeite o recorte circular sem distorção.
+- [x] Implementar a barra de navegação inferior com visual inspirado no Liquid Glass do iPhone: formato cápsula mais arredondado, transparência, desfoque, contraste e área de toque preservados.
+  - [x] Exibir a foto de perfil no atalho de Perfil quando cadastrada.
+  - [x] Sem foto, exibir o ícone de perfil centralizado em avatar circular.
+  - [x] Manter o toque no avatar direcionando à tela Perfil e aplicar recorte circular sem distorção.
+  - [ ] Validar o acabamento visual em iPhone/iOS Safari e Android após a próxima publicação.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
 
 ## Prioridade 5 — Comunicação e orientação visual
