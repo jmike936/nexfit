@@ -43,11 +43,13 @@ Para um projeto Supabase novo, aplicar nesta ordem:
 - O SQL de integridade de séries, que pode remover duplicatas idênticas após validar que não existem divergências, foi separado em `supabase/operations/` e não integra a sequência automática.
 - `supabase-musculacao.sql` cria um schema legado separado, não usado como base da estrutura atual de programas. Foi arquivado em `supabase/legacy/` e não deve ser aplicado em uma instalação nova do NEXFIT atual sem necessidade explícita.
 
-## Idempotência e rollback
+## Idempotência, segurança e rollback
 
-Os scripts foram preservados sem reescrita nesta etapa. Muitos usam `IF NOT EXISTS`, `CREATE OR REPLACE` ou substituição explícita de políticas; scripts de dados usam chaves de conflito ou verificações para evitar duplicação. Isso não significa que todo script seja seguro para execução repetida em qualquer estado: conferir os comentários e pré-condições antes de reexecutar.
+A auditoria estática arquivo a arquivo está em [AUDIT.md](AUDIT.md). Ela classifica os comportamentos observados, registra dependências e destaca operações sensíveis. A classificação não substitui testes em PostgreSQL/Supabase descartável e não autoriza reexecutar uma migração já aplicada.
 
-Não executar rollback destrutivo automaticamente. Para mudanças aditivas de schema, o rollback preferencial é manter as colunas/tabelas e reverter o código consumidor. Remover colunas, identidades, relações ou dados históricos pode destruir compatibilidade e exige plano específico, backup e aprovação. Esta entrega não inclui comandos de rollback que apaguem dados.
+Em especial, 010 e 016 consolidam e excluem aliases do catálogo; 017 altera identidades históricas; 008 arquiva versões pendentes duplicadas; 015 instala um trigger cujo comportamento de runtime remove logs/sessão ao excluir uma atividade vinculada. Essas operações exigem prévia, backup e validação conforme a auditoria.
+
+Não executar rollback destrutivo automaticamente. Para mudanças aditivas de schema, o rollback preferencial é manter colunas/tabelas e reverter o código consumidor. Remover colunas, identidades, relações, aliases ou dados históricos pode destruir compatibilidade e exige plano específico, backup e aprovação. A sequência ainda não está aprovada para execução automática nem foi reproduzida do zero em banco descartável.
 
 ## Origem
 
