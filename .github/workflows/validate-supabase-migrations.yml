@@ -82,3 +82,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -Atc "SELECT to_regclass('public.training_programs') IS NOT NULL AND to_regclass('public.training_exercise_catalog') IS NOT NULL AND to_regclass('public.training_sessions') IS NOT NULL" | grep -qx t
       - name: Verify sensitive backfills with representative legacy fixtures
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/backfill-migration-fixtures.sql
+      - name: Verify RLS coverage and protected helper function grants
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/rls-policy-inventory.sql
+      - name: Verify private avatar Storage isolation
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/storage-rls-isolation.sql
