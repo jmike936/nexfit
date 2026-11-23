@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nexfit-app-shell-v84';
+const CACHE_NAME = 'nexfit-app-shell-v85';
 const APP_FILES = [
   './',
   './index.html',
