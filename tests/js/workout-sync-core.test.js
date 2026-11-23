@@ -97,7 +97,7 @@ function makeSyncAdapter(options={}){
   async upsertSession(payload){state.calls.session++;state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {data:null,error:null}},
   async upsertSetLogs(rows){state.calls.logs++;if(failLogOnce){failLogOnce=false;return {data:null,error:new Error('temporary offline')}}for(const row of rows)state.logs.set(row.exercise_id+':'+row.set_number,row);return {data:null,error:null}},
   async completeSession(payload){state.calls.complete++;state.sessions.set(payload.id,{...state.sessions.get(payload.id),...payload});return {data:null,error:null}},
-  async findActivityByMarker(userId,notes){state.calls.lookup++;const found=[...state.activities.values()].find(x=>x.user_id===userId&&x.notes===notes);return {data:found?{id:found.id}:null,error:null}},
+  async findActivityByMarker(userId,notes){state.calls.lookup++;if(options.hideInitialLookup)return {data:null,error:null};const found=[...state.activities.values()].find(x=>x.user_id===userId&&x.notes===notes);return {data:found?{id:found.id}:null,error:null}},
   async insertActivity(payload){state.calls.insert++;if(options.insertRace)return {data:null,error:new Error('duplicate race')};state.activities.set(payload.id,payload);return {data:{id:payload.id},error:null}},
   async findActivityByIdAndMarker(id,userId,notes){state.calls.raceLookup++;const found=state.activities.get(id);return {data:found&&found.user_id===userId&&found.notes===notes?{id:found.id}:null,error:null}}
  };
@@ -146,7 +146,7 @@ test('completed sync reuses an existing activity marker instead of inserting a d
 });
 
 test('insert race is recovered by looking up the deterministic session marker',async()=>{
- const saved=completedSnapshot(),db=makeSyncAdapter({insertRace:true});
+ const saved=completedSnapshot(),db=makeSyncAdapter({insertRace:true,hideInitialLookup:true});
  const expected=sync.buildCompletedActivityPayload({pendingSession:saved.session,saved,userId:'athlete-a',finishedAt:saved.session.finished_at});
  db.state.activities.set(expected.id,expected);
  const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>true});
