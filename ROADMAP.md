@@ -68,6 +68,7 @@ Atualizado em 23/11/2026.
 - [ ] Validar reprodução do zero e reexecução em PostgreSQL/Supabase descartável; conferir FKs do catálogo e políticas RLS com identidades distintas.
   - [x] Adicionar smoke test de instalação das 18 migrações em PostgreSQL 16 descartável, com camada mínima de compatibilidade Supabase e verificação inicial do isolamento RLS de `activities` (não substitui testes no Supabase local/real).
   - [x] Reaplicar as 18 migrações no mesmo banco descartável para verificar idempotência estrutural; validar separadamente os backfills com dados representativos.
+  - [ ] Testar isolamento RLS de programas, versões, treinos, exercícios, sessões e séries entre dois atletas, personal com leitura, personal com gestão e profissional sem vínculo.
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
