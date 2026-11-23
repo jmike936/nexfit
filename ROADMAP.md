@@ -31,7 +31,7 @@ Atualizado em 23/11/2026.
 - [x] Iniciar e retomar sessões offline.
 - [x] Persistir séries pendentes localmente e sincronizá-las quando houver conexão.
 - [x] Proteger o histórico e a evolução contra troca de conta.
-- [ ] Continuar testando reconexão, retomada e concorrência entre abas/dispositivos.
+- [ ] Continuar testando reconexão, retomada e concorrência entre abas/dispositivos.\n  - [x] Extrair e testar as primitivas determinísticas de sincronização offline: isolamento por conta, merge de séries, payloads idempotentes, fila de cancelamento e single-flight por atleta.
 
 ## Prioridade 4 — Experiência e desempenho
 
