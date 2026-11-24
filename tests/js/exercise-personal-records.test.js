@@ -21,5 +21,5 @@ test('personal records are highlighted on the set history list',()=>{
  assert.match(evolution,/evolution-pr-badge/);
  assert.match(evolution,/personalRecordData\.flags\.get/);
  assert.match(evolution,/Recorde pessoal · repetições/);
- assert.match(evolution,/timestamp:log\.completed_at\|\|session\.finished_at\|\|session\.started_at/);
+ assert.match(evolution,/timestamp,value,reps:Number\(log\.reps_completed\|\|0\)/);
 });
