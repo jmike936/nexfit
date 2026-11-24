@@ -53,3 +53,14 @@ test('exercise muscle map keeps its visual styles after the modal is moved to bo
   assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.body-base/);
   assert.match(index, /\.execution-guidance-modal \.execution-muscle-summary/);
 });
+
+test('exercise muscle map remains visible when catalog muscle labels are not mapped', () => {
+  const start = workout.indexOf('function renderExecutionMuscleMap');
+  const end = workout.indexOf('function renderSessionStep()', start);
+  const renderer = workout.slice(start, end);
+  assert.match(renderer, /replace\(\/\[\\u0300-\\u036f\]\/g/);
+  assert.match(renderer, /dorsai\|dorsal\|latissim/);
+  assert.doesNotMatch(renderer, /if\(!p\.size&&!s\.size\)return ''/);
+  assert.match(renderer, /const mappingNotice=/);
+  assert.match(renderer, /class="muscle-map-svg"/);
+});
