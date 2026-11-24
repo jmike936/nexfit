@@ -192,7 +192,7 @@ function chart(points,metricType){
  const subject=metricType==='time'?'maior duração':metricType==='volume'?'volume total por sessão':metricType==='estimated1RM'?'1RM estimado':'maior carga';
  const recent=series.slice(-4).reverse();
  const accessiblePoints='<div class="evolution-chart-points" aria-label="Registros mais recentes do gráfico">'+recent.map(p=>'<div class="evolution-chart-point"><span>'+dateLabel(p.date)+'</span><strong>'+formatMetric(p.value,metricType)+'</strong></div>').join('')+'</div>';
- return '<div class="evolution-chart-scroll" role="region" aria-label="Gráfico rolável horizontalmente"><svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':metricType==='volume'?' · volume da série':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg></div>'+accessiblePoints+'<p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. Os registros mais recentes também aparecem abaixo do gráfico.</p>';
+ return '<div class="evolution-chart-scroll" role="region" aria-label="Gráfico rolável horizontalmente"><svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':metricType==='volume'?' · volume da sessão':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg></div>'+accessiblePoints+'<p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. Os registros mais recentes também aparecem abaixo do gráfico.</p>';
 }
 async function render(host){
  const uid=user()?.id||null,client=getClient(),generation=++renderGeneration;
@@ -211,7 +211,7 @@ async function render(host){
   const paint=()=>{
    if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':'cargas';
+   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':metricType==='estimated1RM'?'estimativas de 1RM':'cargas';
    const personalRecordData=detectPersonalRecords(points,metricType);
    const sessionPoints=sessionSeries(points,metricType);
    const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
