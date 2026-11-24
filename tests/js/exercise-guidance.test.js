@@ -24,3 +24,16 @@ test('exercise guidance reuses cached images and provides an offline fallback', 
   assert.match(workout, /Demonstração visual indisponível offline/);
   assert.match(workout, /parsed\.protocol==='https:'/);
 });
+
+test('exercise guidance modal is replaced between exercises and starts at the top', () => {
+  assert.match(workout, /querySelectorAll\('body > #exerciseGuidanceModal'\)\.forEach\(previousModal=>previousModal\.remove\(\)\)/);
+  assert.match(workout, /guidanceModal\.scrollTop=0/);
+  assert.match(workout, /dialog\.scrollTop=0/);
+});
+
+test('exercise muscle map keeps its visual styles after the modal is moved to body', () => {
+  const index = fs.readFileSync('index.html', 'utf8');
+  assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.muscle-region\.primary/);
+  assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.body-base/);
+  assert.match(index, /\.execution-guidance-modal \.execution-muscle-summary/);
+});
