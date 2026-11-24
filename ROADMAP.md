@@ -105,6 +105,8 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Criar uma Biblioteca de Exercícios, acessível em área própria e fácil de encontrar, para consulta por atletas e personais.
   - [x] Organizar a biblioteca por nome e grupo muscular, com busca e filtros.
   - [ ] Completar a cobertura de orientações objetivas para todos os exercícios; a interface já apresenta instruções e referências visuais quando disponíveis, com fallback para itens sem material.
+    - [x] Auditar estaticamente o modelo e as migrações do catálogo; preparar diagnóstico somente leitura para medir a cobertura real no Supabase.
+    - [ ] Executar `supabase/operations/audit-exercise-catalog-readonly.sql` no DBeaver e revisar os resultados reais antes de propor correções.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
   - [x] Reutilizar o ID canônico do catálogo e o mesmo cache de imagens na biblioteca e durante a execução, sem criar registros ou cópias de arquivos de imagem.
