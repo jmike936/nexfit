@@ -61,7 +61,7 @@ Atualizado em 24/11/2026.
 - [x] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
 - [x] Exibir tela amigável de conclusão do treino com resumo, status de sincronização e próximos passos; continuar a substituição de mensagens nativas nas demais etapas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
-- [ ] Revisar indicadores de evolução e desempenho no celular.
+- [x] Revisar indicadores de evolução e desempenho no celular: cartões mais legíveis em duas colunas, gráfico com rolagem horizontal quando necessário, valores recentes acessíveis abaixo do gráfico e identificação explícita do 1RM estimado (Epley).
 - [x] Implementar a barra de navegação inferior com visual inspirado no Liquid Glass do iPhone: formato cápsula mais arredondado, transparência, desfoque, contraste e área de toque preservados.
   - [x] Exibir a foto de perfil no atalho de Perfil quando cadastrada.
   - [x] Sem foto, exibir o ícone de perfil centralizado em avatar circular.
