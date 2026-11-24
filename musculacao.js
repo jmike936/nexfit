@@ -82,7 +82,7 @@
  #strengthPage .execution-guidance-trigger{display:flex;justify-content:flex-start;margin:4px 0 12px}
  #strengthPage .execution-guidance-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 13px;border:1px solid #526b32;border-radius:12px;background:#202b20;color:#d5ff7b;font-weight:750;font-size:12px;cursor:pointer}
  #strengthPage .execution-guidance-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
- .execution-guidance-modal.modalback{position:fixed;inset:0;z-index:20;box-sizing:border-box;display:none;align-items:center;justify-content:center;padding:18px;background:#05080dcc;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+ .execution-guidance-modal.modalback{position:fixed;inset:0;z-index:5;box-sizing:border-box;display:none;align-items:center;justify-content:center;padding:18px;background:#05080dcc;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
  .execution-guidance-modal.modalback.show{display:flex}
  .execution-guidance-modal .execution-guidance-dialog{box-sizing:border-box;width:min(680px,100%);max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:18px;background:#1a232e;border:1px solid #354454;border-radius:22px;box-shadow:0 24px 80px #0009;color:#f4f7fa}
  .execution-guidance-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -1513,35 +1513,6 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const guidanceModalMarkup=host.querySelector('#exerciseGuidanceModal');if(guidanceModalMarkup)document.body.appendChild(guidanceModalMarkup);
   const guidanceModal=$('exerciseGuidanceModal'),guidanceButton=$('openExerciseGuidance'),guidanceClose=$('closeExerciseGuidance');
   const guidanceObjectUrls=[];
-  const guidanceScrollState={scrollY:0,htmlOverflow:'',bodyPosition:'',bodyTop:'',bodyLeft:'',bodyRight:'',bodyWidth:''};
-  const lockGuidanceBackground=()=>{
-   if(document.body.dataset.guidanceScrollLocked==='true')return;
-   guidanceScrollState.scrollY=window.scrollY||window.pageYOffset||0;
-   guidanceScrollState.htmlOverflow=document.documentElement.style.overflow;
-   guidanceScrollState.bodyPosition=document.body.style.position;
-   guidanceScrollState.bodyTop=document.body.style.top;
-   guidanceScrollState.bodyLeft=document.body.style.left;
-   guidanceScrollState.bodyRight=document.body.style.right;
-   guidanceScrollState.bodyWidth=document.body.style.width;
-   document.body.dataset.guidanceScrollLocked='true';
-   document.documentElement.style.overflow='hidden';
-   document.body.style.position='fixed';
-   document.body.style.top='-'+guidanceScrollState.scrollY+'px';
-   document.body.style.left='0';
-   document.body.style.right='0';
-   document.body.style.width='100%';
-  };
-  const unlockGuidanceBackground=()=>{
-   if(document.body.dataset.guidanceScrollLocked!=='true')return;
-   document.documentElement.style.overflow=guidanceScrollState.htmlOverflow;
-   document.body.style.position=guidanceScrollState.bodyPosition;
-   document.body.style.top=guidanceScrollState.bodyTop;
-   document.body.style.left=guidanceScrollState.bodyLeft;
-   document.body.style.right=guidanceScrollState.bodyRight;
-   document.body.style.width=guidanceScrollState.bodyWidth;
-   delete document.body.dataset.guidanceScrollLocked;
-   window.scrollTo(0,guidanceScrollState.scrollY);
-  };
   const showGuidanceImageFallback=img=>{
    img.hidden=true;
    const note=document.createElement('div');note.className='execution-image-unavailable';note.textContent='Demonstração visual indisponível offline. Abra a Biblioteca com internet para guardar esta imagem.';
@@ -1576,13 +1547,12 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   };
   const closeGuidance=()=>{
    if(guidanceModal)guidanceModal.classList.remove('show');
-   unlockGuidanceBackground();
    guidanceObjectUrls.forEach(url=>URL.revokeObjectURL(url));guidanceObjectUrls.length=0;
    guidanceModal?.querySelectorAll('.execution-media').forEach(img=>{img.removeAttribute('src');img.hidden=false;img.parentElement.querySelector('.execution-image-unavailable')?.remove()});
   };
   if(guidanceButton)guidanceButton.onclick=async()=>{
    if(!guidanceModal)return;
-   lockGuidanceBackground();guidanceModal.classList.add('show');guidanceClose?.focus();
+   guidanceModal.classList.add('show');guidanceClose?.focus();
    await Promise.all([...guidanceModal.querySelectorAll('.execution-media')].map(loadGuidanceImage));
   };
   if(guidanceClose)guidanceClose.onclick=closeGuidance;
