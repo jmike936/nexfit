@@ -1654,6 +1654,17 @@ function renderSessionStep(){
   if(guidanceClose)guidanceClose.onclick=closeGuidance;
   if(guidanceModal)guidanceModal.onclick=event=>{if(event.target===guidanceModal)closeGuidance()};
   if(guidanceModal)guidanceModal.onkeydown=event=>{if(event.key==='Escape')closeGuidance()};
+  guidanceModal?.querySelectorAll('[data-muscle-view]').forEach(button=>button.addEventListener('click',()=>{
+   const side=button.dataset.muscleView==='back'?'back':'front';
+   const svg=guidanceModal.querySelector('[data-muscle-svg]');
+   if(svg){
+    svg.setAttribute('viewBox',side==='back'?'162 0 192 224':'0 0 192 224');
+    svg.setAttribute('aria-label',side==='back'?'Mapa muscular com vista posterior; músculos principais em verde e secundários em amarelo':'Mapa muscular com vista frontal; músculos principais em verde e secundários em amarelo');
+   }
+   guidanceModal.querySelectorAll('[data-muscle-view]').forEach(option=>{
+    const active=option===button;option.classList.toggle('active',active);option.setAttribute('aria-pressed',String(active));
+   });
+  }));
   
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   const effortType=$('sessionEffortType'),effortValue=$('sessionEffortValue');
