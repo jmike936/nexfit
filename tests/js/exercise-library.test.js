@@ -24,3 +24,10 @@ test('exercise library only renders HTTPS image URLs and supports cached offline
   assert.match(library, /caches\.open\(IMAGE_CACHE\)/);
   assert.match(library, /if\(!navigator\.onLine\)/);
 });
+
+test('exercise library detail modal is moved to body and scrolls within a centered mobile viewport', () => {
+  assert.match(library, /document\.body\.appendChild\(detailModal\)/);
+  assert.match(index, /body \.exercise-library-modal[\s\S]*align-items:center/);
+  assert.match(index, /body \.exercise-library-dialog[\s\S]*overflow-y:auto/);
+  assert.match(index, /body \.nav\{z-index:15!important\}/);
+});

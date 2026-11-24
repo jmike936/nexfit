@@ -103,6 +103,8 @@ async function load(){
 }
 function init(){
  if(!$('exerciseLibraryPage'))return;
+ const detailModal=$('exerciseLibraryModal');
+ if(detailModal&&detailModal.parentElement!==document.body)document.body.appendChild(detailModal);
  $('exerciseLibrarySearch').addEventListener('input',render);
  $('exerciseLibraryCategory').addEventListener('change',render);
  $('exerciseLibraryRefresh').addEventListener('click',load);
