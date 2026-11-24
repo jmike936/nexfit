@@ -61,7 +61,8 @@ BEGIN
       RAISE EXCEPTION 'authenticated retains an administrative table privilege on %', public_table;
     END IF;
     IF current_setting('server_version_num')::integer >= 170000
-       AND has_table_privilege('authenticated', public_table, 'MAINTAIN') THEN
+       AND (has_table_privilege('anon', public_table, 'MAINTAIN')
+            OR has_table_privilege('authenticated', public_table, 'MAINTAIN')) THEN
       RAISE EXCEPTION 'authenticated retains MAINTAIN on %', public_table;
     END IF;
   END LOOP;
