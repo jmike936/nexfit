@@ -25,5 +25,6 @@ jobs:
           node --test tests/js/release-version.test.js
           node --check workout-history.js
           node --check exercise-evolution.js
+          node --test tests/js/exercise-evolution.test.js
           node --check exercise-library.js
           node --test tests/js/exercise-library.test.js
