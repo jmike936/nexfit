@@ -1411,8 +1411,16 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(saved.draftLoad!==null&&$('sessionLoad')){$('sessionLoad').value=saved.draftLoad;$('sessionLoad').dataset.userEdited='true'}
    if(saved.draftReps!==null&&$('sessionReps'))$('sessionReps').value=saved.draftReps;
    if(restSnapshot&&sessionPlan[restSnapshot.itemIndex]){
-    const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;restSnapshot=null;advanceAfterSet(item)};
-    activeRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
+    const item=sessionPlan[restSnapshot.itemIndex],rest=restSnapshot,sessionId=session.id;
+    let restoredRest=null;
+    const advance=workoutSyncCore.createOnce(()=>{
+     if(session?.id!==sessionId||activeRest!==restoredRest)return false;
+     if(timer){clearInterval(timer);timer=null}
+     activeRest=null;restSnapshot=null;
+     return advanceAfterSet(item);
+    });
+    restoredRest={deadline:rest.deadline,total:rest.total,remaining:rest.remaining,paused:rest.paused,advance,nextText:rest.nextText,notified:rest.notified};
+    activeRest=restoredRest;
     restoreActiveRestUI();
    }
   }else renderExercisePicker();
@@ -1849,12 +1857,20 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   renderExercisePicker();
  }
  function advanceAfterSet(item){
-  sessionIndex++;restSnapshot=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;persistWorkoutState();
+  // Ignora callbacks atrasados ou duplicados: só a etapa que ainda está ativa pode avançar.
+  if(!workoutSyncCore.isCurrentWorkoutStep(sessionPlan,sessionIndex,item))return false;
+  sessionIndex++;restSnapshot=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
+  if(timer){clearInterval(timer);timer=null}
+  persistWorkoutState();
   const next=sessionPlan[sessionIndex];
   if(next&&next.exerciseIndex===item.exerciseIndex)renderSessionStep();else renderExercisePicker();
+  return true;
  }
  function continueAfterRecordedSet(item){
+  if(!workoutSyncCore.isCurrentWorkoutStep(sessionPlan,sessionIndex,item))return;
   activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
+  // Recuperação de uma série já persistida também encerra qualquer timer antigo.
+  if(timer){clearInterval(timer);timer=null}
   const nextItem=sessionPlan[sessionIndex+1];
   if(!nextItem||nextItem.exerciseIndex!==item.exerciseIndex){advanceAfterSet(item);return}
   let rest;try{rest=parseRestSeconds(item.exercise.rest_seconds)}catch(error){setExecutionFeedback('Série registrada, mas o descanso configurado é inválido. Avançando sem timer.','error');advanceAfterSet(item);return}
@@ -1871,8 +1887,16 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const nextLoad=sameExercise?(suggestedNextLoad??next.set.load_kg??sessionLoads[next.exercise.id+':'+next.setIndex]??null):null;
   const nextText=sameExercise?'Próxima: série '+(next.setIndex+1)+' de '+next.exercise.name+' · '+(next.set.reps==='MR'?'MR':next.set.reps+' reps')+' · carga '+(nextLoad==null?'a informar':nextLoad+' kg'):next?'Exercício concluído. Após o descanso, escolha qual exercício iniciar.':'Último descanso do treino.';
   $('nextStepText').textContent=nextText;
-  const advance=()=>{if(timer)clearInterval(timer);timer=null;activeRest=null;advanceAfterSet(item)};
-  activeRest={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};restSnapshot={deadline,total:rest,remaining:rest,paused:false,nextText,notified:false,itemIndex:sessionIndex};persistWorkoutState();
+  const sessionId=session.id;
+  let restState=null;
+  const advance=workoutSyncCore.createOnce(()=>{
+   if(session?.id!==sessionId||activeRest!==restState)return false;
+   if(timer){clearInterval(timer);timer=null}
+   activeRest=null;restSnapshot=null;
+   return advanceAfterSet(item);
+  });
+  restState={deadline,total:rest,remaining:rest,paused:false,advance,nextText,notified:false};
+  activeRest=restState;restSnapshot={deadline,total:rest,remaining:rest,paused:false,nextText,notified:false,itemIndex:sessionIndex};persistWorkoutState();
   $('skipRest').onclick=advance;
   timer=setInterval(tickRestTimer,250);tickRestTimer();
  }
