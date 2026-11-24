@@ -5,6 +5,23 @@ const IMAGE_CACHE='nexfit-exercise-library-images-v1';
 const $=id=>document.getElementById(id);
 let items=[],activeUserId=null,activeItem=null,objectUrls=[];
 const normalize=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
+const SMALL_NAME_WORDS=new Set(['a','as','ao','aos','com','da','das','de','do','dos','e','em','na','nas','no','nos','para','por']);
+const EXERCISE_ACRONYMS=new Map([['hiit','HIIT'],['trx','TRX'],['wod','WOD'],['1rm','1RM'],['rpe','RPE'],['rir','RIR'],['bosu','BOSU'],['ems','EMS']]);
+function formatExerciseName(value){
+ const original=String(value??'').trim();
+ if(!original||original!==original.toLocaleUpperCase('pt-BR')||!/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(original))return original;
+ const words=original.toLocaleLowerCase('pt-BR').split(/(\s+)/);
+ let first=true;
+ return words.map(word=>{
+  if(/^\s+$/.test(word))return word;
+  const key=word.replace(/^[^\p{L}\p{N}]|[^\p{L}\p{N}]$/gu,'');
+  const acronym=EXERCISE_ACRONYMS.get(key);
+  if(acronym){first=false;return word.replace(key,acronym)}
+  if(!first&&SMALL_NAME_WORDS.has(key)){return word}
+  first=false;
+  return word.replace(/(^|[^\p{L}\p{N}])([\p{L}])/gu,(_,prefix,letter)=>prefix+letter.toLocaleUpperCase('pt-BR'));
+ }).join('');
+}
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeImageUrl=value=>{try{const url=new URL(String(value||''));return url.protocol==='https:'?url.href:''}catch(_){return ''}};
 function cacheKey(){return CACHE_KEY_PREFIX+activeUserId}
@@ -21,7 +38,7 @@ function render(){
  if(!filtered.length){host.innerHTML='<div class="exercise-library-empty"><strong>Nenhum exercício encontrado</strong><span>Tente outro nome ou grupo muscular.</span></div>';return}
  host.innerHTML=filtered.map(item=>{
   const image=safeImageUrl(item.demonstration_image_url),muscles=(item.primary_muscles||[]).slice(0,2).map(escapeHtml).join(' · ');
-  return '<button class="exercise-library-card" type="button" data-exercise-id="'+escapeHtml(item.id)+'"><span class="exercise-library-thumb">'+(image?'<img src="'+escapeHtml(image)+'" alt="" loading="lazy">':'<span aria-hidden="true">🏋️</span>')+'</span><span class="exercise-library-card-copy"><strong>'+escapeHtml(item.name)+'</strong><small>'+escapeHtml(item.category||'Outros')+(muscles?' · '+muscles:'')+'</small></span><span class="exercise-library-chevron" aria-hidden="true">›</span></button>';
+  return '<button class="exercise-library-card" type="button" data-exercise-id="'+escapeHtml(item.id)+'"><span class="exercise-library-thumb">'+(image?'<img src="'+escapeHtml(image)+'" alt="" loading="lazy">':'<span aria-hidden="true">🏋️</span>')+'</span><span class="exercise-library-card-copy"><strong>'+escapeHtml(formatExerciseName(item.name))+'</strong><small>'+escapeHtml(item.category||'Outros')+(muscles?' · '+muscles:'')+'</small></span><span class="exercise-library-chevron" aria-hidden="true">›</span></button>';
  }).join('');
  host.querySelectorAll('[data-exercise-id]').forEach(button=>button.addEventListener('click',()=>openDetail(button.dataset.exerciseId)));
 }
@@ -54,7 +71,7 @@ function closeDetail(){
 function openDetail(id){
  const item=items.find(entry=>String(entry.id)===String(id));if(!item)return;
  activeItem=item;const modal=$('exerciseLibraryModal');
- $('exerciseLibraryDetailTitle').textContent=item.name;
+ $('exerciseLibraryDetailTitle').textContent=formatExerciseName(item.name);
  $('exerciseLibraryDetailCategory').textContent=item.category||'Outros';
  $('exerciseLibraryDetailPrimary').textContent=(item.primary_muscles||[]).join(', ')||'Não informado';
  $('exerciseLibraryDetailSecondary').textContent=(item.secondary_muscles||[]).join(', ')||'Não informado';
