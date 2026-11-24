@@ -216,3 +216,30 @@ test('two independent tabs racing to sync one completed session create only one 
  assert.equal(insertCalls,2);
  assert.equal(duplicateInsertCalls,1);
 });
+
+
+test('workout step guard only accepts the exact active plan item',()=>{
+ const first={exerciseIndex:0,setIndex:0},second={exerciseIndex:0,setIndex:1},plan=[first,second];
+ assert.equal(sync.isCurrentWorkoutStep(plan,0,first),true);
+ assert.equal(sync.isCurrentWorkoutStep(plan,1,first),false);
+ assert.equal(sync.isCurrentWorkoutStep(plan,0,{...first}),false);
+ assert.equal(sync.isCurrentWorkoutStep(plan,-1,first),false);
+ assert.equal(sync.isCurrentWorkoutStep(null,0,first),false);
+});
+
+test('rest transition callback advances at most once, even if timer and tap race',()=>{
+ let advances=0;
+ const advance=sync.createOnce(()=>{advances++;return 'advanced'});
+ assert.equal(advance(),'advanced');
+ assert.equal(advance(),false);
+ assert.equal(advances,1);
+});
+
+test('rest transition can be safely ignored when its owning session is no longer active',()=>{
+ let activeSession='session-a',advances=0;
+ const advance=sync.createOnce(()=>activeSession==='session-a'?(advances++,'advanced'):false);
+ activeSession='session-b';
+ assert.equal(advance(),false);
+ assert.equal(advance(),false);
+ assert.equal(advances,0);
+});
