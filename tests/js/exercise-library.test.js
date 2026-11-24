@@ -31,3 +31,10 @@ test('exercise library detail modal is moved to body and scrolls within a center
   assert.match(index, /body \.exercise-library-dialog[\s\S]*overflow-y:auto/);
   assert.match(index, /body \.nav\{z-index:15!important\}/);
 });
+
+test('exercise library formats all-uppercase exercise names without changing stored catalog values', () => {
+  assert.match(library, /function formatExerciseName/);
+  assert.match(library, /formatExerciseName\\(item\\.name\\)/);
+  assert.match(library, /EXERCISE_ACRONYMS/);
+  assert.match(library, /SMALL_NAME_WORDS/);
+});
