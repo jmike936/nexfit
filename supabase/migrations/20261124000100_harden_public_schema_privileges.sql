@@ -124,8 +124,11 @@ begin
 end
 $$;
 
--- 4) Stop automatically granting new public-schema functions to anon/authenticated.
--- Each future RPC must receive an explicit, reviewed GRANT.
+-- 4) Stop implicit PUBLIC EXECUTE globally, then remove role-specific defaults in public.
+-- PostgreSQL schema-level REVOKE cannot subtract a privilege inherited from global defaults.
+-- Every future RPC must receive an explicit, reviewed GRANT.
+alter default privileges for role postgres
+  revoke execute on functions from public;
 alter default privileges for role postgres in schema public
   revoke execute on functions from anon, authenticated;
 
@@ -135,6 +138,7 @@ do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'supabase_admin') then
     if pg_has_role(current_user, 'supabase_admin', 'MEMBER') then
+      execute 'alter default privileges for role supabase_admin revoke execute on functions from public';
       execute 'alter default privileges for role supabase_admin in schema public revoke execute on functions from anon, authenticated';
     else
       raise warning 'Não foi possível alterar os privilégios padrão de supabase_admin. Execute a correção complementar como supabase_admin ou membro desse papel.';
