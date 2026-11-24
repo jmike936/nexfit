@@ -1534,7 +1534,8 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  function renderExecutionMuscleMap(primary=[],secondary=[]){
   primary=Array.isArray(primary)?primary:[];secondary=Array.isArray(secondary)?secondary:[];
   const keyFor=value=>{
-   const raw=typeof value==='string'?value:(value?.name||value?.label||value?.muscle||'');\n   const key=String(raw).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+   const raw=typeof value==='string'?value:(value?.name||value?.label||value?.muscle||'');
+   const key=String(raw).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
    if(/peitoral|pector|chest/.test(key))return 'chest';
    if(/ombro|deltoid|shoulder/.test(key))return 'shoulders';
    if(/triceps/.test(key))return 'triceps';
@@ -1555,7 +1556,9 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    return null;
   };
   const p=new Set(primary.map(keyFor).filter(Boolean)),s=new Set(secondary.map(keyFor).filter(k=>k&&!p.has(k)));
-  const hasMuscleData=primary.length>0||secondary.length>0;\n  const hasUnmapped=[...primary,...secondary].some(value=>!keyFor(value));\n  const mappingNotice=!hasMuscleData?'Este exercício ainda não possui grupos musculares cadastrados.':hasUnmapped?'Alguns grupos cadastrados ainda não possuem uma região correspondente no mapa.':'';
+  const hasMuscleData=primary.length>0||secondary.length>0;
+  const hasUnmapped=[...primary,...secondary].some(value=>!keyFor(value));
+  const mappingNotice=!hasMuscleData?'Este exercício ainda não possui grupos musculares cadastrados.':hasUnmapped?'Alguns grupos cadastrados ainda não possuem uma região correspondente no mapa.':'';
   const cls=k=>'muscle-region '+(p.has(k)?'primary':s.has(k)?'secondary':'');
   const shapes={
    chest:'<path d="M78 61 Q88 55 96 62 Q104 55 114 61 L111 76 Q103 81 96 75 Q89 81 81 76Z"/>',
@@ -1580,7 +1583,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const base='<g class="body-base"><circle cx="96" cy="18" r="11"/><rect x="88" y="29" width="16" height="14" rx="5"/><path d="M77 44 Q66 44 62 55 L67 108 Q77 117 96 117 Q115 117 125 108 L130 55 Q126 44 115 44Z"/><path d="M64 50 Q55 48 51 62 L43 115 Q42 124 49 126 Q56 127 59 119 L74 63Z"/><path d="M128 50 Q137 48 141 62 L149 115 Q150 124 143 126 Q136 127 133 119 L118 63Z"/><path d="M78 112 L93 116 L89 160 L84 198 L73 198 L74 158Z"/><path d="M99 116 L114 112 L118 158 L119 198 L108 198 L103 160Z"/><circle cx="258" cy="18" r="11"/><rect x="250" y="29" width="16" height="14" rx="5"/><path d="M239 44 Q228 44 224 55 L229 108 Q239 117 258 117 Q277 117 287 108 L292 55 Q288 44 277 44Z"/><path d="M226 50 Q217 48 213 62 L205 115 Q204 124 211 126 Q218 127 221 119 L236 63Z"/><path d="M290 50 Q299 48 303 62 L311 115 Q312 124 305 126 Q298 127 295 119 L280 63Z"/><path d="M240 112 L255 116 L251 160 L246 198 L235 198 L236 158Z"/><path d="M261 116 L276 112 L280 158 L281 198 L270 198 L265 160Z"/></g>';
   const labels='<g class="body-labels"><text x="96" y="216">Frente</text><text x="258" y="216">Costas</text></g>';
   const primaryNames=primary.length?primary.join(' · '):'—',secondaryNames=secondary.length?secondary.join(' · '):'—';
-  return '<section class="execution-muscle-map"><h3>Mapa de ativação muscular</h3><p>As cores indicam o foco do exercício. Alterne a vista para localizar cada região.</p>'+(mappingNotice?'<p class="muscle-map-notice">'+esc(mappingNotice)+'</p>':'')<div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><div class="muscle-map-view-toggle" role="group" aria-label="Vista do mapa muscular"><button type="button" class="active" data-muscle-view="front" aria-pressed="true">Frente</button><button type="button" data-muscle-view="back" aria-pressed="false">Costas</button></div><svg class="muscle-map-svg" viewBox="0 0 192 224" data-muscle-svg="true" role="img" aria-label="Mapa muscular com vista frontal; músculos principais em verde e secundários em amarelo">'+base+'<g>'+regions+'</g>'+labels+'</svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span><span class="inactive"><i></i>Demais regiões</span></div></section>';
+  return '<section class="execution-muscle-map"><h3>Mapa de ativação muscular</h3><p>As cores indicam o foco do exercício. Alterne a vista para localizar cada região.</p>'+(mappingNotice?'<p class="muscle-map-notice">'+esc(mappingNotice)+'</p>':'')+'<div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><div class="muscle-map-view-toggle" role="group" aria-label="Vista do mapa muscular"><button type="button" class="active" data-muscle-view="front" aria-pressed="true">Frente</button><button type="button" data-muscle-view="back" aria-pressed="false">Costas</button></div><svg class="muscle-map-svg" viewBox="0 0 192 224" data-muscle-svg="true" role="img" aria-label="Mapa muscular com vista frontal; músculos principais em verde e secundários em amarelo">'+base+'<g>'+regions+'</g>'+labels+'</svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span><span class="inactive"><i></i>Demais regiões</span></div></section>';
  }
 function renderSessionStep(){
   sessionView='exercise';
