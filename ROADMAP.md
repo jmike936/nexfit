@@ -115,7 +115,7 @@ Atualizado em 24/11/2026.
 - [ ] Calcular 1RM estimado (Epley/Brzycki) por exercício, exibindo que é uma estimativa.
 - [ ] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino.
   - [x] Calcular e destacar recordes pessoais de carga, repetições, 1RM estimado (Epley) e duração na tela Evolução, identificando as séries que estabeleceram cada recorde.
-  - [ ] Exibir aviso de comemoração quando um novo recorde for alcançado ao concluir o treino.
+  - [x] Exibir aviso de comemoração ao concluir o treino quando uma nova melhor marca de carga, repetições, 1RM estimado (Epley) ou duração superar o histórico de sessões concluídas; a comparação só ocorre após sincronização confirmada e usa identidade estável do exercício.
 - [x] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando os músculos principais do catálogo e distribuindo o volume igualmente quando houver mais de um músculo principal no exercício.
 - [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
   - [x] Incluir gráficos por sessão para carga, volume total por sessão e 1RM estimado, mantendo a evolução de duração separada.
