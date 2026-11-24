@@ -107,6 +107,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [ ] Completar a cobertura de orientações objetivas para todos os exercícios; a interface já apresenta instruções e referências visuais quando disponíveis, com fallback para itens sem material.
     - [x] Auditar estaticamente o modelo e as migrações do catálogo; preparar diagnóstico somente leitura para medir a cobertura real no Supabase.
     - [ ] Executar `supabase/operations/audit-exercise-catalog-readonly.sql` no DBeaver e revisar os resultados reais antes de propor correções.
+    - [ ] Criar e revisar instruções originais em português para todos os exercícios ativos; o seed inicial cadastra nomes/categorias e as migrações visuais adicionam imagens/músculos, mas não populam textos de execução.
     - [ ] Revisar a categoria canônica de exercícios com classificação ambígua no seed (ex.: Agachamento sumô aparece em Quadríceps e Glúteos).
     - [ ] Definir taxonomia estruturada de equipamento, modalidade e padrão de movimento, incluindo valores controlados e filtros, antes de propor migration aditiva.
     - [ ] Validar no catálogo real a cobertura das 415 referências visuais do snapshot CC0; a análise estática encontrou correspondência potencial para 116 dos 157 nomes únicos do seed inicial, sem afirmar cobertura do banco de produção.
