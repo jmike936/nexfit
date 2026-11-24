@@ -42,3 +42,10 @@ test('activity history editing and deletion use in-app dialogs instead of native
   assert.match(remove, /await openAppDialog/);
   assert.doesNotMatch(remove, /\b(?:prompt|confirm|alert)\s*\(/);
 });
+
+test('remaining application flows no longer invoke native alert, confirm or prompt dialogs', () => {
+  assert.doesNotMatch(index, /\\b(?:alert|confirm)\\s*\\(/);
+  assert.doesNotMatch(index, /(?<![\\w.])prompt\\s*\\(/);
+  assert.match(index, /promptEvent\\.prompt\\(\\)/);
+  assert.match(index, /async function editName\\(\\)[\\s\\S]*?await openAppDialog/);
+});
