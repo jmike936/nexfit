@@ -116,7 +116,7 @@ Atualizado em 24/11/2026.
 - [ ] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino.
   - [x] Calcular e destacar recordes pessoais de carga, repetições, 1RM estimado (Epley) e duração na tela Evolução, identificando as séries que estabeleceram cada recorde.
   - [ ] Exibir aviso de comemoração quando um novo recorde for alcançado ao concluir o treino.
-- [ ] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando o mapa do corpo.
+- [x] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando os músculos principais do catálogo e distribuindo o volume igualmente quando houver mais de um músculo principal no exercício.
 - [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
 - [ ] Detectar platô (sem progresso em N sessões) e sugerir ajuste ou deload.
 - [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa.
