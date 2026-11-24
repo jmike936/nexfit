@@ -18,6 +18,8 @@ jobs:
           node-version: 22
       - name: Check JavaScript syntax
         run: |
+          node --check workout-personal-records.js
+          node --test tests/js/workout-personal-records.test.js
           node --check workout-sync-core.js
           node --check musculacao.js
           node --test tests/js/training-management-lazy-load.test.js
