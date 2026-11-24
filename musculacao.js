@@ -446,7 +446,7 @@
    {keys:['panturrilha','panturrilhas','gemeos','gêmeos'],aliases:['panturrilha','gastrocnemio','gastrocnêmio','soleo','sóleo']},
    {keys:['abdomen','abdômen','abdominal'],aliases:['abdomen','abdômen','obliquo','oblíquo']}
   ];
-  const normalizeMuscle=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR');
+  const normalizeMuscle=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
   const muscleFocus=(workout)=>{
    const text=normalizeMuscle([workout.title,workout.description].join(' '));
    return muscleAliases.filter(group=>group.keys.some(key=>text.includes(normalizeMuscle(key)))).map(group=>group.aliases);
