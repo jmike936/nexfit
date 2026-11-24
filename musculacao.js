@@ -197,6 +197,11 @@
  #strengthPage .completion-mark svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
  #strengthPage .completion-screen h1{margin:0;font-size:clamp(27px,6vw,36px);line-height:1.15;letter-spacing:-.8px}
  #strengthPage .completion-subtitle{max-width:430px;margin:10px auto 22px;color:#a0a99c;font-size:14px;line-height:1.6}
+ #strengthPage .completion-records{margin:14px 0;padding:15px;background:linear-gradient(145deg,#25351f,#1b2920);border:1px solid #58763a;border-radius:14px;text-align:left}
+ #strengthPage .completion-records h2{margin:0 0 10px;text-align:center;color:#d5ff7b;font-size:17px}
+ #strengthPage .completion-record-item{padding:8px 0;border-top:1px solid #425438}
+ #strengthPage .completion-record-item strong{display:block;font-size:13px}
+ #strengthPage .completion-record-item span{display:block;margin-top:3px;color:#d5ff7b;font-size:12px}
  #strengthPage .completion-workout{margin:0 0 14px;color:#b7f34a;font-size:13px;font-weight:800}
  #strengthPage .completion-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}
  #strengthPage .completion-stat{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 8px;border:1px solid #303a30;border-radius:14px;background:linear-gradient(145deg,#1d271f,#151b17)}
@@ -2029,6 +2034,29 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   });
  }
  window.nexfitShowWorkoutDialog=showWorkoutDialog;
+ async function findNewWorkoutPersonalRecords(expectedUserId,completedSessionId,exercises,currentLogs,synced){
+  const api=window.NexfitWorkoutPersonalRecords;
+  if(!synced||!api||userRef()?.id!==expectedUserId)return [];
+  try{
+   const identities=[...new Set((exercises||[]).map(item=>String(item.identity_id||'')).filter(Boolean))];
+   if(!identities.length)return [];
+   const db=dbRef();if(!db)return [];
+   const [sessionsQ,exercisesQ]=await Promise.all([
+    db.from('training_sessions').select('id').eq('athlete_id',expectedUserId).eq('status','completed').neq('id',completedSessionId).order('started_at',{ascending:false}).limit(500),
+    db.from('training_exercises').select('id,identity_id,name').in('identity_id',identities)
+   ]);
+   if(userRef()?.id!==expectedUserId||sessionsQ.error||exercisesQ.error||!sessionsQ.data?.length||!exercisesQ.data?.length)return [];
+   const sessionIds=sessionsQ.data.map(row=>row.id),exerciseIds=exercisesQ.data.map(row=>row.id);
+   const logsQ=await db.from('training_set_logs').select('exercise_id,reps_completed,load_kg,duration_seconds').in('session_id',sessionIds).in('exercise_id',exerciseIds).limit(10000);
+   if(userRef()?.id!==expectedUserId||logsQ.error)return [];
+   return api.detectNewRecords({currentLogs,currentExercises:exercises,historicalLogs:logsQ.data||[],historicalExercises:exercisesQ.data||[]});
+  }catch(error){console.warn('Não foi possível comparar recordes pessoais',error);return []}
+ }
+ function renderPersonalRecordCelebration(records){
+  if(!records?.length)return '';
+  const formatValue=record=>record.type==='duration'?formatWorkoutTime(record.value):record.type==='reps'?Number(record.value).toLocaleString('pt-BR')+' reps':Number(record.value).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg';
+  return '<section class="completion-records" aria-label="Novos recordes pessoais"><h2>🏆 Novos recordes pessoais!</h2>'+records.map(item=>'<div class="completion-record-item"><strong>'+esc(normalizeHumanText(item.exerciseName))+'</strong><span>'+item.records.map(record=>esc(record.label)+' · '+esc(formatValue(record))).join('  |  ')+'</span></div>').join('')+'</section>';
+ }
  function renderWorkoutCompletion(summary){
   const duration=formatWorkoutTime(summary.durationSeconds);
   const subtitle=summary.allExercisesDone
@@ -2039,7 +2067,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    '<div class="completion-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></div>'+
    '<p class="completion-workout">'+esc(summary.workoutTitle)+'</p>'+
    '<h1>'+(summary.allExercisesDone?'Parabéns!':'Boa sessão!')+'</h1>'+
-   '<p class="completion-subtitle">'+subtitle+'</p>'+
+   '<p class="completion-subtitle">'+subtitle+'</p>'+renderPersonalRecordCelebration(summary.personalRecords)+
    '<div class="completion-stats">'+
     '<div class="completion-stat"><strong>'+duration+'</strong><span>Tempo de treino</span></div>'+
     '<div class="completion-stat"><strong>'+summary.completedSets+'/'+summary.totalSets+'</strong><span>Séries registradas</span></div>'+
@@ -2070,7 +2098,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   }
   const synced=await syncPendingWorkout();
   if(!isCurrent())return;
-  const progress=sessionExerciseRows.map((_,i)=>exerciseProgress(i));
+  const personalRecords=await findNewWorkoutPersonalRecords(userId,sessionId,sessionExerciseRows,sessionSetLogs,synced);\n  if(!isCurrent())return;\n  const progress=sessionExerciseRows.map((_,i)=>exerciseProgress(i));
   const totalSets=sessionPlan.length;
   const completedSets=sessionSetLogs.filter(row=>Number(row.duration_seconds)>0||Number(row.reps_completed)>0).length;
   const completedExercises=progress.filter(item=>item.status==='done').length;
