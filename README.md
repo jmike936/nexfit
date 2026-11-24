@@ -58,6 +58,10 @@ A associação e os metadados estão incluídos nas migrações `20261122001000`
 
 A cada alteração nas migrações, o GitHub Actions executa uma instalação de smoke test em PostgreSQL 16 descartável, uma segunda passagem das 19 migrações para verificar idempotência estrutural, fixtures de isolamento RLS entre atletas/personais e cenários sintéticos dos backfills 008, 010, 016 e 017, incluindo preservação de sessão e série histórica, inventário RLS de todas as tabelas públicas, grants de funções auxiliares e isolamento de avatares no Storage. O ambiente simula somente as interfaces mínimas de Auth e Storage necessárias; não substitui um projeto Supabase local nem autoriza aplicar migrações em produção. Consulte [o guia de migrações](supabase/migrations/README.md#teste-automatizado-de-instalação).
 
+## Proposta de medição avançada
+
+O modelo de dados para avaliações, VBT, resistência, frequência cardíaca, fotos e integrações está em revisão em [docs/propostas/modelo-medicao-avancada.md](docs/propostas/modelo-medicao-avancada.md). É somente uma proposta: nenhuma tabela, coleta ou integração será criada antes da aprovação explícita, especialmente das regras de consentimento e acesso profissional.
+
 ## Biblioteca de Exercícios (planejada)
 
 O roadmap prevê uma biblioteca consultável por atletas e personais, com instruções e imagens de execução vinculadas ao catálogo canônico. Durante o treino, a orientação ficará recolhida atrás de um indicador acionável e abrirá sob demanda, reutilizando o conteúdo pré-carregado no dispositivo para evitar duplicação e dependência de rede.
