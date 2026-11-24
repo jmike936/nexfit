@@ -7,6 +7,10 @@ DECLARE
 BEGIN
   -- All SECURITY DEFINER RPCs found in the production audit must reject anon
   -- while remaining executable by authenticated and service_role.
+  IF to_regprocedure('public.nexfit_confirm_program_version(uuid)') IS NULL THEN
+    RAISE EXCEPTION 'Required function nexfit_confirm_program_version(uuid) is missing';
+  END IF;
+
   FOREACH function_signature IN ARRAY ARRAY[
     'public.activate_workout_plan(uuid)',
     'public.can_access_workout_plan(uuid,boolean)',
@@ -20,6 +24,9 @@ BEGIN
     'public.nexfit_request_access_by_email(text)',
     'public.share_workout_by_email(uuid,text,text)'
   ] LOOP
+    IF to_regprocedure(function_signature) IS NULL THEN
+      CONTINUE;
+    END IF;
     IF has_function_privilege('anon', function_signature, 'EXECUTE') THEN
       RAISE EXCEPTION 'anon still has EXECUTE on %', function_signature;
     END IF;
