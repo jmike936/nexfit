@@ -32,7 +32,7 @@ BEGIN
   END LOOP;
 
   -- The authentication guard must be present in the deployed function body.
-  IF position('auth.uid() IS NULL' in upper(pg_get_functiondef(
+  IF position('AUTH.UID() IS NULL' in upper(pg_get_functiondef(
     'public.nexfit_confirm_program_version(uuid)'::regprocedure
   ))) = 0 THEN
     RAISE EXCEPTION 'nexfit_confirm_program_version is missing its null-authentication guard';
