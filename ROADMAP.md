@@ -119,7 +119,8 @@ Atualizado em 24/11/2026.
 - [x] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando os músculos principais do catálogo e distribuindo o volume igualmente quando houver mais de um músculo principal no exercício.
 - [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
   - [x] Incluir gráficos por sessão para carga, volume total por sessão e 1RM estimado, mantendo a evolução de duração separada.
-  - [ ] Comparar períodos/blocos e permitir selecionar intervalos mensais.
+  - [x] Comparar períodos equivalentes por exercício, com seleção de 30, 90, 180 ou 365 dias e comparação da média por sessão contra o intervalo imediatamente anterior.
+  - [ ] Comparar blocos de treino identificados no programa (micro/mesociclos) quando houver metadados de bloco.
 - [ ] Detectar platô (sem progresso em N sessões) e sugerir ajuste ou deload.
 - [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa.
 
