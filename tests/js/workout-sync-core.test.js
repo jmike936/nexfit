@@ -28,15 +28,20 @@ test('session and set-log payloads retain ownership and stable idempotency keys'
  assert.deepEqual(session,{id:'s1',athlete_id:'athlete-a',program_id:'p1',version_id:'v1',subworkout_id:'w1',started_at:'2026-11-23T10:00:00Z',status:'in_progress'});
  const rows=sync.buildSetLogPayloads('s1',[
   {exercise_id:'e1',set_number:1,reps_completed:12,load_kg:50},
-  {exercise_id:'e2',set_number:2,reps_completed:0,load_kg:null,duration_seconds:35,notes:'skip'}
+  {exercise_id:'e2',set_number:2,reps_completed:0,load_kg:null,duration_seconds:35,notes:'skip',rir:2},
+  {exercise_id:'e3',set_number:3,reps_completed:8,load_kg:40,rpe:8.5}
  ],'2026-11-23T10:05:00Z');
- assert.equal(rows.length,2);
+ assert.equal(rows.length,3);
  assert.equal(rows[0].session_id,'s1');
  assert.equal(rows[0].load_kg,50);
  assert.equal(rows[0].completed_at,'2026-11-23T10:05:00Z');
  assert.equal(rows[1].load_kg,null);
  assert.equal(rows[1].duration_seconds,35);
  assert.equal(rows[1].notes,'skip');
+ assert.equal(rows[1].rir,2);
+ assert.equal(rows[1].rpe,null);
+ assert.equal(rows[2].rpe,8.5);
+ assert.equal(rows[2].rir,null);
 });
 
 test('completed activity has a deterministic session marker and duration',()=>{
@@ -242,4 +247,11 @@ test('rest transition can be safely ignored when its owning session is no longer
  assert.equal(advance(),false);
  assert.equal(advance(),false);
  assert.equal(advances,0);
+});
+
+
+test('legacy set-log payloads default RPE and RIR to null',()=>{
+ const [row]=sync.buildSetLogPayloads('s1',[{exercise_id:'e1',set_number:1,reps_completed:10,load_kg:20}]);
+ assert.equal(row.rpe,null);
+ assert.equal(row.rir,null);
 });
