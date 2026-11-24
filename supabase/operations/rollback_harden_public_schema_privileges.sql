@@ -96,6 +96,8 @@ begin
 end
 $$;
 
+alter default privileges for role postgres
+  grant execute on functions to public;
 alter default privileges for role postgres in schema public
   grant execute on functions to anon, authenticated;
 
@@ -103,6 +105,7 @@ do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'supabase_admin')
      and pg_has_role(current_user, 'supabase_admin', 'MEMBER') then
+    execute 'alter default privileges for role supabase_admin grant execute on functions to public';
     execute 'alter default privileges for role supabase_admin in schema public grant execute on functions to anon, authenticated';
   end if;
 end
