@@ -1583,7 +1583,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const base='<g class="body-base"><circle cx="96" cy="18" r="11"/><rect x="88" y="29" width="16" height="14" rx="5"/><path d="M77 44 Q66 44 62 55 L67 108 Q77 117 96 117 Q115 117 125 108 L130 55 Q126 44 115 44Z"/><path d="M64 50 Q55 48 51 62 L43 115 Q42 124 49 126 Q56 127 59 119 L74 63Z"/><path d="M128 50 Q137 48 141 62 L149 115 Q150 124 143 126 Q136 127 133 119 L118 63Z"/><path d="M78 112 L93 116 L89 160 L84 198 L73 198 L74 158Z"/><path d="M99 116 L114 112 L118 158 L119 198 L108 198 L103 160Z"/><circle cx="258" cy="18" r="11"/><rect x="250" y="29" width="16" height="14" rx="5"/><path d="M239 44 Q228 44 224 55 L229 108 Q239 117 258 117 Q277 117 287 108 L292 55 Q288 44 277 44Z"/><path d="M226 50 Q217 48 213 62 L205 115 Q204 124 211 126 Q218 127 221 119 L236 63Z"/><path d="M290 50 Q299 48 303 62 L311 115 Q312 124 305 126 Q298 127 295 119 L280 63Z"/><path d="M240 112 L255 116 L251 160 L246 198 L235 198 L236 158Z"/><path d="M261 116 L276 112 L280 158 L281 198 L270 198 L265 160Z"/></g>';
   const labels='<g class="body-labels"><text x="96" y="216">Frente</text><text x="258" y="216">Costas</text></g>';
   const primaryNames=primary.length?primary.join(' · '):'—',secondaryNames=secondary.length?secondary.join(' · '):'—';
-  return '<section class="execution-muscle-map"><h3>Mapa de ativação muscular</h3><p>As cores indicam o foco do exercício. Alterne a vista para localizar cada região.</p>'+(mappingNotice?'<p class="muscle-map-notice">'+esc(mappingNotice)+'</p>':'')+'<div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><div class="muscle-map-view-toggle" role="group" aria-label="Vista do mapa muscular"><button type="button" class="active" data-muscle-view="front" aria-pressed="true">Frente</button><button type="button" data-muscle-view="back" aria-pressed="false">Costas</button></div><svg class="muscle-map-svg" viewBox="0 0 192 224" data-muscle-svg="true" role="img" aria-label="Mapa muscular com vista frontal; músculos principais em verde e secundários em amarelo">'+base+'<g>'+regions+'</g>'+labels+'</svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span><span class="inactive"><i></i>Demais regiões</span></div></section>';
+  return '<section class="execution-muscle-map"><h3>Mapa de ativação muscular</h3><p>As cores indicam o foco do exercício. As duas vistas anatômicas mostram os músculos trabalhados neste exercício.</p>'+(mappingNotice?'<p class="muscle-map-notice">'+esc(mappingNotice)+'</p>':'')+'<div class="execution-muscle-summary"><div class="primary"><strong>● Principais</strong><p>'+esc(primaryNames)+'</p></div><div class="secondary"><strong>● Secundários</strong><p>'+esc(secondaryNames)+'</p></div></div><svg class="muscle-map-svg" viewBox="0 0 354 224" data-muscle-svg="true" role="img" aria-label="Mapa muscular com vistas frontal e posterior; músculos principais em verde e secundários em amarelo">'+base+'<g>'+regions+'</g>'+labels+'</svg><div class="muscle-map-legend"><span><i></i>Principal</span><span><i></i>Secundário</span><span class="inactive"><i></i>Demais regiões</span></div></section>';
  }
 function renderSessionStep(){
   sessionView='exercise';
@@ -1657,18 +1657,7 @@ function renderSessionStep(){
   if(guidanceClose)guidanceClose.onclick=closeGuidance;
   if(guidanceModal)guidanceModal.onclick=event=>{if(event.target===guidanceModal)closeGuidance()};
   if(guidanceModal)guidanceModal.onkeydown=event=>{if(event.key==='Escape')closeGuidance()};
-  guidanceModal?.querySelectorAll('[data-muscle-view]').forEach(button=>button.addEventListener('click',()=>{
-   const side=button.dataset.muscleView==='back'?'back':'front';
-   const svg=guidanceModal.querySelector('[data-muscle-svg]');
-   if(svg){
-    svg.setAttribute('viewBox',side==='back'?'162 0 192 224':'0 0 192 224');
-    svg.setAttribute('aria-label',side==='back'?'Mapa muscular com vista posterior; músculos principais em verde e secundários em amarelo':'Mapa muscular com vista frontal; músculos principais em verde e secundários em amarelo');
-   }
-   guidanceModal.querySelectorAll('[data-muscle-view]').forEach(option=>{
-    const active=option===button;option.classList.toggle('active',active);option.setAttribute('aria-pressed',String(active));
-   });
-  }));
-  
+
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   const effortType=$('sessionEffortType'),effortValue=$('sessionEffortValue');
   const syncEffortInput=()=>{const type=effortType?.value||'none';if(effortValue){effortValue.disabled=type==='none';effortValue.min=type==='rir'?'0':'1';effortValue.max='10';effortValue.placeholder=type==='none'?'0–10':type==='rpe'?'1–10':'0–10';if(type==='none')effortValue.value='';}persistWorkoutState()};

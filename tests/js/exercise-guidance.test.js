@@ -36,15 +36,14 @@ test('exercise guidance keeps both demonstration images side by side after movin
   assert.match(index, /\.execution-guidance-modal \.execution-media-pair\s*\{[^}]*display:grid!important;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/s);
 });
 
-test('exercise muscle map supports enlarged front and back views with a clear legend', () => {
-  assert.match(workout, /data-muscle-view="front"/);
-  assert.match(workout, /data-muscle-view="back"/);
-  assert.match(workout, /data-muscle-svg="true"/);
-  assert.match(workout, /viewBox',side==='back'\?'162 0 192 224':'0 0 192 224'/);
-  assert.match(workout, /Mapa de ativação muscular/);
+test('exercise muscle map displays both front and back views together without toggle buttons', () => {
+  assert.match(workout, /viewBox="0 0 354 224"/);
+  assert.match(workout, /vistas frontal e posterior/);
+  assert.doesNotMatch(workout, /data-muscle-view=/);
+  assert.doesNotMatch(workout, /muscle-map-view-toggle/);
   const index = fs.readFileSync('index.html', 'utf8');
-  assert.match(index, /\.execution-guidance-modal \.muscle-map-view-toggle/);
-  assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.muscle-region\.primary/);
+  assert.match(index, /\.execution-guidance-modal \.muscle-map-svg\{width:100%;max-width:420px;height:auto;max-height:none;aspect-ratio:354 \/ 224/);
+  assert.doesNotMatch(index, /\.execution-guidance-modal \.muscle-map-view-toggle/);
 });
 
 test('exercise muscle map keeps its visual styles after the modal is moved to body', () => {
