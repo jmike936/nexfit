@@ -1666,7 +1666,7 @@ function renderSessionStep(){
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
   if(set.mode&&set.mode!=='reps'){$('toggleExerciseTimer').onclick=()=>activeExerciseTimer?.running?pauseExerciseTimer():startExerciseTimer();if(activeExerciseTimer?.running){if(timer)clearInterval(timer);timer=setInterval(tickExerciseTimer,200)}tickExerciseTimer()}else activeExerciseTimer=null;
   $('skipExercise').onclick=skipCurrentExercise;
-  $('exitSession').onclick=exitSessionToHome;
+  $('exitSession').onclick=returnToExercisePicker;
  }
  function restoreActiveRestUI(){
   if(!activeRest)return false;
@@ -1841,6 +1841,27 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   const homeButton=document.querySelector('.nav button[data-page="home"]');
   if(homeButton){homeButton.click();return}
   document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id==='home'));
+ }
+ function returnToExercisePicker(){
+  if(!session||sessionView!=='exercise')return;
+  if(savingSet||finishingSession){setExecutionFeedback('Aguarde o registro da série terminar antes de voltar.');return}
+  const sessionId=session.id,userId=userRef()?.id;
+  if(!userId)return;
+  if(activeRest){
+   activeRest.remaining=Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));
+   activeRest.paused=true;activeRest.deadline=null;
+   restSnapshot={deadline:null,total:activeRest.total,remaining:activeRest.remaining,paused:true,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex};
+  }
+  if(activeExerciseTimer?.running)pauseExerciseTimer();
+  else if(timer){clearInterval(timer);timer=null}
+  sessionView='picker';
+  if(!persistWorkoutState()){
+   sessionView='exercise';
+   setExecutionFeedback('Não foi possível salvar o treino neste aparelho. Libere espaço e tente novamente.','error');
+   return;
+  }
+  if(userRef()?.id!==userId||session?.id!==sessionId)return;
+  renderExercisePicker();
  }
  function beginExercise(index){
   if(index<0||index>=sessionExerciseRows.length)return;
