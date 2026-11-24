@@ -30,6 +30,7 @@ const css=`
 #strengthPage .personal-record span{display:block;color:#a0a99c;font-size:11px}
 #strengthPage .personal-record strong{display:block;color:#b7f34a;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
 #strengthPage .personal-record small{display:block;color:#a0a99c;font-size:11px}
+#strengthPage .evolution-pr-badge{display:inline-block;margin-top:5px;padding:3px 7px;border:1px solid #526b32;border-radius:999px;background:#202b20;color:#d5ff7b;font-size:10px;font-weight:800;letter-spacing:.3px}
 @media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
 @media(max-width:520px){
  #strengthPage .evolution-panel{padding:12px}
@@ -62,6 +63,26 @@ let cache=null,cachedUserId=null,renderGeneration=0;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
 function formatDuration(value){const total=Math.max(0,Math.round(Number(value)||0)),hours=Math.floor(total/3600),minutes=Math.floor(total%3600/60),seconds=total%60;return hours?hours+':'+String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0'):minutes+':'+String(seconds).padStart(2,'0')}
 function formatMetric(value,type){return type==='time'?formatDuration(value):kg(value)}
+function detectPersonalRecords(points,metricType){
+ const ordered=[...points].sort((a,b)=>new Date(a.timestamp||a.date)-new Date(b.timestamp||b.date)||Number(a.set)-Number(b.set));
+ const best={load:0,reps:0,estimated1RM:0,duration:0},flags=new Map();
+ for(const point of ordered){
+  const labels=[];
+  if(metricType==='time'){
+   if(Number.isFinite(point.value)&&point.value>best.duration){best.duration=point.value;labels.push('Duração')}
+  }else{
+   if(Number.isFinite(point.value)&&point.value>best.load){best.load=point.value;labels.push('Carga')}
+   if(Number.isFinite(point.reps)&&point.reps>best.reps){best.reps=point.reps;labels.push('Repetições')}
+   if(Number.isFinite(point.value)&&point.value>0&&Number.isFinite(point.reps)&&point.reps>=1&&point.reps<=12){
+    const estimate=point.value*(1+point.reps/30);
+    if(estimate>best.estimated1RM){best.estimated1RM=estimate;labels.push('1RM estimado')}
+   }
+  }
+  if(labels.length)flags.set(String(point.sessionId)+'|'+String(point.set),labels);
+ }
+ return {best,flags};
+}
+
 function dateLabel(value){if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)){const [y,m,d]=value.split('-');return d+'/'+m+'/'+y}const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
 async function load(expectedUserId,expectedClient,isCurrent){
  const client=expectedClient;if(!client||!expectedUserId||!isCurrent())throw Error('Faça login para consultar sua evolução.');
@@ -105,7 +126,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
   const group=grouped.get(key);
   if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga');group.latestDate=date}
-  group.points.push({date,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
+  group.points.push({date,timestamp:log.completed_at||session.finished_at||session.started_at,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
  }
  return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 }
@@ -140,6 +161,7 @@ async function render(host){
    if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
    const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':'carga',metricPlural=isTimed?'durações':'cargas';
+   const personalRecordData=detectPersonalRecords(points,metricType);
    const sessionMap=new Map();
    for(const point of points){const current=sessionMap.get(point.sessionId);if(!current||point.value>current.value)sessionMap.set(point.sessionId,{...point})}
    const sessionPoints=[...sessionMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sessionId.localeCompare(b.sessionId));
@@ -150,15 +172,16 @@ async function render(host){
    let personalRecords;
    if(isTimed){
     const best=points.reduce((result,p)=>!result||p.value>result.value?p:result,null),average=points.reduce((sum,p)=>sum+p.value,0)/points.length;
-    personalRecords='<div class="personal-records"><div class="personal-record"><span>Maior duração registrada</span><strong>'+formatDuration(best.value)+'</strong><small>'+dateLabel(best.date)+' · Série '+best.set+'</small></div><div class="personal-record"><span>Duração média por série</span><strong>'+formatDuration(average)+'</strong><small>Com base em '+points.length+' séries registradas</small></div></div>';
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · duração</span><strong>'+formatDuration(personalRecordData.best.duration)+'</strong><small>'+dateLabel(best.date)+' · Série '+best.set+'</small></div><div class="personal-record"><span>Duração média por série</span><strong>'+formatDuration(average)+'</strong><small>Com base em '+points.length+' séries registradas</small></div></div>';
    }else{
     const heaviest=points.filter(p=>Number.isFinite(p.value)&&p.value>0).reduce((best,p)=>!best||p.value>best.value?p:best,null);
+    const mostReps=points.filter(p=>Number.isFinite(p.reps)&&p.reps>0).reduce((best,p)=>!best||p.reps>best.reps?p:best,null);
     const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.value*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
-    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.value):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · fórmula de Epley':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · carga</span><strong>'+(heaviest?kg(personalRecordData.best.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Recorde pessoal · repetições</span><strong>'+(mostReps?personalRecordData.best.reps+' reps':'—')+'</strong><small>'+(mostReps?dateLabel(mostReps.date)+' · '+kg(mostReps.value):'Sem repetições registradas')+'</small></div><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+(estimated?kg(personalRecordData.best.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · fórmula de Epley':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
    }
    const metricLabel=isTimed?'Maior duração':'Maior carga';
    if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':' · '+p.reps+' repetições')+'</small></div><b>'+formatMetric(p.value,metricType)+'</b></div>').join('')+'</div>';
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Comparação entre as maiores '+metricPlural+' de duas sessões consecutivas: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+formatMetric(Math.abs(overallDelta),metricType)+(overallDelta<0?' a menos':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',()=>{if(isCurrent())paint()});paint();
