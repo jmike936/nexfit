@@ -20,6 +20,7 @@ jobs:
         run: |
           node --check workout-sync-core.js
           node --check musculacao.js
+          node --test tests/js/exercise-guidance.test.js
           node --test tests/js/workout-sync-core.test.js
           node --test tests/js/release-version.test.js
           node --check workout-history.js
