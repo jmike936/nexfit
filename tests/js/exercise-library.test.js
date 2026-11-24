@@ -8,7 +8,7 @@ const library = fs.readFileSync('exercise-library.js', 'utf8');
 test('exercise library has its own authenticated app page and navigation entry', () => {
   assert.match(index, /data-page="exerciseLibraryPage"/);
   assert.match(index, /id="exerciseLibraryPage"/);
-  assert.match(index, /<script src="\.\.\/?\.\/exercise-library\.js\?v=/);
+  assert.match(index, /<script src="\.\/exercise-library\.js\?v=/);
 });
 
 test('exercise library reads the canonical catalog and scopes its offline cache by account', () => {
