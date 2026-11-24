@@ -81,6 +81,7 @@ Evolução planejada da Biblioteca NEXFIT:
 
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [x] Revisar transições entre séries, exercícios e descansos: avanço protegido contra callbacks duplicados/atrasados, validação da etapa ativa, encerramento consistente de timers e retomada idempotente do descanso.
+- [ ] Ajustar a navegação de retorno durante a execução: ao tocar em Voltar dentro de um exercício, retornar à seleção/lista de exercícios do treino sem encerrar a sessão nem exigir confirmação de saída; solicitar “Sair sem finalizar” somente quando o atleta escolher sair do treino inteiro. Preservar séries já registradas e permitir selecionar outro exercício não iniciado (por exemplo, em caso de dor/lesão), sem marcar automaticamente o exercício anterior como concluído ou pulado.
 - [x] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
 - [x] Exibir tela amigável de conclusão do treino com resumo, status de sincronização e próximos passos; continuar a substituição de mensagens nativas nas demais etapas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
