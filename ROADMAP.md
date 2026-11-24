@@ -138,6 +138,9 @@ Atualizado em 23/11/2026.
 
 ## Prioridade 11 — Medição avançada
 
+- [x] Elaborar proposta de modelo de dados aditivo para avaliações, VBT, resistência/FC, fotos e integrações, com RLS, consentimento e sincronização offline. Documento: `docs/propostas/modelo-medicao-avancada.md`.
+- [ ] Aguardar aprovação do modelo e das permissões antes de criar migrations ou implementar coleta de dados.
+
 - [ ] Avaliações e testes (1RM, salto, medidas corporais, fotos de progresso) com histórico e reavaliação agendada.
 - [ ] Registro de velocidade da barra (VBT): velocidade média/pico por repetição, perfil carga-velocidade e perda de velocidade por série.
 - [ ] Integração com sensores de VBT (Bluetooth) ou medição por câmera.
