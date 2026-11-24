@@ -31,6 +31,22 @@ test('exercise guidance modal is replaced between exercises and starts at the to
   assert.match(workout, /dialog\.scrollTop=0/);
 });
 
+test('exercise guidance keeps both demonstration images side by side after moving the modal to body', () => {
+  const index = fs.readFileSync('index.html', 'utf8');
+  assert.match(index, /\.execution-guidance-modal \.execution-media-pair\s*\{[^}]*display:grid!important;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/s);
+});
+
+test('exercise muscle map supports enlarged front and back views with a clear legend', () => {
+  assert.match(workout, /data-muscle-view="front"/);
+  assert.match(workout, /data-muscle-view="back"/);
+  assert.match(workout, /data-muscle-svg="true"/);
+  assert.match(workout, /viewBox',side==='back'\?'162 0 192 224':'0 0 192 224'/);
+  assert.match(workout, /Mapa de ativação muscular/);
+  const index = fs.readFileSync('index.html', 'utf8');
+  assert.match(index, /\.execution-guidance-modal \.muscle-map-view-toggle/);
+  assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.muscle-region\.primary/);
+});
+
 test('exercise muscle map keeps its visual styles after the modal is moved to body', () => {
   const index = fs.readFileSync('index.html', 'utf8');
   assert.match(index, /\.execution-guidance-modal \.muscle-map-svg \.muscle-region\.primary/);
