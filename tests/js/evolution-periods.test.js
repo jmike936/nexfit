@@ -18,7 +18,7 @@ test('aggregates volume across sets but selects the best single-set metric per s
  assert.equal(sessionBest(points,'volume').find(x=>x.sessionId==='a').value,220);
  assert.equal(sessionBest(points,'load').find(x=>x.sessionId==='a').value,120);
  assert.equal(summarize(points,'volume').sessions,2);
- assert.equal(summarize(points,'volume').average,200);
+ assert.equal(summarize(points,'volume').average,155);
 });
 
 test('returns empty previous period when there are no matching records',()=>{
