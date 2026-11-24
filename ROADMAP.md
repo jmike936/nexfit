@@ -134,7 +134,7 @@ Evolução planejada da Biblioteca NEXFIT:
 
 ## Prioridade 7 — Análise de evolução do atleta
 
-- [ ] Registrar RPE e/ou RIR opcional por série (com suporte offline e sincronização); interface e payload implementados, aguardando validação e publicação.
+- [x] Registrar RPE e/ou RIR opcional por série (com suporte offline, sincronização, exibição e edição no histórico).
 - [ ] Calcular 1RM estimado (Epley/Brzycki) por exercício, exibindo que é uma estimativa.
 - [ ] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino.
   - [x] Calcular e destacar recordes pessoais de carga, repetições, 1RM estimado (Epley) e duração na tela Evolução, identificando as séries que estabeleceram cada recorde.
