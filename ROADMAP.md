@@ -1,6 +1,6 @@
 # Roadmap NEXFIT
 
-Atualizado em 23/11/2026.
+Atualizado em 24/11/2026.
 
 ## Publicação e cota da Vercel
 
@@ -82,7 +82,7 @@ Atualizado em 23/11/2026.
   - [x] Exibir apenas um indicador discreto “Ver execução”.
   - [x] Ao tocar, abrir imagens, instruções e mapa muscular em modal, reutilizando a referência canônica e o cache da Biblioteca de Exercícios.
   - [x] Permitir abertura offline quando a imagem já estiver em cache e apresentar fallback claro quando o material não estiver disponível.
-- [ ] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida.
+- [x] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida. Usa o catálogo existente e seleção por foco muscular, com fallback sem alteração de dados.
 - [x] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
 
 ## Prioridade 6 — Qualidade e engenharia (transversal)

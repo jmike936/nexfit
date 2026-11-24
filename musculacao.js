@@ -422,8 +422,52 @@
    if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
   });
+  // Carrega o catálogo em lote para escolher uma imagem que represente o foco muscular do treino.
+  const catalogIds=[...new Set(workouts.flatMap(({exercises})=>exercises.map(x=>x.catalog_exercise_id).filter(Boolean).map(String)))];
+  let catalogById=new Map();
+  if(catalogIds.length){
+   try{
+    const catalogQuery=await renderDb.from('training_exercise_catalog')
+     .select('id,demonstration_image_url,primary_muscles,category')
+     .in('id',catalogIds);
+    if(!isSameAccount())return;
+    if(!catalogQuery.error)catalogById=new Map((catalogQuery.data||[]).map(item=>[String(item.id),item]));
+   }catch(error){console.warn('Não foi possível carregar imagens representativas do catálogo',error)}
+  }
+  const muscleAliases=[
+   {keys:['peito','peitoral','chest'],aliases:['peito','peitoral','pector']},
+   {keys:['triceps','tríceps'],aliases:['triceps','tríceps']},
+   {keys:['ombro','ombros','deltoide'],aliases:['ombro','deltoide']},
+   {keys:['biceps','bíceps'],aliases:['biceps','bíceps']},
+   {keys:['costas','dorsal','lats'],aliases:['costas','dorsal','latissimo','latíssimo']},
+   {keys:['quadriceps','quadríceps','pernas'],aliases:['quadriceps','quadríceps','coxa']},
+   {keys:['posterior','isquiotibiais'],aliases:['posterior','isquiotibiais','femoral']},
+   {keys:['gluteo','glúteo','gluteos','glúteos'],aliases:['gluteo','glúteo']},
+   {keys:['panturrilha','panturrilhas','gemeos','gêmeos'],aliases:['panturrilha','gastrocnemio','gastrocnêmio','soleo','sóleo']},
+   {keys:['abdomen','abdômen','abdominal'],aliases:['abdomen','abdômen','obliquo','oblíquo']}
+  ];
+  const normalizeMuscle=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+  const muscleFocus=(workout)=>{
+   const text=normalizeMuscle([workout.title,workout.description].join(' '));
+   return muscleAliases.filter(group=>group.keys.some(key=>text.includes(normalizeMuscle(key)))).map(group=>group.aliases);
+  };
+  const representativeImage=(workout,exercises)=>{
+   const focus=muscleFocus(workout);
+   const candidates=exercises.map(exercise=>({exercise,catalog:catalogById.get(String(exercise.catalog_exercise_id||''))}))
+    .filter(item=>/^https:\/\//i.test(item.catalog?.demonstration_image_url||'')||/^https:\/\//i.test(item.exercise?.media_url||''));
+   if(!candidates.length)return '';
+   if(focus.length){
+    const matching=candidates.find(item=>{
+     const muscles=(item.catalog?.primary_muscles||[]).map(normalizeMuscle);
+     return muscles.some(muscle=>focus.some(group=>group.some(alias=>muscle.includes(normalizeMuscle(alias)))));
+    });
+    if(matching)return matching.catalog?.demonstration_image_url||matching.exercise.media_url||'';
+   }
+   const catalogImage=candidates.find(item=>item.catalog?.demonstration_image_url)?.catalog?.demonstration_image_url;
+   return catalogImage||candidates.find(item=>item.exercise?.media_url)?.exercise.media_url||'';
+  };
   const cards=workouts.map(({program:p,workout,exercises})=>{
-   const thumb=exercises.find(x=>/^https?:/i.test(x.media_url||''))?.media_url||'';
+   const thumb=representativeImage(workout,exercises);
    const image=thumb?'<img src="'+esc(thumb)+'" alt="" loading="lazy">':'<div class="training-card-placeholder" aria-hidden="true"><span>✦</span></div>';
    const category=programCategory(p.description),last=lastExecutionForWorkout(p.id,workout);
    const lastDate=dateLabel(last);
