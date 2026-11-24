@@ -8,7 +8,7 @@ const home=source.slice(source.indexOf('async function home(){'),source.indexOf(
 test('training management query is deferred until its collapsed panel is opened',()=>{
  assert.match(home,/id="trainingManagementDetails"/);
  assert.match(home,/trainingDetails\?\.addEventListener\('toggle'/);
- assert.match(home,/Promise\\.resolve\\(renderTrainingManagement\\(\\)\\)\\.finally/);
+ assert.ok(home.includes('Promise.resolve(renderTrainingManagement()).finally'));
  assert.doesNotMatch(home,/renderProgramManagement\(\);await renderTrainingManagement\(\)/);
 });
 
