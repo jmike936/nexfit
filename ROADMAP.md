@@ -18,6 +18,29 @@ Atualizado em 24/11/2026.
 - [x] Validar automaticamente a consistência entre versão exibida, `version.json`, URLs dos scripts e assets do Service Worker no CI.
 - [ ] Validar a atualização de ponta a ponta em iOS/Android após a publicação, incluindo instalação já existente e retorno do app em segundo plano.
 
+
+## Benchmark externo — Biblioteca SmartWorkout
+
+Referência analisada em 24/11/2026: [SmartWorkout — Biblioteca de exercícios](https://smartworkout.app/pt/biblioteca-de-exerc%C3%ADcios).
+
+A página apresenta uma biblioteca com mais de 1.000 exercícios e destaca:
+- Vídeo demonstrativo, descrição da execução, erros comuns e músculos trabalhados em cada exercício.
+- Navegação por grupos musculares (peito, costas, ombros, pernas, glúteos, braços, antebraços e abdômen).
+- Filtros por equipamento/modalidade: barra, halteres, polia, máquinas, Smith, peso corporal, barra fixa, elásticos e kettlebell.
+- Seções específicas para aquecimento e mobilidade.
+- Integração da biblioteca com a montagem de fichas para alunos.
+
+Diretriz para o NEXFIT: usar essas funcionalidades como referência de produto, sem copiar vídeos, textos, imagens ou banco de dados de terceiros. Priorizar conteúdo próprio/licenciado e manter catálogo, identidade canônica, RLS e cache offline já existentes.
+
+Evolução planejada da Biblioteca NEXFIT:
+- [ ] Auditar cobertura atual do catálogo por grupo muscular, equipamento e modalidade; identificar lacunas e duplicidades.
+- [ ] Expandir filtros para equipamento, tipo de movimento e finalidade (força, hipertrofia, aquecimento/mobilidade), quando os metadados estiverem disponíveis.
+- [ ] Adicionar ao modelo de orientação campos estruturados para erros comuns, dicas de execução, músculos estabilizadores e requisitos de equipamento; preservar compatibilidade com registros existentes.
+- [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
+- [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
+- [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
+- [ ] Medir cobertura e qualidade do catálogo com testes/relatórios, sem prometer quantidade de exercícios sem conteúdo validado.
+
 ## Prioridade 1 — Integridade dos programas e histórico
 
 - [x] Impedir que versões concorrentes sejam criadas com o mesmo número.
