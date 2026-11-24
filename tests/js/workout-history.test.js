@@ -11,7 +11,7 @@ test('history session lookup selects only the fields needed for matching and dis
 
 test('history details fetch only exercise and set-log fields used by the view',()=>{
  assert.match(history,/training_exercises'\)\.select\('id,name,sets,rest_seconds,position'\)/);
- assert.match(history,/training_set_logs'\)\.select\('exercise_id,set_number,reps_completed,load_kg,duration_seconds'\)/);
+ assert.match(history,/training_set_logs'\)\.select\('exercise_id,set_number,reps_completed,load_kg,duration_seconds,rpe,rir'\)/);
 });
 
 test('history matches set logs through a prebuilt map instead of scanning all logs for each set',()=>{
@@ -23,4 +23,13 @@ test('history matches set logs through a prebuilt map instead of scanning all lo
 test('history fallback avoids empty IN queries',()=>{
  assert.match(history,/programIds\.length\?dbx\.from\('training_programs'\)/);
  assert.match(history,/subIds\.length\?dbx\.from\('training_subworkouts'\)/);
+});
+
+
+test('history displays and edits optional RPE/RIR values per set',()=>{
+ assert.match(history,/log\.rpe!=null\?' · RPE '/);
+ assert.match(history,/log\.rir!=null\?' · RIR '/);
+ assert.match(history,/data-wh-effort-type=/);
+ assert.match(history,/data-wh-effort-value=/);
+ assert.match(history,/effortValues=\{rpe:/);
 });
