@@ -137,15 +137,15 @@ $$;
 CREATE FUNCTION public.__nexfit_acl_default_probe()
 RETURNS integer
 LANGUAGE sql
-AS $ SELECT 1 $;
-DO $
+AS $probe$ SELECT 1 $probe$;
+DO $assert$
 BEGIN
   IF has_function_privilege('anon', 'public.__nexfit_acl_default_probe()', 'EXECUTE')
      OR has_function_privilege('authenticated', 'public.__nexfit_acl_default_probe()', 'EXECUTE') THEN
     RAISE EXCEPTION 'A newly created function inherited an unreviewed EXECUTE grant';
   END IF;
 END
-$;
+$assert$;
 DROP FUNCTION public.__nexfit_acl_default_probe();
 
 -- Confirm an authenticated session without a JWT subject fails closed at the function body.
