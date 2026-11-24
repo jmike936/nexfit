@@ -148,6 +148,13 @@
  #strengthPage .execution-load-stat small{margin-top:-4px;color:#a0a99c;font-size:10px}
  #strengthPage .execution-reps-label{display:block;margin:8px 0 5px;color:#a0a99c;font-size:12px}
  #strengthPage .execution-reps-input{width:100%;padding:11px;border:1px solid #354454;border-radius:10px;background:#111922;color:#f4f7fa}
+ #strengthPage .execution-effort-fields{margin:10px 0 4px;padding:10px 11px;border:1px solid #2b3948;border-radius:12px;background:#151e28}
+ #strengthPage .execution-effort-fields>label{display:block;margin:0 0 6px;color:#c4d0dc;font-size:12px;font-weight:700}
+ #strengthPage .execution-effort-fields>label span{color:#91a0af;font-weight:400}
+ #strengthPage .execution-effort-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+ #strengthPage .execution-effort-row select,#strengthPage .execution-effort-row input{min-height:40px;padding:8px 10px}
+ #strengthPage .execution-effort-row input:disabled{opacity:.45}
+ #strengthPage .execution-effort-fields>small{display:block;margin-top:5px;color:#91a0af;font-size:10px}
  #strengthPage .execution-feedback{margin:10px 0 0;padding:9px 11px;border:1px solid #354454;border-radius:10px;color:#dce8d2;background:#18221a;font-size:12px;line-height:1.4}#strengthPage .execution-feedback[data-state="error"]{border-color:#8b4545;color:#ffb7b7;background:#2a191b}#strengthPage .execution-feedback[data-state="success"]{border-color:#526b32;color:#d5ff7b}
  #strengthPage .execution-actions{display:grid;grid-template-columns:1.35fr 1fr;gap:8px;margin-top:10px}
  #strengthPage .execution-primary,#strengthPage .execution-secondary{min-height:48px;border-radius:13px;padding:11px 14px;font-weight:800;cursor:pointer}
@@ -159,6 +166,7 @@
  #strengthPage .execution-screen.is-resting .execution-stat,
  #strengthPage .execution-screen.is-resting .execution-reps-label,
  #strengthPage .execution-screen.is-resting .execution-reps-input,
+ #strengthPage .execution-screen.is-resting .execution-effort-fields,
  #strengthPage .execution-screen.is-resting .execution-feedback{display:none!important}
  #strengthPage .execution-screen.is-resting .execution-guidance-content .execution-feedback{display:block!important}
  #strengthPage .execution-screen.is-resting .execution-exercise-heading{margin-bottom:8px}
