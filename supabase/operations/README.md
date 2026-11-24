@@ -10,9 +10,13 @@ Estes scripts não fazem parte da sequência padrão de migrações. São corre�
 | `training_set_log_integrity_manual.sql` | `supabase-training-set-log-integrity.sql` | Remove duplicatas idênticas de séries e cria índice único; interrompe se encontrar divergências. |
 | `audit-rls-storage-readonly.sql` | Diagnóstico de segurança | Somente SELECT: inventário de RLS, policies, grants de funções SECURITY DEFINER, permissões de tabelas, buckets e triggers de Auth. |
 | `audit-security-definer-acl-readonly.sql` | Diagnóstico complementar de segurança | Somente SELECT: definições completas das funções SECURITY DEFINER, ACL explícita e efetiva, default privileges, grants em tabelas e presença do histórico de migrations. |
+| `rollback_harden_public_schema_privileges.sql` | Rollback emergencial | Restaura os grants inseguros observados antes do hardening; uso somente em emergência e após avaliar o risco. |
 
 Os arquivos `audit-rls-storage-readonly.sql` e `audit-security-definer-acl-readonly.sql` são exclusivamente diagnósticos: contêm somente consultas SELECT e não alteram dados, schema, funções ou permissões. O segundo pode retornar o texto integral de funções; revise/redija segredos hardcoded antes de compartilhar os resultados.
 
 Não aplicar os demais arquivos como parte de uma instalação nova. Antes de qualquer execução, fazer backup, revisar os identificadores e conferir a prévia. Não adaptar UUIDs ou filtros sem validar a propriedade dos registros.
 
 Os arquivos originais permanecem na raiz. As cópias nesta pasta são idênticas aos originais.
+
+
+A correção versionada está em `../migrations/20261124000100_harden_public_schema_privileges.sql`. Ela é uma migration de banco, não uma alteração do runtime/PWA. A migration não foi executada no projeto Supabase de produção nesta etapa. O rollback restaura permissões que a auditoria classificou como excessivas e, portanto, não deve ser usado como procedimento normal.

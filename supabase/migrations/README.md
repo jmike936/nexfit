@@ -34,7 +34,8 @@ Para um projeto Supabase novo, aplicar nesta ordem:
 16. `20261122001600_unify_exercise_aliases.sql` — unificação explícita de aliases do catálogo.
 17. `20261122001700_reconcile_legacy_workout_identities.sql` — reconciliação conservadora de identidades antigas.
 18. `20261122001800_exercise_image_library_seed.sql` — imagens e grupos musculares da biblioteca visual.
-19. `20261123001900_harden_rls_helper_function_grants.sql` — restringe execução de helpers `SECURITY DEFINER` a `authenticated` e `service_role`.
+19. `20261123001900_harden_rls_helper_function_grants.sql` — primeira restrição de execução de helpers `SECURITY DEFINER` (não remove grants diretos a `anon`).
+20. `20261124000100_harden_public_schema_privileges.sql` — corrige a confirmação de versão sem autenticação, restringe até 11 RPCs privilegiadas auditadas que existirem no banco (incluindo RPCs legadas fora da cadeia de instalação), remove privilégios de tabela de `anon`, remove privilégios administrativos desnecessários de `authenticated` e endurece os privilégios padrão de funções.
 
 ### Observações importantes
 
@@ -58,6 +59,12 @@ Os arquivos de origem correspondentes permanecem na raiz do repositório. Esta d
 
 ## Teste automatizado de instalação
 
-O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 19 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`). Os testes `rls-policy-inventory.sql` e `storage-rls-isolation.sql` verificam cobertura RLS em todas as tabelas públicas, privilégios dos helpers `SECURITY DEFINER` e isolamento dos avatares.
+O workflow `.github/workflows/validate-supabase-migrations.yml` aplica as 20 migrações, em ordem, em um PostgreSQL 16 efêmero do GitHub Actions. Em seguida, reaplica a sequência no mesmo banco para verificar idempotência estrutural. O arquivo `tests/sql/supabase-bootstrap.sql` fornece apenas os objetos mínimos usados pelas migrações (`auth.users`, `auth.uid()`, `storage.buckets` e `storage.objects`). Os testes `rls-policy-inventory.sql` e `storage-rls-isolation.sql` verificam cobertura RLS em todas as tabelas públicas, privilégios dos helpers `SECURITY DEFINER` e isolamento dos avatares.
 
 Esse teste verifica sintaxe, dependências de criação, reexecução estrutural e cenários de isolamento RLS entre atletas e personais com permissões distintas nas tabelas de programas, treinos e histórico. **Não equivale ao Supabase real**: não valida Auth, Storage, PostgREST, permissões padrão, extensões gerenciadas ou todos os fluxos RLS. Também não reproduz todos os formatos de dados históricos reais nem todas as permissões internas do Storage/Auth/PostgREST gerenciados pelo Supabase. A auditoria completa de RLS e a validação em Supabase local/real continuam pendentes.
+
+### Endurecimento de ACLs após auditoria de produção
+
+A migration `20261124000100_harden_public_schema_privileges.sql` foi criada a partir dos retornos read-only do projeto real. Ela revoga os grants diretos de `anon` nas RPCs `SECURITY DEFINER`, também remove grants `PUBLIC` quando existentes, preserva execução para `authenticated` e `service_role`, elimina privilégios de tabela de `anon`, remove `TRUNCATE`/`REFERENCES`/`TRIGGER` (e `MAINTAIN` no PostgreSQL 17+) de `authenticated`, corrige a validação de identidade de `nexfit_confirm_program_version` e remove o `EXECUTE` implícito de `PUBLIC` globalmente e os grants automáticos de `anon`/`authenticated` no schema `public` para funções futuras. Se o executor não puder alterar os privilégios padrão de `supabase_admin`, a migration emite um aviso e essa etapa precisa ser executada por um membro desse papel.
+
+A migration não altera registros de atletas nem dados de treino. O teste `tests/sql/security-definer-acl-regression.sql` valida grants, privilégios de tabelas, ACLs padrão e rejeição de chamada sem JWT. O rollback correspondente está em `supabase/operations/rollback_harden_public_schema_privileges.sql`; ele restaura deliberadamente grants inseguros anteriores e só deve ser usado em emergência após avaliação de risco.
