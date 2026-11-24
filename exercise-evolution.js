@@ -31,6 +31,13 @@ const css=`
 #strengthPage .personal-record strong{display:block;color:#b7f34a;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
 #strengthPage .personal-record small{display:block;color:#a0a99c;font-size:11px}
 #strengthPage .evolution-pr-badge{display:inline-block;margin-top:5px;padding:3px 7px;border:1px solid #526b32;border-radius:999px;background:#202b20;color:#d5ff7b;font-size:10px;font-weight:800;letter-spacing:.3px}
+#strengthPage .evolution-volume-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#strengthPage .evolution-volume-table{width:100%;min-width:420px;border-collapse:collapse;font-size:12px}
+#strengthPage .evolution-volume-table th,#strengthPage .evolution-volume-table td{padding:10px 8px;border-bottom:1px solid #354454;text-align:right;white-space:nowrap}
+#strengthPage .evolution-volume-table th:first-child,#strengthPage .evolution-volume-table td:first-child{text-align:left}
+#strengthPage .evolution-volume-table thead th{color:#b7f34a;font-size:11px}
+#strengthPage .evolution-volume-table td:first-child strong{display:block}
+#strengthPage .evolution-volume-table td:first-child small{display:block;color:#a0a99c;font-size:10px;margin-top:3px}
 @media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
 @media(max-width:520px){
  #strengthPage .evolution-panel{padding:12px}
@@ -86,6 +93,7 @@ function detectPersonalRecords(points,metricType){
 function dateLabel(value){if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)){const [y,m,d]=value.split('-');return d+'/'+m+'/'+y}const d=new Date(value);return Number.isNaN(d.getTime())?'—':new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(d)}
 async function load(expectedUserId,expectedClient,isCurrent){
  const client=expectedClient;if(!client||!expectedUserId||!isCurrent())throw Error('Faça login para consultar sua evolução.');
+ const evolutionCore=window.NexfitExerciseEvolutionCore;if(!evolutionCore)throw Error('Não foi possível preparar a análise de volume muscular.');
  // A Evolução só inclui sessões que ainda possuem atividade correspondente no histórico do atleta.
  // A atividade guarda o vínculo explícito [NEXFIT_SESSION:<uuid>], evitando exibir séries de atividades excluídas.
  const activitiesQ=await client.from('activities').select('notes,activity_date').eq('user_id',expectedUserId).eq('sport','Musculação').order('activity_date',{ascending:false}).limit(500);
@@ -111,7 +119,15 @@ async function load(expectedUserId,expectedClient,isCurrent){
  if(!isCurrent())return null;if(versionsQ.error)throw versionsQ.error;
  const subworkoutMap=new Map((subworkoutsQ.data||[]).map(x=>[x.id,x.version_id]));
  const versionMap=new Map((versionsQ.data||[]).map(x=>[x.id,x.program_id]));
- const exerciseMap=new Map(exerciseRows.map(x=>[x.id,{name:x.name,identityId:x.identity_id||null,catalogId:x.catalog_exercise_id||null,versionId:subworkoutMap.get(x.subworkout_id)||null,programId:versionMap.get(subworkoutMap.get(x.subworkout_id))||null}]));
+ const exerciseMap=new Map(exerciseRows.map(x=>[String(x.id),{name:x.name,identityId:x.identity_id||null,catalogId:x.catalog_exercise_id||null,versionId:subworkoutMap.get(x.subworkout_id)||null,programId:versionMap.get(subworkoutMap.get(x.subworkout_id))||null}]));
+ const catalogIds=[...new Set(exerciseRows.map(x=>x.catalog_exercise_id).filter(Boolean).map(String))];
+ let catalogById=new Map();
+ if(catalogIds.length){
+  const catalogQ=await client.from('training_exercise_catalog').select('id,primary_muscles').in('id',catalogIds);
+  if(!isCurrent())return null;
+  if(!catalogQ.error)catalogById=new Map((catalogQ.data||[]).map(item=>[String(item.id),item]));
+ }
+ const weeklyVolume=evolutionCore.aggregateWeeklyVolume({logs,exerciseById:exerciseMap,catalogById,sessionDateById:activityDateBySession});
  const grouped=new Map();
  for(const log of logs){
   const exercise=exerciseMap.get(log.exercise_id);if(!exercise?.name)continue;
@@ -128,7 +144,16 @@ async function load(expectedUserId,expectedClient,isCurrent){
   if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga');group.latestDate=date}
   group.points.push({date,timestamp:log.completed_at||session.finished_at||session.started_at,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
  }
- return [...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+ const result=[...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+ result.weeklyVolume=weeklyVolume;
+ return result;
+}
+function renderWeeklyVolumePanel(data){
+ if(!data?.groups?.length||!data?.weeks?.length)return '<div class="evolution-panel"><h3>Volume semanal por grupo muscular</h3><p class="evolution-intro">Ainda não há séries com carga, repetições e grupo muscular identificado para calcular o volume.</p></div>';
+ const weeks=data.weeks.slice(-4),formatVolume=value=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1})+' kg',formatSets=value=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1});
+ const weekLabel=key=>{const [year,month,day]=key.split('-');return day+'/'+month};
+ const rows=data.groups.map(group=>'<tr><td><strong>'+esc(group.muscle)+'</strong><small>'+formatSets(group.totalSets)+' séries equivalentes</small></td>'+weeks.map(week=>'<td>'+formatVolume(group.weeks[week]?.volume||0)+'</td>').join('')+'</tr>').join('');
+ return '<div class="evolution-panel"><h3>Volume semanal por grupo muscular</h3><p class="evolution-intro">Volume calculado por carga × repetições. Quando um exercício tem mais de um músculo principal, o volume e as séries são distribuídos igualmente entre eles. Exercícios por tempo ou sem carga ficam fora deste cálculo.</p><div class="evolution-volume-scroll" role="region" aria-label="Tabela de volume semanal, rolável horizontalmente"><table class="evolution-volume-table"><thead><tr><th>Grupo muscular</th>'+weeks.map(week=>'<th>Semana '+weekLabel(week)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function chart(points,metricType){
  const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.value>old.value)bySession.set(p.sessionId,p)}
@@ -155,7 +180,7 @@ async function render(host){
   cache=loaded;
   if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre a carga ou a duração das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
-  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p><div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
+  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p>'+renderWeeklyVolumePanel(cache.weeklyVolume)+'<div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const paint=()=>{
    if(!isCurrent())return;
