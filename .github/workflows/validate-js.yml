@@ -28,5 +28,6 @@ jobs:
           node --test tests/js/workout-history.test.js
           node --check exercise-evolution.js
           node --test tests/js/exercise-evolution.test.js
+          node --test tests/js/exercise-personal-records.test.js
           node --check exercise-library.js
           node --test tests/js/exercise-library.test.js
