@@ -35,7 +35,7 @@ Para um projeto Supabase novo, aplicar nesta ordem:
 17. `20261122001700_reconcile_legacy_workout_identities.sql` — reconciliação conservadora de identidades antigas.
 18. `20261122001800_exercise_image_library_seed.sql` — imagens e grupos musculares da biblioteca visual.
 19. `20261123001900_harden_rls_helper_function_grants.sql` — primeira restrição de execução de helpers `SECURITY DEFINER` (não remove grants diretos a `anon`).
-20. `20261124000100_harden_public_schema_privileges.sql` — corrige a confirmação de versão sem autenticação, restringe as 11 RPCs privilegiadas, remove privilégios de tabela de `anon`, remove privilégios administrativos desnecessários de `authenticated` e endurece os privilégios padrão de funções.
+20. `20261124000100_harden_public_schema_privileges.sql` — corrige a confirmação de versão sem autenticação, restringe até 11 RPCs privilegiadas auditadas que existirem no banco (incluindo RPCs legadas fora da cadeia de instalação), remove privilégios de tabela de `anon`, remove privilégios administrativos desnecessários de `authenticated` e endurece os privilégios padrão de funções.
 
 ### Observações importantes
 
