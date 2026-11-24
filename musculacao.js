@@ -2098,7 +2098,9 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   }
   const synced=await syncPendingWorkout();
   if(!isCurrent())return;
-  const personalRecords=await findNewWorkoutPersonalRecords(userId,sessionId,sessionExerciseRows,sessionSetLogs,synced);\n  if(!isCurrent())return;\n  const progress=sessionExerciseRows.map((_,i)=>exerciseProgress(i));
+  const personalRecords=await findNewWorkoutPersonalRecords(userId,sessionId,sessionExerciseRows,sessionSetLogs,synced);
+  if(!isCurrent())return;
+  const progress=sessionExerciseRows.map((_,i)=>exerciseProgress(i));
   const totalSets=sessionPlan.length;
   const completedSets=sessionSetLogs.filter(row=>Number(row.duration_seconds)>0||Number(row.reps_completed)>0).length;
   const completedExercises=progress.filter(item=>item.status==='done').length;
