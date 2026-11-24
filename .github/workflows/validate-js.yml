@@ -30,6 +30,8 @@ jobs:
           node --test tests/js/exercise-evolution-volume.test.js
           node --check evolution-periods.js
           node --test tests/js/evolution-periods.test.js
+          node --check exercise-plateau.js
+          node --test tests/js/exercise-plateau.test.js
           node --check exercise-evolution.js
           node --test tests/js/exercise-evolution.test.js
           node --test tests/js/exercise-personal-records.test.js

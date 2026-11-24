@@ -121,7 +121,7 @@ Atualizado em 24/11/2026.
   - [x] Incluir gráficos por sessão para carga, volume total por sessão e 1RM estimado, mantendo a evolução de duração separada.
   - [x] Comparar períodos equivalentes por exercício, com seleção de 30, 90, 180 ou 365 dias e comparação da média por sessão contra o intervalo imediatamente anterior.
   - [ ] Comparar blocos de treino identificados no programa (micro/mesociclos) quando houver metadados de bloco.
-- [ ] Detectar platô (sem progresso em N sessões) e sugerir ajuste ou deload.
+- [x] Detectar possível estabilidade por exercício com critério conservador (mínimo de 5 sessões em 28 dias, comparação das médias das duas primeiras e duas últimas sessões, tolerância de 5%); diferenciar queda recente e orientar revisão de progressão, recuperação e execução sem prescrever deload automaticamente.
 - [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa.
 
 ## Prioridade 8 — Wellness e controle de carga
