@@ -18,6 +18,8 @@ test('exercise guidance loads only after an explicit user action', () => {
 
 test('exercise guidance reuses cached images and provides an offline fallback', () => {
   assert.match(workout, /nexfit-exercise-library-images-v1/);
+  assert.match(workout, /nexfit-exercise-library:v1:/);
+  assert.match(workout, /entry\.id\)===String\(e\.catalog_exercise_id\)/);
   assert.match(workout, /if\(!navigator\.onLine\)\{showGuidanceImageFallback\(img\);return\}/);
   assert.match(workout, /Demonstração visual indisponível offline/);
   assert.match(workout, /parsed\.protocol==='https:'/);
