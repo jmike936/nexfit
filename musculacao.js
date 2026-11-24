@@ -79,6 +79,20 @@
  #strengthPage .execution-media-pair figure{min-width:0;margin:0;padding:7px;border:1px solid #28342b;border-radius:12px;background:#111610}
  #strengthPage .execution-media-pair img{display:block;width:100%;height:clamp(150px,38vw,240px);object-fit:contain}
  #strengthPage .execution-media-pair figcaption{padding:5px 0 0;color:#a0a99c;text-align:center;font-size:11px}
+ #strengthPage .execution-guidance-trigger{display:flex;justify-content:flex-start;margin:4px 0 12px}
+ #strengthPage .execution-guidance-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 13px;border:1px solid #526b32;border-radius:12px;background:#202b20;color:#d5ff7b;font-weight:750;font-size:12px;cursor:pointer}
+ #strengthPage .execution-guidance-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+ #strengthPage .execution-guidance-modal{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;padding:14px;background:#05080ddd}
+ #strengthPage .execution-guidance-modal[hidden]{display:none}
+ #strengthPage .execution-guidance-dialog{width:min(680px,100%);max-height:min(88dvh,850px);overflow:auto;padding:18px;background:#1a232e;border:1px solid #354454;border-radius:22px;box-shadow:0 24px 80px #0009;color:#f4f7fa}
+ #strengthPage .execution-guidance-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+ #strengthPage .execution-guidance-dialog>header strong{font-size:16px;line-height:1.3}
+ #strengthPage .execution-guidance-dialog>header button{width:36px;height:36px;flex:none;border:1px solid #354454;border-radius:50%;background:#111922;color:#f4f7fa;font-size:24px;line-height:1;cursor:pointer}
+ #strengthPage .execution-guidance-content .execution-media-pair{margin:0 0 12px}
+ #strengthPage .execution-guidance-content .execution-media-pair img{height:clamp(145px,38vw,250px)}
+ #strengthPage .execution-guidance-content .execution-feedback{margin:0 0 12px}
+ #strengthPage .execution-guidance-empty{padding:24px 12px;border:1px dashed #354454;border-radius:12px;color:#a0a99c;text-align:center;font-size:12px}
+ @media(max-width:520px){#strengthPage .execution-guidance-modal{padding:10px}#strengthPage .execution-guidance-dialog{padding:14px;border-radius:22px 22px 14px 14px}#strengthPage .execution-guidance-content .execution-media-pair img{height:clamp(125px,38vw,190px)}}
  #strengthPage .execution-image-unavailable{display:grid;place-items:center;min-height:120px;padding:12px;color:#a0a99c;text-align:center;font-size:12px}
  #strengthPage .execution-muscle-map{margin:12px 0;padding:12px;border:1px solid #28342b;border-radius:14px;background:#121812}
  #strengthPage .execution-muscle-map h3{margin:0 0 6px;font-size:14px}
@@ -119,12 +133,11 @@
  #strengthPage .execution-skip-exercise{display:block;margin:8px auto 0;border:0;background:transparent;color:#a0a99c;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
  #strengthPage .execution-rest[hidden]{display:none}
  #strengthPage .execution-rest{margin-top:14px;padding:10px 0 4px;text-align:center}
- #strengthPage .execution-screen.is-resting .execution-media-pair,
- #strengthPage .execution-screen.is-resting .execution-muscle-map,
  #strengthPage .execution-screen.is-resting .execution-stat,
  #strengthPage .execution-screen.is-resting .execution-reps-label,
  #strengthPage .execution-screen.is-resting .execution-reps-input,
  #strengthPage .execution-screen.is-resting .execution-feedback{display:none!important}
+ #strengthPage .execution-screen.is-resting .execution-guidance-content .execution-feedback{display:block!important}
  #strengthPage .execution-screen.is-resting .execution-exercise-heading{margin-bottom:8px}
  #strengthPage .execution-screen.is-resting .execution-rest{margin:10px 0 0;padding:18px 14px 16px;border:1px solid #35452f;border-radius:18px;background:linear-gradient(145deg,#1c281b,#111811);box-shadow:0 10px 28px #0003}
  #strengthPage .execution-screen.is-resting .execution-rest-heading{margin:0 0 12px;color:#b7f34a;font-size:13px}
