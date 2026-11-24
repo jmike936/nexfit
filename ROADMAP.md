@@ -111,6 +111,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Adicionar imagens representativas aos treinos por grupo muscular (peito/tríceps, ombros, bíceps, costas, pernas etc.) para facilitar a identificação rápida. Usa o catálogo existente e seleção por foco muscular, com fallback sem alteração de dados.
 - [x] Aprimorar o mapa ilustrativo do corpo na execução dos exercícios: refinar proporções e regiões musculares nas vistas frontal/posterior, melhorar a correspondência entre nomes e áreas destacadas, diferenciar com clareza músculos principais/secundários, e otimizar escala, leitura e interação em telas de celular.
   - [x] Alternar entre vistas frontais/posteriores ampliadas e aplicar cores consistentes para músculos principais, secundários e demais regiões.
+  - [x] Manter o mapa visível mesmo quando os nomes musculares do catálogo ainda não possuem correspondência visual; ampliar aliases anatômicos e informar regiões sem mapeamento.
 
 ## Prioridade 6 — Qualidade e engenharia (transversal)
 
