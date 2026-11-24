@@ -552,17 +552,47 @@
     <div class="panel training-form-panel"><h3>Criar programa</h3><label for="programCategory">Categoria</label><select id="programCategory"><option>Musculação</option><option>Natação</option><option>Corrida</option><option>Pedal</option><option>Ciclismo</option><option>Caminhada</option><option>Funcional</option><option>Cross training</option><option>Outra</option></select>${field('programTitle','Nome do programa','Ex.: Hipertrofia — bloco 1')}<label for="programDesc">Descrição</label><textarea id="programDesc" rows="2" placeholder="Objetivo e observações"></textarea><button class="btn" id="createProgram">Criar programa</button><div id="professionalProgramFields" style="display:none"><hr><h3>Enviar programa a outro atleta</h3>${field('athleteEmail','E-mail do atleta','aluno@email.com','email')}<button class="btn alt" id="createForAthlete" type="button">Enviar programa</button></div></div>
     <div id="programManagement" class="training-program-management"></div>
    </details>
-   <details class="training-secondary"><summary>Gerenciar Treinos</summary>
+   <details class="training-secondary" id="trainingManagementDetails"><summary>Gerenciar Treinos</summary>
     <div class="panel training-form-panel"><h3>Criar treino dentro de um programa</h3><label for="workoutProgram">Programa vigente</label><select id="workoutProgram"><option value="">Selecione um programa</option></select>${field('workoutTitle','Nome do treino','Ex.: Treino A — Peito e tríceps')}<label for="workoutDescription">Descrição (opcional)</label><textarea id="workoutDescription" rows="2" placeholder="Observações"></textarea><button class="btn" id="createWorkout" type="button">Criar treino</button></div>
     <div id="trainingManagement" class="training-program-management"></div>
    </details>
 
-   <details class="training-secondary"><summary>Acessos profissionais e notificações</summary><div class="panel" id="professionalAccessPanel"><div id="professionalRequestControls"><div class="rowf"><div>${field('professionalEmail','Solicitar acesso como profissional','personal@email.com','email')}</div><div><label for="accessType">Permissão solicitada</label><select id="accessType"><option value="view">Visualizar histórico</option><option value="manage">Gerenciar meus programas</option></select></div></div><button class="btn alt" id="requestAccess">Solicitar acesso ao atleta</button></div><div id="accessList"></div><h3>Notificações</h3><div id="notifications" class="muted">Carregando…</div></div></details>
+   <details class="training-secondary" id="professionalAccessDetails"><summary>Acessos profissionais e notificações</summary><div class="panel" id="professionalAccessPanel"><div id="professionalRequestControls"><div class="rowf"><div>${field('professionalEmail','Solicitar acesso como profissional','personal@email.com','email')}</div><div><label for="accessType">Permissão solicitada</label><select id="accessType"><option value="view">Visualizar histórico</option><option value="manage">Gerenciar meus programas</option></select></div></div><button class="btn alt" id="requestAccess">Solicitar acesso ao atleta</button></div><div id="accessList"></div><h3>Notificações</h3><div id="notifications" class="muted">Carregando…</div></div></details>
   `);
   section.classList.add('training-gallery');section.querySelector('.sectionhead')?.remove();
   section.querySelectorAll('[data-training-tab]').forEach(b=>b.onclick=()=>{activeTrainingTab=b.dataset.trainingTab;home()});
   $('createProgram').onclick=createProgram;$('createForAthlete').onclick=createProgramForAthlete;$('createWorkout').onclick=createWorkout;$('requestAccess').onclick=requestAccess;
   const accountType=u.user_metadata?.account_type||'athlete';if(accountType!=='professional')$('professionalRequestControls').style.display='none';
+  // Painéis recolhidos são carregados somente quando abertos, evitando consultas que o usuário ainda não solicitou.
+  const trainingDetails=$('trainingManagementDetails');let trainingManagementLoaded=false,trainingManagementLoading=false;
+  trainingDetails?.addEventListener('toggle',()=>{
+   if(!trainingDetails.open||trainingManagementLoaded||trainingManagementLoading)return;
+   trainingManagementLoading=true;
+   Promise.resolve(renderTrainingManagement()).finally(()=>{trainingManagementLoading=false;trainingManagementLoaded=true});
+  });
+  const professionalDetails=$('professionalAccessDetails');let professionalPanelLoaded=false,professionalPanelLoading=false;
+  const loadProfessionalPanel=async()=>{
+   if(professionalPanelLoaded||professionalPanelLoading||!professionalDetails?.open||!isSameAccount())return;
+   professionalPanelLoading=true;
+   try{
+    const [nq,aq]=await Promise.all([
+     db.from('app_notifications').select('title,body,created_at').order('created_at',{ascending:false}).limit(8),
+     db.from('athlete_professional_access').select('id,professional_id,athlete_id,status,can_view_history,can_manage_programs')
+    ]);
+    if(!isSameAccount())return;
+    if($('notifications'))$('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>'<div class="item"><strong>'+esc(n.title)+'</strong><p class="muted">'+esc(n.body)+'</p></div>').join('')||'Nenhuma notificação.';
+    if(aq.error){$('accessList').textContent='Não foi possível carregar os acessos profissionais.'}
+    else{
+     const canPrescribe=(aq.data||[]).some(a=>a.professional_id===u.id&&a.status==='active'&&a.can_manage_programs);
+     if(canPrescribe)$('professionalProgramFields').style.display='block';
+     $('accessList').innerHTML=(aq.data||[]).map(a=>'<div class="item"><strong>'+(a.professional_id===u.id?'Acesso solicitado':'Profissional')+'</strong> · '+esc(a.status)+' <span class="muted">Histórico: '+(a.can_view_history?'sim':'não')+' · Programas: '+(a.can_manage_programs?'sim':'não')+'</span>'+(a.athlete_id===u.id&&a.status==='pending'?'<button class="btn" data-approve="'+a.id+'">Aprovar</button><button class="btn alt" data-reject="'+a.id+'">Recusar</button>':'')+'</div>').join('')||'Nenhum acesso profissional.';
+     section.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.approve,true));
+     section.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.reject,false));
+    }
+    professionalPanelLoaded=true;
+   }finally{professionalPanelLoading=false}
+  };
+  professionalDetails?.addEventListener('toggle',()=>{if(professionalDetails.open)loadProfessionalPanel()});
   const q=await db.from('training_programs').select('*').order('updated_at',{ascending:false});
   if(!isSameAccount())return;
   if(q.error){
@@ -576,7 +606,7 @@
   }
   plans=q.data||[];
   try{localStorage.setItem('nexfit-offline-programs:'+u.id,JSON.stringify(plans))}catch(error){console.warn('Não foi possível guardar os programas offline',error)}
-  showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();await renderTrainingManagement();if(!isSameAccount())return;
+  showArchivedPlans=false;populateProgramSelectors();renderProgramManagement();if(!isSameAccount())return;
   const evolutionView=activeTrainingTab==='evolution';
   $('exerciseEvolution').hidden=!evolutionView;$('programSearch').parentElement.hidden=evolutionView;$('programList').hidden=evolutionView;
   if(evolutionView){
@@ -591,15 +621,7 @@
   }else await renderProgramList();
   if(!isSameAccount())return;
   $('programSearch').oninput=()=>{const term=$('programSearch').value.toLocaleLowerCase('pt-BR');section.querySelectorAll('.training-card').forEach(card=>card.style.display=card.textContent.toLocaleLowerCase('pt-BR').includes(term)?'':'none')};
-  const nq=await db.from('app_notifications').select('*').order('created_at',{ascending:false}).limit(8);
-  if(!isSameAccount())return;
-  if($('notifications'))$('notifications').innerHTML=nq.error?'Não foi possível carregar notificações.':(nq.data||[]).map(n=>'<div class="item"><strong>'+esc(n.title)+'</strong><p class="muted">'+esc(n.body)+'</p></div>').join('')||'Nenhuma notificação.';
-  const aq=await db.from('athlete_professional_access').select('*');
-  if(!isSameAccount())return;
-  const canPrescribe=(aq.data||[]).some(a=>a.professional_id===u.id&&a.status==='active'&&a.can_manage_programs);
-  if(canPrescribe)$('professionalProgramFields').style.display='block';
-  if(!aq.error)$('accessList').innerHTML=(aq.data||[]).map(a=>'<div class="item"><strong>'+(a.professional_id===u.id?'Acesso solicitado':'Profissional')+'</strong> · '+esc(a.status)+' <span class="muted">Histórico: '+(a.can_view_history?'sim':'não')+' · Programas: '+(a.can_manage_programs?'sim':'não')+'</span>'+(a.athlete_id===u.id&&a.status==='pending'?'<button class="btn" data-approve="'+a.id+'">Aprovar</button><button class="btn alt" data-reject="'+a.id+'">Recusar</button>':'')+'</div>').join('');
-  section.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.approve,true));section.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.reject,false));
+
  }
  function populateProgramSelectors(){
   const select=$('workoutProgram');if(!select)return;
