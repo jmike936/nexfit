@@ -35,6 +35,7 @@
    session_id:sessionId,exercise_id:row.exercise_id,set_number:row.set_number,
    reps_completed:row.reps_completed,load_kg:row.load_kg??null,
    duration_seconds:row.duration_seconds??null,distance_m:row.distance_m??null,
+   rpe:row.rpe??null,rir:row.rir??null,
    notes:row.notes??null,completed_at:row.completed_at||fallbackCompletedAt||new Date().toISOString()
   }));
  }
