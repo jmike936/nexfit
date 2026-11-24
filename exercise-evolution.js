@@ -38,6 +38,14 @@ const css=`
 #strengthPage .evolution-volume-table thead th{color:#b7f34a;font-size:11px}
 #strengthPage .evolution-volume-table td:first-child strong{display:block}
 #strengthPage .evolution-volume-table td:first-child small{display:block;color:#a0a99c;font-size:10px;margin-top:3px}
+#strengthPage .evolution-period-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+#strengthPage .evolution-period-filter label{font-size:12px;color:#c4d0d8}
+#strengthPage .evolution-period-filter select{min-width:150px;max-width:100%;padding:9px 12px;border-radius:10px;background:#18232e;color:inherit;border:1px solid #526273}
+#strengthPage .evolution-period-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+#strengthPage .evolution-period-summary>div{padding:12px;border:1px solid #354454;border-radius:12px;background:#17232d}
+#strengthPage .evolution-period-summary span{display:block;font-size:11px;color:#b7c3cb}
+#strengthPage .evolution-period-summary strong{display:block;margin-top:5px;font-size:17px}
+#strengthPage .evolution-period-summary small{display:block;margin-top:4px;color:#aebbc3;font-size:10px}
 @media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
 @media(max-width:520px){
  #strengthPage .evolution-panel{padding:12px}
@@ -208,15 +216,28 @@ async function render(host){
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
   host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p>'+renderWeeklyVolumePanel(cache.weeklyVolume)+'<div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
+  const periodSelect=document.createElement('select');periodSelect.id='evolutionPeriodSelect';periodSelect.innerHTML='<option value="30">Últimos 30 dias</option><option value="90" selected>Últimos 90 dias</option><option value="180">Últimos 6 meses</option><option value="365">Últimos 12 meses</option><option value="all">Todo o histórico</option>';
+  const periodLabel=document.createElement('label');periodLabel.htmlFor='evolutionPeriodSelect';periodLabel.textContent='Período de análise';
+  const periodWrap=document.createElement('div');periodWrap.className='evolution-period-filter';periodWrap.append(periodLabel,periodSelect);
+  details.before(periodWrap);
   const paint=()=>{
    if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':metricType==='estimated1RM'?'estimativas de 1RM':'cargas';
+   if(periodSelect.value!=='all'&&!window.NexfitEvolutionPeriods.splitPeriods(item.points,Number(periodSelect.value)).current.length){
+    details.innerHTML='<div class="evolution-empty"><strong>Sem registros neste período</strong><p>Amplie o intervalo para consultar o histórico anterior.</p></div>';return;
+   }
+   const allPoints=item.points,metricType=item.metricType,period=periodSelect.value,periodApi=window.NexfitEvolutionPeriods;
+   const split=period==='all'?{current:allPoints,previous:[]}:periodApi.splitPeriods(allPoints,Number(period));
+   const points=split.current.length?split.current:[],previousPoints=split.previous;
+   const isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':metricType==='estimated1RM'?'estimativas de 1RM':'cargas';
    const personalRecordData=detectPersonalRecords(points,metricType);
    const sessionPoints=sessionSeries(points,metricType);
    const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
    const delta=previous?latest.value-previous.value:null,deltaPercent=previous&&previous.value>0?(delta/previous.value)*100:null;
    const first=sessionPoints[0],overallDelta=first?latest.value-first.value:0,sessions=sessionPoints.length;
+   const currentSummary=periodApi.summarize(points,metricType),previousSummary=periodApi.summarize(previousPoints,metricType);
+   const periodDelta=previousSummary.sessions?currentSummary.average-previousSummary.average:null,periodDeltaPct=previousSummary.average>0&&periodDelta!==null?periodDelta/previousSummary.average*100:null;
+   const periodComparison='<div class="evolution-period-summary"><div><span>Média por sessão · período atual</span><strong>'+formatMetric(currentSummary.average,metricType)+'</strong><small>'+currentSummary.sessions+' sessões</small></div><div><span>Período anterior equivalente</span><strong>'+ (previousSummary.sessions?formatMetric(previousSummary.average,metricType):'—')+'</strong><small>'+previousSummary.sessions+' sessões</small></div></div><p class="evolution-intro">'+(periodDelta===null?'Ainda não há registros suficientes no período anterior para comparar.': 'Variação da média por sessão: '+(periodDelta>0?'+':'')+formatMetric(Math.abs(periodDelta),metricType)+(periodDelta<0?' a menos':'')+(periodDeltaPct!==null?' ('+(periodDeltaPct>0?'+':'')+periodDeltaPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'.')+'</p>';
    const records=[...points].sort((a,b)=>new Date(b.date)-new Date(a.date)||b.set-a.set).slice(0,30);
    let personalRecords;
    if(isTimed){
@@ -236,10 +257,10 @@ async function render(host){
    }
    const metricLabel=isTimed?'Maior duração':metricType==='volume'?'Volume total da sessão':metricType==='estimated1RM'?'1RM estimado':'Maior carga';
    if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':metricType==='volume'?' · volume da série':metricType==='estimated1RM'?' · 1RM estimado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
-   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Comparação entre as maiores '+metricPlural+' de duas sessões consecutivas: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+formatMetric(Math.abs(overallDelta),metricType)+(overallDelta<0?' a menos':'')+'.';details.querySelector('.evolution-stats').after(note)}
+   details.innerHTML=periodComparison+personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':metricType==='volume'?' · volume da série':metricType==='estimated1RM'?' · 1RM estimado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
+   if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação entre as duas sessões mais recentes deste período: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
-  select.addEventListener('change',()=>{if(isCurrent())paint()});paint();
+  select.addEventListener('change',()=>{if(isCurrent())paint()});periodSelect.addEventListener('change',()=>{if(isCurrent())paint()});paint();
  }catch(error){if(!isCurrent())return;host.innerHTML='<div class="evolution-empty"><strong>Não foi possível carregar a evolução</strong><p>'+esc(error?.message||'Verifique sua conexão e tente novamente.')+'</p><button type="button" class="btn alt" id="retryExerciseEvolution">Tentar novamente</button></div>';host.querySelector('#retryExerciseEvolution')?.addEventListener('click',()=>{if(isCurrent()){cache=null;render(host)}})}
 }
 window.resetNexfitExerciseEvolutionUserState=function(){renderGeneration++;cache=null;cachedUserId=null};
