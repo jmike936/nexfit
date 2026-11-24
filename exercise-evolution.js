@@ -31,7 +31,31 @@ const css=`
 #strengthPage .personal-record strong{display:block;color:#b7f34a;font-size:20px;margin:4px 0;overflow-wrap:anywhere}
 #strengthPage .personal-record small{display:block;color:#a0a99c;font-size:11px}
 @media(max-width:420px){#strengthPage .personal-record{padding:10px}#strengthPage .personal-record strong{font-size:17px}}
-@media(max-width:420px){#strengthPage .evolution-panel{padding:12px}#strengthPage .evolution-panel select{min-height:44px;font-size:14px}#strengthPage .evolution-intro{font-size:12px;line-height:1.45}#strengthPage .evolution-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}#strengthPage .evolution-stat{padding:10px 4px}#strengthPage .evolution-stat span{font-size:10px}#strengthPage .evolution-stat strong{font-size:16px}#strengthPage .evolution-record{gap:7px;padding:10px 0}#strengthPage .evolution-record strong{font-size:12px}#strengthPage .evolution-record small{font-size:10px}#strengthPage .evolution-record b{font-size:12px}}
+@media(max-width:520px){
+ #strengthPage .evolution-panel{padding:12px}
+ #strengthPage .evolution-panel select{min-height:46px;font-size:15px}
+ #strengthPage .evolution-intro{font-size:12px;line-height:1.5}
+ #strengthPage .evolution-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #strengthPage .evolution-stat{padding:11px 8px}
+ #strengthPage .evolution-stat span{font-size:11px;line-height:1.35}
+ #strengthPage .evolution-stat strong{font-size:17px}
+ #strengthPage .evolution-stat:last-child:nth-child(odd){grid-column:1/-1}
+ #strengthPage .evolution-chart{min-width:320px}
+ #strengthPage .evolution-chart-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ #strengthPage .evolution-chart-points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+ #strengthPage .evolution-chart-point{min-width:0;padding:9px;background:#111922;border:1px solid #354454;border-radius:10px}
+ #strengthPage .evolution-chart-point span{display:block;color:#a0a99c;font-size:10px}
+ #strengthPage .evolution-chart-point strong{display:block;margin-top:3px;font-size:13px;overflow-wrap:anywhere}
+ #strengthPage .personal-records{gap:7px}
+ #strengthPage .personal-record{padding:10px}
+ #strengthPage .personal-record span{font-size:10px;line-height:1.35}
+ #strengthPage .personal-record strong{font-size:17px}
+ #strengthPage .personal-record small{font-size:10px;line-height:1.4}
+ #strengthPage .evolution-record{gap:7px;padding:11px 0}
+ #strengthPage .evolution-record strong{font-size:13px}
+ #strengthPage .evolution-record small{font-size:11px}
+ #strengthPage .evolution-record b{font-size:13px}
+}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
 let cache=null,cachedUserId=null,renderGeneration=0;
@@ -94,7 +118,9 @@ function chart(points,metricType){
  const labelPoints=pts.length===1?[{...pts[0],anchor:'middle'}]:[{...pts[0],anchor:'start'},{...pts[Math.floor((pts.length-1)/2)],anchor:'middle'},{...pts[pts.length-1],anchor:'end'}].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i);
  const labels=labelPoints.map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="'+p.anchor+'">'+dateLabel(p.p.date)+'</text>').join('');
  const subject=metricType==='time'?'maior duração':'maior carga';
- return '<svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg><p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. A linha conecta as sessões em ordem cronológica.</p>';
+ const recent=series.slice(-4).reverse();
+ const accessiblePoints='<div class="evolution-chart-points" aria-label="Registros mais recentes do gráfico">'+recent.map(p=>'<div class="evolution-chart-point"><span>'+dateLabel(p.date)+'</span><strong>'+formatMetric(p.value,metricType)+'</strong></div>').join('')+'</div>';
+ return '<div class="evolution-chart-scroll" role="region" aria-label="Gráfico rolável horizontalmente"><svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg></div>'+accessiblePoints+'<p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. Os registros mais recentes também aparecem abaixo do gráfico.</p>';
 }
 async function render(host){
  const uid=user()?.id||null,client=getClient(),generation=++renderGeneration;
@@ -128,9 +154,10 @@ async function render(host){
    }else{
     const heaviest=points.filter(p=>Number.isFinite(p.value)&&p.value>0).reduce((best,p)=>!best||p.value>best.value?p:best,null);
     const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.value*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
-    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.value):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · 1RM estimado':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde de maior carga</span><strong>'+(heaviest?kg(heaviest.value):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Melhor desempenho estimado</span><strong>'+(estimated?kg(estimated.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · fórmula de Epley':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
    }
    const metricLabel=isTimed?'Maior duração':'Maior carga';
+   if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
    details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>'<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':' · '+p.reps+' repetições')+'</small></div><b>'+formatMetric(p.value,metricType)+'</b></div>').join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Comparação entre as maiores '+metricPlural+' de duas sessões consecutivas: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+formatMetric(Math.abs(overallDelta),metricType)+(overallDelta<0?' a menos':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
