@@ -62,6 +62,6 @@ A cada alteração nas migrações, o GitHub Actions executa uma instalação de
 
 O modelo de dados para avaliações, VBT, resistência, frequência cardíaca, fotos e integrações está em revisão em [docs/propostas/modelo-medicao-avancada.md](docs/propostas/modelo-medicao-avancada.md). É somente uma proposta: nenhuma tabela, coleta ou integração será criada antes da aprovação explícita, especialmente das regras de consentimento e acesso profissional.
 
-## Biblioteca de Exercícios (planejada)
+## Biblioteca de Exercícios
 
-O roadmap prevê uma biblioteca consultável por atletas e personais, com instruções e imagens de execução vinculadas ao catálogo canônico. Durante o treino, a orientação ficará recolhida atrás de um indicador acionável e abrirá sob demanda, reutilizando o conteúdo pré-carregado no dispositivo para evitar duplicação e dependência de rede.
+A biblioteca consultável por atletas e personais usa o catálogo canônico `training_exercise_catalog`, com busca por nome, filtro por grupo muscular, imagens de início/fim, instruções e grupos musculares quando disponíveis. Os metadados e instruções ficam em cache local separado por conta; imagens abertas são armazenadas no Cache Storage para reutilização offline. Durante o treino, imagens e mapa muscular ficam recolhidos atrás da ação “Ver execução” e só são carregados ao abrir o painel. Se uma imagem ainda não estiver no cache e não houver conexão, o app informa que a demonstração não está disponível offline.

@@ -79,6 +79,20 @@
  #strengthPage .execution-media-pair figure{min-width:0;margin:0;padding:7px;border:1px solid #28342b;border-radius:12px;background:#111610}
  #strengthPage .execution-media-pair img{display:block;width:100%;height:clamp(150px,38vw,240px);object-fit:contain}
  #strengthPage .execution-media-pair figcaption{padding:5px 0 0;color:#a0a99c;text-align:center;font-size:11px}
+ #strengthPage .execution-guidance-trigger{display:flex;justify-content:flex-start;margin:4px 0 12px}
+ #strengthPage .execution-guidance-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 13px;border:1px solid #526b32;border-radius:12px;background:#202b20;color:#d5ff7b;font-weight:750;font-size:12px;cursor:pointer}
+ #strengthPage .execution-guidance-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+ #strengthPage .execution-guidance-modal{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;padding:14px;background:#05080ddd}
+ #strengthPage .execution-guidance-modal[hidden]{display:none}
+ #strengthPage .execution-guidance-dialog{width:min(680px,100%);max-height:min(88dvh,850px);overflow:auto;padding:18px;background:#1a232e;border:1px solid #354454;border-radius:22px;box-shadow:0 24px 80px #0009;color:#f4f7fa}
+ #strengthPage .execution-guidance-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+ #strengthPage .execution-guidance-dialog>header strong{font-size:16px;line-height:1.3}
+ #strengthPage .execution-guidance-dialog>header button{width:36px;height:36px;flex:none;border:1px solid #354454;border-radius:50%;background:#111922;color:#f4f7fa;font-size:24px;line-height:1;cursor:pointer}
+ #strengthPage .execution-guidance-content .execution-media-pair{margin:0 0 12px}
+ #strengthPage .execution-guidance-content .execution-media-pair img{height:clamp(145px,38vw,250px)}
+ #strengthPage .execution-guidance-content .execution-feedback{margin:0 0 12px}
+ #strengthPage .execution-guidance-empty{padding:24px 12px;border:1px dashed #354454;border-radius:12px;color:#a0a99c;text-align:center;font-size:12px}
+ @media(max-width:520px){#strengthPage .execution-guidance-modal{padding:10px}#strengthPage .execution-guidance-dialog{padding:14px;border-radius:22px 22px 14px 14px}#strengthPage .execution-guidance-content .execution-media-pair img{height:clamp(125px,38vw,190px)}}
  #strengthPage .execution-image-unavailable{display:grid;place-items:center;min-height:120px;padding:12px;color:#a0a99c;text-align:center;font-size:12px}
  #strengthPage .execution-muscle-map{margin:12px 0;padding:12px;border:1px solid #28342b;border-radius:14px;background:#121812}
  #strengthPage .execution-muscle-map h3{margin:0 0 6px;font-size:14px}
@@ -119,12 +133,11 @@
  #strengthPage .execution-skip-exercise{display:block;margin:8px auto 0;border:0;background:transparent;color:#a0a99c;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
  #strengthPage .execution-rest[hidden]{display:none}
  #strengthPage .execution-rest{margin-top:14px;padding:10px 0 4px;text-align:center}
- #strengthPage .execution-screen.is-resting .execution-media-pair,
- #strengthPage .execution-screen.is-resting .execution-muscle-map,
  #strengthPage .execution-screen.is-resting .execution-stat,
  #strengthPage .execution-screen.is-resting .execution-reps-label,
  #strengthPage .execution-screen.is-resting .execution-reps-input,
  #strengthPage .execution-screen.is-resting .execution-feedback{display:none!important}
+ #strengthPage .execution-screen.is-resting .execution-guidance-content .execution-feedback{display:block!important}
  #strengthPage .execution-screen.is-resting .execution-exercise-heading{margin-bottom:8px}
  #strengthPage .execution-screen.is-resting .execution-rest{margin:10px 0 0;padding:18px 14px 16px;border:1px solid #35452f;border-radius:18px;background:linear-gradient(145deg,#1c281b,#111811);box-shadow:0 10px 28px #0003}
  #strengthPage .execution-screen.is-resting .execution-rest-heading{margin:0 0 12px;color:#b7f34a;font-size:13px}
@@ -1466,34 +1479,66 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const previousLoad=planned==='MR'?null:previousLoadsByExercise[identity]?.[planned];
   if(sessionLoads[loadKey]===undefined)sessionLoads[loadKey]=previousLoad??set.load_kg??(item.setIndex>0?(sessionLoads[e.id+':'+(item.setIndex-1)]??''):'');
   const loadValue=sessionLoads[loadKey],loggedSets=sessionSetLogs.length,allSets=sessionPlan.length;
-  const media=e.media_url?'<div class="execution-media-pair"><figure><img class="execution-media" src="'+esc(e.media_url)+'" alt="Posição inicial de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição inicial</figcaption></figure>'+(e.media_end_url&&e.media_end_url!==e.media_url?'<figure><img class="execution-media" src="'+esc(e.media_end_url)+'" alt="Posição final de '+esc(normalizeHumanText(e.name))+'"><figcaption>Posição final</figcaption></figure>':'')+'</div>':'';
-  const muscleMap=renderExecutionMuscleMap(e.primary_muscles,e.secondary_muscles);
-  const instructions=e.execution_instructions?'<div class="execution-feedback" style="margin:10px 0 12px"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(e.execution_instructions)+'</p></div>':'';
-  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+"<div class=\"execution-rest\" id=\"restPanel\" hidden><div class=\"execution-rest-heading\">DESCANSO</div><div class=\"execution-rest-row\"><div class=\"execution-rest-dial\" id=\"restDial\" style=\"--progress:100\"><div><strong id=\"restClock\">00:00</strong><span>Tempo restante</span></div></div></div><p id=\"nextStepText\"></p><button class=\"execution-secondary execution-skip-rest\" type=\"button\" id=\"skipRest\">Pular descanso</button></div></div>"+''+media+instructions+muscleMap+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Não realizar série</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button>';
-  host.querySelectorAll('.execution-media').forEach(img=>{
-   const initial=img.getAttribute('src')||img.src;
-   const pathMatch=initial.match(/images\/(.+?)(?:[?#].*)?$/);
+  let guidanceExercise=e;
+  try{
+   const cacheUserId=userRef()?.id,raw=cacheUserId?localStorage.getItem('nexfit-exercise-library:v1:'+cacheUserId):null;
+   const libraryItems=raw?JSON.parse(raw).items:[];
+   const canonical=Array.isArray(libraryItems)?libraryItems.find(entry=>String(entry.id)===String(e.catalog_exercise_id)):null;
+   if(canonical)guidanceExercise={...e,media_url:canonical.demonstration_image_url||e.media_url,media_end_url:canonical.demonstration_end_image_url||e.media_end_url,execution_instructions:canonical.execution_instructions||e.execution_instructions,primary_muscles:canonical.primary_muscles||e.primary_muscles,secondary_muscles:canonical.secondary_muscles||e.secondary_muscles};
+  }catch(_){}
+  const media=guidanceExercise.media_url?'<div class="execution-media-pair"><figure><img class="execution-media" data-guidance-src="'+esc(guidanceExercise.media_url)+'" alt="Posição inicial de '+esc(normalizeHumanText(guidanceExercise.name))+'"><figcaption>Posição inicial</figcaption></figure>'+(guidanceExercise.media_end_url&&guidanceExercise.media_end_url!==guidanceExercise.media_url?'<figure><img class="execution-media" data-guidance-src="'+esc(guidanceExercise.media_end_url)+'" alt="Posição final de '+esc(normalizeHumanText(guidanceExercise.name))+'"><figcaption>Posição final</figcaption></figure>':'')+'</div>':'';
+  const muscleMap=renderExecutionMuscleMap(guidanceExercise.primary_muscles,guidanceExercise.secondary_muscles);
+  const instructions=guidanceExercise.execution_instructions?'<div class="execution-feedback execution-guidance-instructions"><strong>Como executar</strong><p style="margin:6px 0 0;white-space:pre-line">'+esc(guidanceExercise.execution_instructions)+'</p></div>':'';
+  const guidanceContent=media+instructions+muscleMap;
+  const guidance='<div class="execution-guidance-trigger"><button class="execution-guidance-button" type="button" id="openExerciseGuidance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9h.01"/></svg>Ver execução</button></div><div class="execution-guidance-modal" id="exerciseGuidanceModal" hidden><section class="execution-guidance-dialog" role="dialog" aria-modal="true" aria-labelledby="exerciseGuidanceTitle"><header><strong id="exerciseGuidanceTitle">'+esc(normalizeHumanText(guidanceExercise.name))+'</strong><button type="button" id="closeExerciseGuidance" aria-label="Fechar orientação">×</button></header><div class="execution-guidance-content">'+(guidanceContent||'<p class="execution-guidance-empty">Ainda não há imagens ou instruções cadastradas para este exercício.</p>')+'</div></section></div>';
+  host.innerHTML='<div class="execution-screen"><header class="execution-header"><button class="execution-back" type="button" id="exitSession" aria-label="Voltar para o início" title="Voltar para o início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><strong>'+esc(normalizeHumanText(current.title))+'</strong><span>'+(item.exerciseIndex+1)+' / '+sessionExerciseRows.length+'</span></header><div class="execution-progress"><span style="width:'+Math.round((loggedSets/Math.max(1,allSets))*100)+'%"></span></div><div class="execution-exercise-heading"><h2>'+esc(normalizeHumanText(e.name))+'</h2><p>'+(e.notes?esc(e.notes):'Exercício '+(item.exerciseIndex+1)+' do treino')+'</p></div>'+"<div class=\"execution-rest\" id=\"restPanel\" hidden><div class=\"execution-rest-heading\">DESCANSO</div><div class=\"execution-rest-row\"><div class=\"execution-rest-dial\" id=\"restDial\" style=\"--progress:100\"><div><strong id=\"restClock\">00:00</strong><span>Tempo restante</span></div></div></div><p id=\"nextStepText\"></p><button class=\"execution-secondary execution-skip-rest\" type=\"button\" id=\"skipRest\">Pular descanso</button></div></div>"+guidance+(set.mode&&set.mode!=='reps'?'<div class="execution-stat" style="margin:12px 0"><span>'+(set.mode==='countdown'?'Duração-alvo':'Cronômetro livre')+'</span><strong id="exerciseClock" style="display:block;font-size:42px;text-align:center">'+formatWorkoutTime(activeExerciseTimer?exerciseTimerElapsed():(set.mode==='countdown'?Number(set.target_seconds)||0:0))+'</strong><small>'+(set.mode==='countdown'?'Tempo restante':'Tempo realizado')+'</small><button class="btn alt" type="button" id="toggleExerciseTimer">'+(activeExerciseTimer?.running?'Pausar':activeExerciseTimer?.elapsedSeconds?'Continuar':'Iniciar')+'</button></div>':'')+'<div class="execution-stats"><div class="execution-stat"><span>Séries</span><strong>'+setNo+'/'+total+'</strong></div><div class="execution-stat"><span>Repetições</span><strong>'+(planned==='MR'?'MR':planned)+'</strong></div><div class="execution-stat execution-load-stat"><label for="sessionLoad">Carga</label><div class="execution-load-control"><button type="button" id="loadDown" aria-label="Diminuir carga">−</button><input id="sessionLoad" type="number" min="0" step="0.25" placeholder="kg" value="'+(loadValue??'')+'" aria-label="Carga em quilogramas"><button type="button" id="loadUp" aria-label="Aumentar carga">+</button></div><small id="previousLoadHint">'+(previousLoad!==undefined&&previousLoad!==null?'Última carga registrada':'kg')+'</small></div></div>'+(planned==='MR'?'<label class="execution-reps-label" for="sessionReps">Repetições realizadas</label><input class="execution-reps-input" id="sessionReps" type="number" min="1" placeholder="Informe quantas conseguiu">':'')+'<div class="execution-feedback" id="executionFeedback" role="status" aria-live="polite" data-state="info"></div><div class="execution-actions"><button class="execution-primary" type="button" id="completeSet">'+(set.mode&&set.mode!=='reps'?'Registrar tempo':'Registrar carga')+'</button><button class="execution-secondary" type="button" id="skipSet">Não realizar série</button></div><button class="execution-skip-exercise" type="button" id="skipExercise">Pular exercício</button>';
+  const guidanceModal=$('exerciseGuidanceModal'),guidanceButton=$('openExerciseGuidance'),guidanceClose=$('closeExerciseGuidance');
+  const guidanceObjectUrls=[];
+  const showGuidanceImageFallback=img=>{
+   img.hidden=true;
+   const note=document.createElement('div');note.className='execution-image-unavailable';note.textContent='Demonstração visual indisponível offline. Abra a Biblioteca com internet para guardar esta imagem.';
+   img.parentElement.insertBefore(note,img.nextSibling);
+  };
+  const loadGuidanceImage=async img=>{
+   const original=img.dataset.guidanceSrc||'';
+   let safe='';try{const parsed=new URL(original);if(parsed.protocol==='https:')safe=parsed.href}catch(_){}
+   if(!safe)return;
+   try{
+    if('caches' in window){
+     const cache=await caches.open('nexfit-exercise-library-images-v1'),cached=await cache.match(safe);
+     if(cached){const url=URL.createObjectURL(await cached.blob());guidanceObjectUrls.push(url);img.src=url;return}
+    }
+   }catch(_){}
+   if(!navigator.onLine){showGuidanceImageFallback(img);return}
+   const pathMatch=safe.match(/images\/(.+?)(?:[?#].*)?$/);
    const candidates=pathMatch?[
-    'https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
+    safe,
     'https://cdn.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1],
     'https://fastly.jsdelivr.net/gh/MarvinNazari/exercise-images@2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/'+pathMatch[1]
-   ]:[];
-   img.dataset.fallbackIndex='0';
-   img.onerror=()=>{
-    const index=Number(img.dataset.fallbackIndex||'0');
-    if(index<candidates.length){
-     img.dataset.fallbackIndex=String(index+1);
-     if(candidates[index]!==img.src){img.src=candidates[index];return}
-     img.onerror();
-     return;
-    }
-    img.hidden=true;
-    const note=document.createElement('div');
-    note.className='execution-image-unavailable';
-    note.textContent='Demonstração visual indisponível no momento';
-    img.parentElement.insertBefore(note,img.nextSibling);
-   };
-  });
+   ]:[safe];
+   for(const candidate of candidates){
+    try{
+     const response=await fetch(candidate,{mode:'cors'});if(!response.ok)continue;
+     const copy=response.clone();
+     if('caches' in window){try{const cache=await caches.open('nexfit-exercise-library-images-v1');await cache.put(safe,copy)}catch(_){}}
+     const url=URL.createObjectURL(await response.blob());guidanceObjectUrls.push(url);img.src=url;return;
+    }catch(_){}
+   }
+   showGuidanceImageFallback(img);
+  };
+  const closeGuidance=()=>{
+   if(guidanceModal)guidanceModal.hidden=true;
+   guidanceObjectUrls.forEach(url=>URL.revokeObjectURL(url));guidanceObjectUrls.length=0;
+   host.querySelectorAll('.execution-media').forEach(img=>{img.removeAttribute('src');img.hidden=false;img.parentElement.querySelector('.execution-image-unavailable')?.remove()});
+  };
+  if(guidanceButton)guidanceButton.onclick=async()=>{
+   if(!guidanceModal)return;
+   guidanceModal.hidden=false;guidanceClose?.focus();
+   await Promise.all([...guidanceModal.querySelectorAll('.execution-media')].map(loadGuidanceImage));
+  };
+  if(guidanceClose)guidanceClose.onclick=closeGuidance;
+  if(guidanceModal)guidanceModal.onclick=event=>{if(event.target===guidanceModal)closeGuidance()};
+  if(guidanceModal)guidanceModal.onkeydown=event=>{if(event.key==='Escape')closeGuidance()};
   $('sessionLoad').oninput=()=>{sessionLoads[loadKey]=$('sessionLoad').value;$('sessionLoad').dataset.userEdited='true';persistWorkoutState()};
   if($('sessionReps'))$('sessionReps').oninput=()=>{const actual=Number($('sessionReps').value),suggested=previousLoadsByExercise[identity]?.[actual],loadInput=$('sessionLoad');if(suggested!==undefined&&loadInput&&!loadInput.dataset.userEdited){loadInput.value=String(suggested);sessionLoads[loadKey]=String(suggested);const hint=$('previousLoadHint');if(hint)hint.textContent='Última carga registrada'}persistWorkoutState()};
   $('loadDown').onclick=()=>adjustLoad(loadKey,-2.5);$('loadUp').onclick=()=>adjustLoad(loadKey,2.5);
