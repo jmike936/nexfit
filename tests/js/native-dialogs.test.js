@@ -31,3 +31,14 @@ test('custom dialog resolves safely on cancel, backdrop, Escape and Enter', () =
   assert.match(index, /event\.key==='Enter'.*finishAppDialog/);
   assert.match(index, /event\.target===\$\('appDialog'\)/);
 });
+
+test('activity history editing and deletion use in-app dialogs instead of native prompt/confirm', () => {
+  const edit = index.match(/async function editActivity\(id\)\{[\s\S]*?\n\}/)?.[0] || '';
+  const remove = index.match(/async function deleteActivity\(id\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.equal((edit.match(/await openAppDialog/g) || []).length, 3);
+  assert.match(edit, /inputType:'date'/);
+  assert.match(edit, /multiline:true/);
+  assert.doesNotMatch(edit, /\b(?:prompt|confirm|alert)\s*\(/);
+  assert.match(remove, /await openAppDialog/);
+  assert.doesNotMatch(remove, /\b(?:prompt|confirm|alert)\s*\(/);
+});
