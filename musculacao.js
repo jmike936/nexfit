@@ -1847,13 +1847,8 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
   if(savingSet||finishingSession){setExecutionFeedback('Aguarde o registro da série terminar antes de voltar.');return}
   const sessionId=session.id,userId=userRef()?.id;
   if(!userId)return;
-  if(activeRest){
-   activeRest.remaining=Math.max(0,Math.ceil((activeRest.deadline-Date.now())/1000));
-   activeRest.paused=true;activeRest.deadline=null;
-   restSnapshot={deadline:null,total:activeRest.total,remaining:activeRest.remaining,paused:true,nextText:activeRest.nextText,notified:activeRest.notified,itemIndex:sessionIndex};
-  }
-  if(activeExerciseTimer?.running)pauseExerciseTimer();
-  else if(timer){clearInterval(timer);timer=null}
+  if(timer){clearInterval(timer);timer=null}
+  activeRest=null;restSnapshot=null;activeExerciseTimer=null;lastExerciseTimerPersistedSecond=-1;
   sessionView='picker';
   if(!persistWorkoutState()){
    sessionView='exercise';
