@@ -33,7 +33,7 @@ begin
   end if;
 
   v_category := lower(trim(coalesce(
-    substring(v_description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+    substring(v_description from '\[MODALIDADE:\s*([^\]]+)\]'),
     'Musculação'
   )));
 
@@ -44,7 +44,7 @@ begin
       and p.id <> v_program
       and p.status = 'active'
       and lower(trim(coalesce(
-        substring(p.description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+        substring(p.description from '\[MODALIDADE:\s*([^\]]+)\]'),
         'Musculação'
       ))) = v_category
   ) then
