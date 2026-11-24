@@ -70,13 +70,29 @@ let cache=null,cachedUserId=null,renderGeneration=0;
 function kg(n){return Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2})+' kg'}
 function formatDuration(value){const total=Math.max(0,Math.round(Number(value)||0)),hours=Math.floor(total/3600),minutes=Math.floor(total%3600/60),seconds=total%60;return hours?hours+':'+String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0'):minutes+':'+String(seconds).padStart(2,'0')}
 function formatMetric(value,type){return type==='time'?formatDuration(value):kg(value)}
+function sessionSeries(points,metricType){
+ const bySession=new Map();
+ for(const point of points){
+  const old=bySession.get(point.sessionId);
+  if(metricType==='volume'){
+   if(!old)bySession.set(point.sessionId,{...point});
+   else{old.value+=point.value;if(new Date(point.timestamp||point.date)>new Date(old.timestamp||old.date)){old.date=point.date;old.timestamp=point.timestamp;old.set=point.set}}
+  }else if(!old||point.value>old.value)bySession.set(point.sessionId,{...point});
+ }
+ return [...bySession.values()].sort((a,b)=>new Date(a.timestamp||a.date)-new Date(b.timestamp||b.date));
+}
 function detectPersonalRecords(points,metricType){
- const ordered=[...points].sort((a,b)=>new Date(a.timestamp||a.date)-new Date(b.timestamp||b.date)||Number(a.set)-Number(b.set));
- const best={load:0,reps:0,estimated1RM:0,duration:0},flags=new Map();
+ const source=metricType==='volume'?sessionSeries(points,'volume'):points;
+ const ordered=[...source].sort((a,b)=>new Date(a.timestamp||a.date)-new Date(b.timestamp||b.date)||Number(a.set)-Number(b.set));
+ const best={load:0,reps:0,estimated1RM:0,duration:0,volume:0},flags=new Map();
  for(const point of ordered){
   const labels=[];
   if(metricType==='time'){
    if(Number.isFinite(point.value)&&point.value>best.duration){best.duration=point.value;labels.push('Duração')}
+  }else if(metricType==='volume'){
+   if(Number.isFinite(point.value)&&point.value>best.volume){best.volume=point.value;labels.push('Volume')}
+  }else if(metricType==='estimated1RM'){
+   if(Number.isFinite(point.value)&&point.value>best.estimated1RM){best.estimated1RM=point.value;labels.push('1RM estimado')}
   }else{
    if(Number.isFinite(point.value)&&point.value>best.load){best.load=point.value;labels.push('Carga')}
    if(Number.isFinite(point.reps)&&point.reps>best.reps){best.reps=point.reps;labels.push('Repetições')}
@@ -131,18 +147,29 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const grouped=new Map();
  for(const log of logs){
   const exercise=exerciseMap.get(log.exercise_id);if(!exercise?.name)continue;
-  const name=exercise.name,metricType=Number(log.duration_seconds)>0?'time':'load',normalized=normalize(name);if(!normalized)continue;
+  const name=exercise.name,normalized=normalize(name);if(!normalized)continue;
   const session=sessionMap.get(log.session_id);if(!session)continue;
   const date=activityDateBySession.get(session.id)||log.completed_at||session.finished_at||session.started_at;
+  const timestamp=log.completed_at||session.finished_at||session.started_at;
   // A identidade lógica é a fonte principal: o mesmo exercício do catálogo pode
   // aparecer em treinos diferentes e não deve fundir históricos de ocorrências distintas.
   // O catálogo só serve como fallback para registros antigos sem identity_id.
   const identityKey=exercise.identityId?'identity:'+exercise.identityId:exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:'legacy-exercise:'+log.exercise_id;
-  const key=identityKey+'|'+metricType;
-  if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga'),metricType,points:[],latestDate:date});
-  const group=grouped.get(key);
-  if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+(metricType==='time'?'Tempo':'Carga');group.latestDate=date}
-  group.points.push({date,timestamp:log.completed_at||session.finished_at||session.started_at,value:metricType==='time'?Number(log.duration_seconds):Number(log.load_kg),reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
+  const addPoint=(metricType,value)=>{
+   if(!Number.isFinite(value)||value<=0)return;
+   const key=identityKey+'|'+metricType,label=metricType==='time'?'Tempo':metricType==='volume'?'Volume':metricType==='estimated1RM'?'1RM estimado':'Carga';
+   if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+label,metricType,points:[],latestDate:date});
+   const group=grouped.get(key);
+   if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+label;group.latestDate=date}
+   group.points.push({date,timestamp,value,reps:Number(log.reps_completed||0),set:Number(log.set_number),sessionId:log.session_id});
+  };
+  const duration=Number(log.duration_seconds),load=Number(log.load_kg),reps=Number(log.reps_completed);
+  if(duration>0)addPoint('time',duration);
+  else if(load>0&&reps>0){
+   addPoint('load',load);
+   addPoint('volume',load*reps);
+   if(reps>=1&&reps<=12)addPoint('estimated1RM',load*(1+reps/30));
+  }
  }
  const result=[...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
  result.weeklyVolume=weeklyVolume;
@@ -156,17 +183,16 @@ function renderWeeklyVolumePanel(data){
  return '<div class="evolution-panel"><h3>Volume semanal por grupo muscular</h3><p class="evolution-intro">Volume calculado por carga × repetições. Quando um exercício tem mais de um músculo principal, o volume e as séries são distribuídos igualmente entre eles. Exercícios por tempo ou sem carga ficam fora deste cálculo.</p><div class="evolution-volume-scroll" role="region" aria-label="Tabela de volume semanal, rolável horizontalmente"><table class="evolution-volume-table"><thead><tr><th>Grupo muscular</th>'+weeks.map(week=>'<th>Semana '+weekLabel(week)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function chart(points,metricType){
- const bySession=new Map();for(const p of points){const old=bySession.get(p.sessionId);if(!old||p.value>old.value)bySession.set(p.sessionId,p)}
- const series=[...bySession.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));if(!series.length)return '<div class="evolution-chart-empty">Ainda não há registros para este exercício.</div>';
+ const series=sessionSeries(points,metricType);if(!series.length)return '<div class="evolution-chart-empty">Ainda não há registros para este exercício.</div>';
  const width=360,height=224,left=52,right=12,top=16,bottom=40,plotW=width-left-right,plotH=height-top-bottom,vals=series.map(x=>x.value),min=0,max=Math.max(1,...vals),range=max-min||1;
  const x=i=>left+(series.length===1?plotW/2:i/(series.length-1)*plotW),y=v=>top+plotH-(v-min)/range*plotH,pts=series.map((p,i)=>({x:x(i),y:y(p.value),p}));
  const grid=[0,1,2,3].map(i=>{const v=min+range*i/3,yy=y(v);return '<line class="grid" x1="'+left+'" y1="'+yy+'" x2="'+(width-right)+'" y2="'+yy+'"/><text x="'+(left-7)+'" y="'+(yy+4)+'" text-anchor="end">'+(metricType==='time'?formatDuration(v):Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1}))+'</text>'}).join('');
  const labelPoints=pts.length===1?[{...pts[0],anchor:'middle'}]:[{...pts[0],anchor:'start'},{...pts[Math.floor((pts.length-1)/2)],anchor:'middle'},{...pts[pts.length-1],anchor:'end'}].filter((p,i,a)=>a.findIndex(x=>x.x===p.x)===i);
  const labels=labelPoints.map(p=>'<text x="'+p.x+'" y="'+(height-12)+'" text-anchor="'+p.anchor+'">'+dateLabel(p.p.date)+'</text>').join('');
- const subject=metricType==='time'?'maior duração':'maior carga';
+ const subject=metricType==='time'?'maior duração':metricType==='volume'?'volume total por sessão':metricType==='estimated1RM'?'1RM estimado':'maior carga';
  const recent=series.slice(-4).reverse();
  const accessiblePoints='<div class="evolution-chart-points" aria-label="Registros mais recentes do gráfico">'+recent.map(p=>'<div class="evolution-chart-point"><span>'+dateLabel(p.date)+'</span><strong>'+formatMetric(p.value,metricType)+'</strong></div>').join('')+'</div>';
- return '<div class="evolution-chart-scroll" role="region" aria-label="Gráfico rolável horizontalmente"><svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg></div>'+accessiblePoints+'<p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. Os registros mais recentes também aparecem abaixo do gráfico.</p>';
+ return '<div class="evolution-chart-scroll" role="region" aria-label="Gráfico rolável horizontalmente"><svg class="evolution-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da '+subject+' registrada em cada sessão">'+grid+'<polyline class="line" points="'+pts.map(p=>p.x+','+p.y).join(' ')+'"/>'+pts.map(p=>'<circle class="dot" cx="'+p.x+'" cy="'+p.y+'" r="5"><title>'+formatMetric(p.p.value,metricType)+(metricType==='time'?'':metricType==='volume'?' · volume da série':' · '+p.p.reps+' repetições')+' · '+dateLabel(p.p.date)+'</title></circle>').join('')+labels+'</svg></div>'+accessiblePoints+'<p class="evolution-intro">Cada ponto representa a '+subject+' de uma sessão. Os registros mais recentes também aparecem abaixo do gráfico.</p>';
 }
 async function render(host){
  const uid=user()?.id||null,client=getClient(),generation=++renderGeneration;
@@ -185,11 +211,9 @@ async function render(host){
   const paint=()=>{
    if(!isCurrent())return;
    const item=cache[Number(select.value)];if(!item)return;
-   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':'carga',metricPlural=isTimed?'durações':'cargas';
+   const points=item.points,metricType=item.metricType,isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':'cargas';
    const personalRecordData=detectPersonalRecords(points,metricType);
-   const sessionMap=new Map();
-   for(const point of points){const current=sessionMap.get(point.sessionId);if(!current||point.value>current.value)sessionMap.set(point.sessionId,{...point})}
-   const sessionPoints=[...sessionMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sessionId.localeCompare(b.sessionId));
+   const sessionPoints=sessionSeries(points,metricType);
    const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
    const delta=previous?latest.value-previous.value:null,deltaPercent=previous&&previous.value>0?(delta/previous.value)*100:null;
    const first=sessionPoints[0],overallDelta=first?latest.value-first.value:0,sessions=sessionPoints.length;
@@ -198,15 +222,21 @@ async function render(host){
    if(isTimed){
     const best=points.reduce((result,p)=>!result||p.value>result.value?p:result,null),average=points.reduce((sum,p)=>sum+p.value,0)/points.length;
     personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · duração</span><strong>'+formatDuration(personalRecordData.best.duration)+'</strong><small>'+dateLabel(best.date)+' · Série '+best.set+'</small></div><div class="personal-record"><span>Duração média por série</span><strong>'+formatDuration(average)+'</strong><small>Com base em '+points.length+' séries registradas</small></div></div>';
+   }else if(metricType==='volume'){
+    const best=sessionPoints.reduce((result,p)=>!result||p.value>result.value?p:result,null),average=sessionPoints.reduce((sum,p)=>sum+p.value,0)/sessionPoints.length;
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · volume por sessão</span><strong>'+kg(personalRecordData.best.volume)+'</strong><small>'+dateLabel(best.date)+'</small></div><div class="personal-record"><span>Volume médio por sessão</span><strong>'+kg(average)+'</strong><small>Com base em '+sessionPoints.length+' sessões</small></div></div>';
+   }else if(metricType==='estimated1RM'){
+    const best=points.reduce((result,p)=>!result||p.value>result.value?p:result,null);
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+kg(personalRecordData.best.estimated1RM)+'</strong><small>'+dateLabel(best.date)+' · Fórmula de Epley</small></div></div><p class="evolution-intro">Estimativa matemática, não um teste de carga máxima.</p>';
    }else{
     const heaviest=points.filter(p=>Number.isFinite(p.value)&&p.value>0).reduce((best,p)=>!best||p.value>best.value?p:best,null);
     const mostReps=points.filter(p=>Number.isFinite(p.reps)&&p.reps>0).reduce((best,p)=>!best||p.reps>best.reps?p:best,null);
     const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.value*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
     personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · carga</span><strong>'+(heaviest?kg(personalRecordData.best.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Recorde pessoal · repetições</span><strong>'+(mostReps?personalRecordData.best.reps+' reps':'—')+'</strong><small>'+(mostReps?dateLabel(mostReps.date)+' · '+kg(mostReps.value):'Sem repetições registradas')+'</small></div><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+(estimated?kg(personalRecordData.best.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · fórmula de Epley':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
    }
-   const metricLabel=isTimed?'Maior duração':'Maior carga';
+   const metricLabel=isTimed?'Maior duração':metricType==='volume'?'Volume total da sessão':metricType==='estimated1RM'?'1RM estimado':'Maior carga';
    if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
-   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
+   details.innerHTML=personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':metricType==='volume'?' · volume da série':metricType==='estimated1RM'?' · 1RM estimado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Comparação entre as maiores '+metricPlural+' de duas sessões consecutivas: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'. Variação desde a primeira sessão: '+(overallDelta>0?'+':'')+formatMetric(Math.abs(overallDelta),metricType)+(overallDelta<0?' a menos':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',()=>{if(isCurrent())paint()});paint();
