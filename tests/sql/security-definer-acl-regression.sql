@@ -106,6 +106,21 @@ BEGIN
 END
 $$;
 
+-- A function created after the migration must not inherit anon/authenticated EXECUTE.
+CREATE FUNCTION public.__nexfit_acl_default_probe()
+RETURNS integer
+LANGUAGE sql
+AS $ SELECT 1 $;
+DO $
+BEGIN
+  IF has_function_privilege('anon', 'public.__nexfit_acl_default_probe()', 'EXECUTE')
+     OR has_function_privilege('authenticated', 'public.__nexfit_acl_default_probe()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'A newly created function inherited an unreviewed EXECUTE grant';
+  END IF;
+END
+$;
+DROP FUNCTION public.__nexfit_acl_default_probe();
+
 -- Confirm an authenticated session without a JWT subject fails closed at the function body.
 SET ROLE authenticated;
 SET request.jwt.claim.sub = '';
