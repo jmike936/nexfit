@@ -9,8 +9,9 @@ Estes scripts não fazem parte da sequência padrão de migrações. São corre�
 | `reconcile_recovered_workout_activity.sql` | `supabase-reconcile-recovered-workout-activity.sql` | Reconciliação de uma atividade histórica específica. |
 | `training_set_log_integrity_manual.sql` | `supabase-training-set-log-integrity.sql` | Remove duplicatas idênticas de séries e cria índice único; interrompe se encontrar divergências. |
 | `audit-rls-storage-readonly.sql` | Diagnóstico de segurança | Somente SELECT: inventário de RLS, policies, grants de funções SECURITY DEFINER, permissões de tabelas, buckets e triggers de Auth. |
+| `audit-security-definer-acl-readonly.sql` | Diagnóstico complementar de segurança | Somente SELECT: definições completas das funções SECURITY DEFINER, ACL explícita e efetiva, default privileges, grants em tabelas e presença do histórico de migrations. |
 
-`audit-rls-storage-readonly.sql` é a exceção: pode ser executado para diagnóstico porque contém somente consultas SELECT e não altera dados ou schema.
+Os arquivos `audit-rls-storage-readonly.sql` e `audit-security-definer-acl-readonly.sql` são exclusivamente diagnósticos: contêm somente consultas SELECT e não alteram dados, schema, funções ou permissões. O segundo pode retornar o texto integral de funções; revise/redija segredos hardcoded antes de compartilhar os resultados.
 
 Não aplicar os demais arquivos como parte de uma instalação nova. Antes de qualquer execução, fazer backup, revisar os identificadores e conferir a prévia. Não adaptar UUIDs ou filtros sem validar a propriedade dos registros.
 
