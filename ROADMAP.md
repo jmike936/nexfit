@@ -114,6 +114,8 @@ Atualizado em 24/11/2026.
 - [ ] Registrar RPE e/ou RIR opcional por série (com suporte offline e sincronização).
 - [ ] Calcular 1RM estimado (Epley/Brzycki) por exercício, exibindo que é uma estimativa.
 - [ ] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino.
+  - [x] Calcular e destacar recordes pessoais de carga, repetições, 1RM estimado (Epley) e duração na tela Evolução, identificando as séries que estabeleceram cada recorde.
+  - [ ] Exibir aviso de comemoração quando um novo recorde for alcançado ao concluir o treino.
 - [ ] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando o mapa do corpo.
 - [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
 - [ ] Detectar platô (sem progresso em N sessões) e sugerir ajuste ou deload.
