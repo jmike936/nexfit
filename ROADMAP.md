@@ -57,7 +57,7 @@ Atualizado em 24/11/2026.
 ## Prioridade 4 — Experiência e desempenho
 
 - [x] Melhorar a sugestão de carga durante o descanso.
-- [ ] Revisar transições entre séries, exercícios e descansos.
+- [x] Revisar transições entre séries, exercícios e descansos: avanço protegido contra callbacks duplicados/atrasados, validação da etapa ativa, encerramento consistente de timers e retomada idempotente do descanso.
 - [x] Diferenciar claramente as ações de pular descanso, não realizar uma série e pular um exercício: pular descanso deve apenas encerrar a pausa; não realizar série/pular exercício deve sempre solicitar confirmação explícita e informar o impacto no registro do treino.
 - [x] Exibir tela amigável de conclusão do treino com resumo, status de sincronização e próximos passos; continuar a substituição de mensagens nativas nas demais etapas.
 - [x] Pular automaticamente o descanso após a última série de cada exercício.
