@@ -67,9 +67,11 @@ Atualizado em 24/11/2026.
   - [x] Sem foto, exibir o ícone de perfil centralizado em avatar circular.
   - [x] Manter o toque no avatar direcionando à tela Perfil e aplicar recorte circular sem distorção.
   - [ ] Validar o acabamento visual em iPhone/iOS Safari e Android após a próxima publicação.
-- [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
+- [x] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
   - [x] Agrupar em lote as consultas de treinos e versões dos programas ativos e modelos públicos; gravar o cache offline uma vez por renderização.
-  - [ ] Revisar consultas restantes do gerenciador e histórico para eliminar N+1 sem alterar regras de acesso.
+  - [x] Revisar consultas restantes do gerenciador e histórico para eliminar N+1 sem alterar regras de acesso.
+    - [x] Histórico: selecionar somente os campos usados e indexar séries em memória, sem buscas repetidas por série.
+    - [x] Gerenciador: adiar a consulta dos treinos de gerenciamento e dos acessos/notificações até o usuário abrir os respectivos painéis recolhidos; buscar notificações e acessos em paralelo.
   - [x] Histórico: reduzir colunas retornadas nas consultas de sessões, exercícios e séries; evitar consultas `.in()` vazias e indexar séries por exercício/número para eliminar buscas repetidas durante a renderização.
 
 ## Prioridade 5 — Comunicação e orientação visual
