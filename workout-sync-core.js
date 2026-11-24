@@ -61,6 +61,18 @@
  function removePendingCancellation(pending,sessionId,userId){
   return (Array.isArray(pending)?pending:[]).filter(item=>!(item?.sessionId===sessionId&&(!userId||item?.userId===userId)));
  }
+ function createOnce(operation){
+  if(typeof operation!=='function')throw new Error('A transição exige uma operação válida.');
+  let called=false;
+  return (...args)=>{
+   if(called)return false;
+   called=true;
+   return operation(...args);
+  };
+ }
+ function isCurrentWorkoutStep(plan,index,item){
+  return Array.isArray(plan)&&Number.isInteger(index)&&index>=0&&plan[index]===item;
+ }
  function createSyncCoordinator(){
   const pending=new Map();
   return {
@@ -113,5 +125,5 @@
   if(!activityId)return {ok:false,reason:'activity_missing_id'};
   return {ok:true,completed:true,activityId,activityPayload};
  }
-  return {mergeSetLogs,isOwnedSessionSnapshot,buildSessionPayload,buildSetLogPayloads,buildCompletedActivityPayload,queueCancellation,removePendingCancellation,createSyncCoordinator,syncWorkoutSnapshot};
+  return {mergeSetLogs,isOwnedSessionSnapshot,buildSessionPayload,buildSetLogPayloads,buildCompletedActivityPayload,queueCancellation,removePendingCancellation,createOnce,isCurrentWorkoutStep,createSyncCoordinator,syncWorkoutSnapshot};
 });
