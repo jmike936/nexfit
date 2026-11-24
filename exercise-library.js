@@ -10,16 +10,16 @@ const EXERCISE_ACRONYMS=new Map([['hiit','HIIT'],['trx','TRX'],['wod','WOD'],['1
 function formatExerciseName(value){
  const original=String(value??'').trim();
  if(!original||original!==original.toLocaleUpperCase('pt-BR')||!/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(original))return original;
- const words=original.toLocaleLowerCase('pt-BR').split(/(\\s+)/);
+ const words=original.toLocaleLowerCase('pt-BR').split(/(\s+)/);
  let first=true;
  return words.map(word=>{
-  if(/^\\s+$/.test(word))return word;
-  const key=word.replace(/^[^\\p{L}\\p{N}]|[^\\p{L}\\p{N}]$/gu,'');
+  if(/^\s+$/.test(word))return word;
+  const key=word.replace(/^[^\p{L}\p{N}]|[^\p{L}\p{N}]$/gu,'');
   const acronym=EXERCISE_ACRONYMS.get(key);
   if(acronym){first=false;return word.replace(key,acronym)}
   if(!first&&SMALL_NAME_WORDS.has(key)){return word}
   first=false;
-  return word.replace(/(^|[^\\p{L}\\p{N}])([\\p{L}])/gu,(_,prefix,letter)=>prefix+letter.toLocaleUpperCase('pt-BR'));
+  return word.replace(/(^|[^\p{L}\p{N}])([\p{L}])/gu,(_,prefix,letter)=>prefix+letter.toLocaleUpperCase('pt-BR'));
  }).join('');
 }
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
