@@ -74,7 +74,20 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- Default ACLs for postgres must no longer grant function execution implicitly.
+  -- Global defaults must not grant PUBLIC EXECUTE; schema defaults must not grant anon/authenticated.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) acl
+    WHERE d.defaclrole = 'postgres'::regrole
+      AND d.defaclnamespace = 0
+      AND d.defaclobjtype = 'f'
+      AND acl.grantee = 0
+      AND acl.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'postgres global default privileges still grant function EXECUTE to PUBLIC';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM pg_default_acl d
@@ -87,6 +100,20 @@ BEGIN
       AND acl.privilege_type = 'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'postgres default privileges still grant function EXECUTE to anon/authenticated';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_roles r
+    JOIN pg_default_acl d ON d.defaclrole = r.oid
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) acl
+    WHERE r.rolname = 'supabase_admin'
+      AND d.defaclnamespace = 0
+      AND d.defaclobjtype = 'f'
+      AND acl.grantee = 0
+      AND acl.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'supabase_admin global default privileges still grant function EXECUTE to PUBLIC';
   END IF;
 
   IF EXISTS (
