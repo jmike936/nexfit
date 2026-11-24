@@ -70,6 +70,7 @@ Atualizado em 24/11/2026.
 - [ ] Reduzir consultas e renderizações desnecessárias (consulta de exercícios e sessões do gerenciador agrupada para evitar N+1).
   - [x] Agrupar em lote as consultas de treinos e versões dos programas ativos e modelos públicos; gravar o cache offline uma vez por renderização.
   - [ ] Revisar consultas restantes do gerenciador e histórico para eliminar N+1 sem alterar regras de acesso.
+  - [x] Histórico: reduzir colunas retornadas nas consultas de sessões, exercícios e séries; evitar consultas `.in()` vazias e indexar séries por exercício/número para eliminar buscas repetidas durante a renderização.
 
 ## Prioridade 5 — Comunicação e orientação visual
 - [ ] Substituir gradualmente alertas, confirmações e prompts nativos restantes por mensagens, diálogos e telas amigáveis consistentes em todas as áreas do aplicativo.

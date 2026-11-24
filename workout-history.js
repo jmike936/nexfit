@@ -11,16 +11,16 @@ async function findSession(activity,expectedUserId,expectedDb,isCurrent){
  const dbx=expectedDb,tag=(activity.notes||'').match(/\[NEXFIT_SESSION:([a-f0-9-]+)\]/i);
  if(!dbx||!expectedUserId||!isCurrent())return null;
  if(tag){
-  const direct=await dbx.from('training_sessions').select('*').eq('id',tag[1]).eq('athlete_id',expectedUserId).maybeSingle();
+  const direct=await dbx.from('training_sessions').select('id,athlete_id,program_id,subworkout_id,started_at,finished_at').eq('id',tag[1]).eq('athlete_id',expectedUserId).maybeSingle();
   if(!isCurrent())return null;
   if(direct.data?.athlete_id===expectedUserId)return direct.data;
  }
- const q=await dbx.from('training_sessions').select('*').eq('athlete_id',expectedUserId).eq('status','completed').order('started_at',{ascending:false}).limit(300);
+ const q=await dbx.from('training_sessions').select('id,athlete_id,program_id,subworkout_id,started_at,finished_at').eq('athlete_id',expectedUserId).eq('status','completed').order('started_at',{ascending:false}).limit(300);
  if(!isCurrent()||q.error||!q.data?.length)return null;
  const sessions=q.data,programIds=[...new Set(sessions.map(x=>x.program_id).filter(Boolean))],subIds=[...new Set(sessions.map(x=>x.subworkout_id).filter(Boolean))];
  const [programs,subs]=await Promise.all([
-  dbx.from('training_programs').select('id,title').in('id',programIds),
-  dbx.from('training_subworkouts').select('id,title').in('id',subIds)
+  programIds.length?dbx.from('training_programs').select('id,title').in('id',programIds):Promise.resolve({data:[],error:null}),
+  subIds.length?dbx.from('training_subworkouts').select('id,title').in('id',subIds):Promise.resolve({data:[],error:null})
  ]);
  if(!isCurrent())return null;
  const pMap=new Map((programs.data||[]).map(x=>[x.id,x.title])),sMap=new Map((subs.data||[]).map(x=>[x.id,x.title]));
@@ -51,13 +51,14 @@ async function show(id,editing=false){
  const [p,s,ex,logs]=await Promise.all([
   dbx.from('training_programs').select('title').eq('id',session.program_id),
   dbx.from('training_subworkouts').select('title').eq('id',session.subworkout_id),
-  dbx.from('training_exercises').select('*').eq('subworkout_id',session.subworkout_id).order('position'),
-  dbx.from('training_set_logs').select('*').eq('session_id',session.id)
+  dbx.from('training_exercises').select('id,name,sets,rest_seconds,position').eq('subworkout_id',session.subworkout_id).order('position'),
+  dbx.from('training_set_logs').select('exercise_id,set_number,reps_completed,load_kg,duration_seconds').eq('session_id',session.id)
  ]);
  if(!isCurrent())return;
  if(ex.error||logs.error){m.querySelector('#whBody').textContent=(ex.error||logs.error).message;return}
  m.querySelector('#whTitle').textContent=(s.data?.[0]?.title||'Treino')+' · '+(p.data?.[0]?.title||'Programa');
- const entries=[];const groups=(ex.data||[]).map(e=>{const rows=(e.sets||[]).map((plan,i)=>{const no=i+1,log=(logs.data||[]).find(z=>z.exercise_id===e.id&&Number(z.set_number)===no)||null,key=e.id+'_'+no,entry={exercise:e,plan,index:i,log,key};entries.push(entry);
+ const logBySet=new Map((logs.data||[]).map(log=>[String(log.exercise_id)+'_'+Number(log.set_number),log]));
+ const entries=[];const groups=(ex.data||[]).map(e=>{const rows=(e.sets||[]).map((plan,i)=>{const no=i+1,log=logBySet.get(String(e.id)+'_'+no)||null,key=e.id+'_'+no,entry={exercise:e,plan,index:i,log,key};entries.push(entry);
  const timed=plan.mode&&plan.mode!=='reps';
  if(editing)return '<div style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #354454"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-wh-done="'+key+'" '+(log?'checked':'')+'> Executada</label>'+(timed?'<input type="number" min="1" max="86400" data-wh-duration="'+key+'" value="'+(log?.duration_seconds??'')+'" placeholder="Tempo realizado (segundos)">':'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input type="number" min="1" data-wh-reps="'+key+'" value="'+(log?.reps_completed??'')+'" placeholder="Repetições"><input type="number" min="0" step="0.25" data-wh-load="'+key+'" value="'+(log?.load_kg??'')+'" placeholder="Carga kg"></div>')+'<small style="grid-column:1/-1;color:#91a0af">Série '+no+' · previsto '+(timed?(plan.mode==='countdown'?Math.floor((plan.target_seconds||0)/60)+':'+String((plan.target_seconds||0)%60).padStart(2,'0')+' alvo':'Cronômetro livre'):(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':''))+'</small></div>';
  return '<div style="padding:10px 0;border-top:1px solid #354454"><strong>Série '+no+'</strong> · '+(log?'<span style="color:#b7f34a">Executada</span>':'<span style="color:#91a0af">Não executada</span>')+'<div style="color:#91a0af">Previsto: '+(timed?(plan.mode==='countdown'?plan.target_seconds+' s':'Cronômetro livre'):(plan.reps==='MR'?'MR':plan.reps+' reps')+(plan.load_kg!=null?' · '+plan.load_kg+' kg':''))+' · descanso '+(e.rest_seconds||0)+' s</div>'+(log?'<div>Realizado: '+(timed?((Math.floor((Number(log.duration_seconds)||0)/60))+':'+String((Number(log.duration_seconds)||0)%60).padStart(2,'0')):(log.reps_completed??'—')+' reps'+(log.load_kg!=null?' · '+log.load_kg+' kg':''))+'</div>':'')+'</div>'}).join('');return '<section style="margin:14px 0;padding:14px;background:#202b37;border:1px solid #354454;border-radius:12px"><h3>'+esc(normalizeHumanText(e.name))+'</h3>'+rows+'</section>'}).join('');
