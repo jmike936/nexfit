@@ -77,32 +77,36 @@ begin
 end;
 $function$;
 
--- 2) Restrict all audited SECURITY DEFINER RPCs to authenticated/service_role.
--- Explicitly revoke both direct anon grants and PUBLIC grants; revoking PUBLIC alone
--- does not remove a separate grant to the anon role.
-revoke execute on function public.activate_workout_plan(uuid) from public, anon;
-revoke execute on function public.can_access_workout_plan(uuid, boolean) from public, anon;
-revoke execute on function public.nexfit_can_manage_program(uuid) from public, anon;
-revoke execute on function public.nexfit_can_read_program(uuid) from public, anon;
-revoke execute on function public.nexfit_confirm_program_version(uuid) from public, anon;
-revoke execute on function public.nexfit_copy_public_program(uuid) from public, anon;
-revoke execute on function public.nexfit_create_own_program(text, text, text) from public, anon;
-revoke execute on function public.nexfit_create_program_for_athlete(text, text, text) from public, anon;
-revoke execute on function public.nexfit_is_admin() from public, anon;
-revoke execute on function public.nexfit_request_access_by_email(text) from public, anon;
-revoke execute on function public.share_workout_by_email(uuid, text, text) from public, anon;
-
-grant execute on function public.activate_workout_plan(uuid) to authenticated, service_role;
-grant execute on function public.can_access_workout_plan(uuid, boolean) to authenticated, service_role;
-grant execute on function public.nexfit_can_manage_program(uuid) to authenticated, service_role;
-grant execute on function public.nexfit_can_read_program(uuid) to authenticated, service_role;
-grant execute on function public.nexfit_confirm_program_version(uuid) to authenticated, service_role;
-grant execute on function public.nexfit_copy_public_program(uuid) to authenticated, service_role;
-grant execute on function public.nexfit_create_own_program(text, text, text) to authenticated, service_role;
-grant execute on function public.nexfit_create_program_for_athlete(text, text, text) to authenticated, service_role;
-grant execute on function public.nexfit_is_admin() to authenticated, service_role;
-grant execute on function public.nexfit_request_access_by_email(text) to authenticated, service_role;
-grant execute on function public.share_workout_by_email(uuid, text, text) to authenticated, service_role;
+-- 2) Restrict every audited SECURITY DEFINER RPC that exists in this database.
+-- A few legacy workout RPCs exist in the production database but are intentionally
+-- absent from the clean-install migration chain; to_regprocedure keeps fresh installs
+-- idempotent while still hardening those functions when present.
+do $$
+declare
+  function_signature text;
+  function_oid regprocedure;
+begin
+  foreach function_signature in array array[
+    'public.activate_workout_plan(uuid)',
+    'public.can_access_workout_plan(uuid,boolean)',
+    'public.nexfit_can_manage_program(uuid)',
+    'public.nexfit_can_read_program(uuid)',
+    'public.nexfit_confirm_program_version(uuid)',
+    'public.nexfit_copy_public_program(uuid)',
+    'public.nexfit_create_own_program(text,text,text)',
+    'public.nexfit_create_program_for_athlete(text,text,text)',
+    'public.nexfit_is_admin()',
+    'public.nexfit_request_access_by_email(text)',
+    'public.share_workout_by_email(uuid,text,text)'
+  ] loop
+    function_oid := to_regprocedure(function_signature);
+    if function_oid is not null then
+      execute format('revoke execute on function %s from public, anon', function_oid);
+      execute format('grant execute on function %s to authenticated, service_role', function_oid);
+    end if;
+  end loop;
+end
+$$;
 
 -- 3) The audit showed no anon-specific RLS policies that return useful data:
 -- the public-role policies are all bound to auth.uid(), which is NULL for anon.
