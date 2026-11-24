@@ -590,6 +590,10 @@
      section.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>decideAccess(b.dataset.reject,false));
     }
     professionalPanelLoaded=true;
+   }catch(error){
+    if(!isSameAccount())return;
+    if($('notifications'))$('notifications').textContent='Não foi possível carregar notificações.';
+    if($('accessList'))$('accessList').textContent='Não foi possível carregar os acessos profissionais.';
    }finally{professionalPanelLoading=false}
   };
   professionalDetails?.addEventListener('toggle',()=>{if(professionalDetails.open)loadProfessionalPanel()});
