@@ -104,7 +104,7 @@ create table if not exists public.training_exercise_catalog_movement_patterns (
 create index if not exists training_exercise_catalog_movement_patterns_pattern_idx
   on public.training_exercise_catalog_movement_patterns (movement_pattern_id, catalog_exercise_id);
 
--- Vocabulários controlados. ON CONFLICT preserva IDs e nomes já existentes.
+-- Vocabulários controlados. ON CONFLICT preserva IDs existentes e sincroniza os nomes com esta migration.
 insert into public.training_exercise_groups (code, name) values
   ('peito', 'Peito'),
   ('costas', 'Costas'),
