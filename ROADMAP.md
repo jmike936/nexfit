@@ -28,7 +28,7 @@ Atualizado em 25/11/2026.
 - [ ] Migrar as URLs do Supabase para caminhos próprios (`/assets/exercises/...`) somente após os binários estarem versionados e validados.
 - [x] Preparar a Biblioteca para aceitar imagens HTTPS legadas e caminhos locais seguros, mantendo cache offline; incluir WebP no cache do Service Worker.
 
-Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença declarada CC0-1.0. O inventário do Supabase foi recebido; o transporte dos arquivos binários ainda precisa ser concluído antes da migração das URLs.
+Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença CC0-1.0. Inventário de URLs do Supabase recebido; transporte dos binários aguarda o arquivo ZIP de origem. O suporte do app a caminhos locais foi integrado na PR #275 e publicado em produção.
 
 ## Benchmark externo — Biblioteca SmartWorkout
 
@@ -44,9 +44,11 @@ A página apresenta uma biblioteca com mais de 1.000 exercícios e destaca:
 Diretriz para o NEXFIT: usar essas funcionalidades como referência de produto, sem copiar vídeos, textos, imagens ou banco de dados de terceiros. Priorizar conteúdo próprio/licenciado e manter catálogo, identidade canônica, RLS e cache offline já existentes.
 
 Evolução planejada da Biblioteca NEXFIT:
-- [ ] Auditar cobertura atual do catálogo por grupo muscular, equipamento e modalidade; identificar lacunas e duplicidades. Consulta somente leitura preparada em `supabase/operations/audit-exercise-catalog-taxonomy-readonly.sql`; aguarda execução no DBeaver e revisão dos resultados.
-- [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).\n- [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.\n- [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
-- [ ] Adicionar ao modelo de orientação campos estruturados para erros comuns, dicas de execução, músculos estabilizadores e requisitos de equipamento; preservar compatibilidade com registros existentes.
+- [x] Auditar a cobertura do catálogo por grupo, modalidade, equipamento e padrão; consulta no DBeaver confirmou cobertura estrutural de 197/197 exercícios nas quatro dimensões, sem vínculos inválidos (25/11/2026).
+- [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).
+- [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.
+- [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
+- [ ] Implementar o modelo estruturado de orientação (erros comuns, dicas, estabilizadores e observações de segurança) conforme `docs/propostas/orientacao-estruturada-exercicios.md`; reutilizar a taxonomia de equipamento, sem duplicá-la.
 - [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
 - [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
 - [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
@@ -110,26 +112,30 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Histórico: reduzir colunas retornadas nas consultas de sessões, exercícios e séries; evitar consultas `.in()` vazias e indexar séries por exercício/número para eliminar buscas repetidas durante a renderização.
 
 ## Prioridade 5 — Comunicação e orientação visual
-- [x] Substituir alertas, confirmações e prompts nativos por mensagens e diálogos consistentes em todas as áreas do aplicativo. Exceção intencional: `promptEvent.prompt()` permanece para acionar a API nativa de instalação PWA do navegador, não sendo um diálogo de alerta/entrada do app.\n  - [x] Metas: substituir alertas por mensagens consistentes e trocar prompt/confirm nativos por diálogo acessível para atualizar progresso e excluir metas.\n  - [x] Histórico: substituir prompt/confirm nativos na edição e exclusão de atividades por diálogos próprios, mantendo a validação de data, duração e observações.\n  - [x] Registro de atividades e perfil: substituir alertas de validação/erro e o prompt de edição do nome por feedback e diálogos do próprio app; manter o prompt de instalação nativo do navegador, que é uma API específica da PWA.
+- [x] Substituir alertas, confirmações e prompts nativos por mensagens e diálogos consistentes em todas as áreas do aplicativo. Exceção intencional: `promptEvent.prompt()` permanece para acionar a API nativa de instalação PWA do navegador, não sendo um diálogo de alerta/entrada do app.
+  - [x] Metas: substituir alertas por mensagens consistentes e trocar prompt/confirm nativos por diálogo acessível para atualizar progresso e excluir metas.
+  - [x] Histórico: substituir prompt/confirm nativos na edição e exclusão de atividades por diálogos próprios, mantendo a validação de data, duração e observações.
+  - [x] Registro de atividades e perfil: substituir alertas de validação/erro e o prompt de edição do nome por feedback e diálogos do próprio app; manter o prompt de instalação nativo do navegador, que é uma API específica da PWA.
 - [x] Criar uma Biblioteca de Exercícios, acessível em área própria e fácil de encontrar, para consulta por atletas e personais.
   - [x] Organizar a biblioteca por nome e grupo muscular, com busca e filtros.
   - [ ] Completar a cobertura de orientações objetivas para todos os exercícios; a interface já apresenta instruções e referências visuais quando disponíveis, com fallback para itens sem material.
     - [x] Auditar estaticamente o modelo e as migrações do catálogo; preparar diagnóstico somente leitura para medir a cobertura real no Supabase.
     - [x] Executar a auditoria somente leitura do catálogo no DBeaver e revisar os resultados reais; catálogo com 197 exercícios, 197 instruções de execução preenchidas e 361/361 exercícios de fichas vinculados a IDs canônicos.
     - [x] Criar e revisar instruções originais em português para todos os 197 exercícios ativos; confirmar cobertura de 197/197, sem alterar os campos históricos de `training_exercises`.
-    - [ ] Revisar a categoria canônica de exercícios com classificação ambígua no seed (ex.: Agachamento sumô aparece em Quadríceps e Glúteos).
+    - [ ] Auditar os valores legados de `category` contra o grupo principal estruturado; tratar divergências com revisão conservadora, sem alterar grupos ou músculos automaticamente.
     - [x] Definir a taxonomia estruturada de grupo de treino, modalidade, equipamento e padrão de movimento, com vocabulários controlados e arquitetura aditiva; preservar `category` e os campos de músculos.
     - [x] Auditar RLS, políticas, grants e default privileges reais do catálogo; manter leitura autenticada e negar acesso `anon` nas novas tabelas.
     - [x] Preparar migration, rollback e auditoria somente leitura em PR #271; concessões explícitas para `anon`, `authenticated` e `service_role`.
     - [x] Revisar e integrar a PR #271 após smoke test PostgreSQL: 22 migrations aplicadas e reaplicadas, RLS, grants, vocabulários, FKs e papéis de equipamento verificados em CI.
-    - [ ] Aplicar a migration em projeto Supabase de homologação e executar `supabase/operations/verify-exercise-catalog-taxonomy-readonly.sql`; não aplicar em produção nesta etapa.
+    - [x] Aplicar a migration de taxonomia e executar o verifier read-only no Supabase; RLS, policies, grants, vocabulários e FKs aprovados.
     - [x] Consolidar proposta técnica para os 197 exercícios por UUID; 124 classificações de alta confiança, 70 médias e 3 baixas; 4 equipamentos permanecem sem vínculo por evidência insuficiente.
     - [x] Separar implementos alternativos de acessórios no modelo de equipamento e acrescentar os padrões Protração e o equipamento Wrist roller.
-    - [ ] Validar as 3 classificações de baixa confiança e os 4 equipamentos pendentes antes da carga idempotente dos vínculos.
+    - [x] Revisar as classificações de confiança média/baixa e resolver os quatro equipamentos inicialmente pendentes com evidência das instruções; cobertura final de equipamento 197/197.
     - [x] Integrar a leitura da taxonomia na Biblioteca de Exercícios com filtros por grupo, modalidade, equipamento e padrão de movimento; fallback automático para `category` quando as tabelas/vínculos ainda não estiverem disponíveis; PR #272 aprovada no CI e integrada no build 1.4.6.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
     - [ ] Internalizar as imagens demonstrativas no repositório GitHub do NEXFIT para eliminar dependência de hospedagem externa: inventariar URLs e arquivos atuais, verificar licença/atribuição e autorização de redistribuição, baixar apenas ativos permitidos para diretório versionado (ex.: `assets/exercises/`), padronizar nomes/formato/tamanho, atualizar `demonstration_image_url` e `demonstration_end_image_url` para caminhos próprios estáveis, preservar créditos e origem em manifesto, validar integridade/arquivos ausentes no CI e testar carregamento online/offline. Não copiar imagens sem licença compatível; substituir por material próprio ou licenciado quando necessário. Considerar Git LFS apenas se o volume/tamanho justificar.
-  - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.\n  - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
+  - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
+  - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
   - [x] Reutilizar o ID canônico do catálogo e o mesmo cache de imagens na biblioteca e durante a execução, sem criar registros ou cópias de arquivos de imagem.
 - [x] Simplificar a tela durante a execução do treino: não exibir a imagem de execução permanentemente junto ao exercício.
