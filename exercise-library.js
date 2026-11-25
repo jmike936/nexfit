@@ -23,7 +23,7 @@ function formatExerciseName(value){
  }).join('');
 }
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const safeImageUrl=value=>{try{const url=new URL(String(value||''));return url.protocol==='https:'?url.href:''}catch(_){return ''}};
+const safeImageUrl=value=>{try{const raw=String(value||'').trim();if(!raw)return '';const url=new URL(raw,window.location.origin);if(url.protocol==='https:')return url.href;if(url.origin===window.location.origin&&url.pathname.startsWith('/assets/exercises/')&&!url.pathname.split('/').includes('..'))return url.href;return ''}catch(_){return ''}};
 function cacheKey(){return CACHE_KEY_PREFIX+activeUserId}
 function readCache(){try{const raw=localStorage.getItem(cacheKey());if(!raw)return null;const parsed=JSON.parse(raw);return Array.isArray(parsed.items)?parsed.items:null}catch(_){return null}}
 function writeCache(data){try{localStorage.setItem(cacheKey(),JSON.stringify({savedAt:new Date().toISOString(),items:data}))}catch(error){console.warn('[NEXFIT] Biblioteca: cache local indisponível',error)}}
