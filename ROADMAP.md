@@ -113,7 +113,9 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Auditar RLS, políticas, grants e default privileges reais do catálogo; manter leitura autenticada e negar acesso `anon` nas novas tabelas.
     - [x] Preparar migration, rollback e auditoria somente leitura em PR #271; concessões explícitas para `anon`, `authenticated` e `service_role`.
     - [ ] Revisar/validar a PR #271 e aplicar primeiro em ambiente de teste; executar verificações de estrutura, RLS e privilégios antes de qualquer aplicação no Supabase real.
-    - [ ] Concluir a matriz técnica dos 197 exercícios por UUID, registrar confiança e ambiguidades e só então preparar carga idempotente dos vínculos.
+    - [x] Consolidar proposta técnica para os 197 exercícios por UUID; 124 classificações de alta confiança, 70 médias e 3 baixas; 4 equipamentos permanecem sem vínculo por evidência insuficiente.
+    - [x] Separar implementos alternativos de acessórios no modelo de equipamento e acrescentar os padrões Protração e o equipamento Wrist roller.
+    - [ ] Validar as 3 classificações de baixa confiança e os 4 equipamentos pendentes antes da carga idempotente dos vínculos.
     - [ ] Integrar a leitura da taxonomia no frontend com fallback para `category`; não remover campos legados.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
