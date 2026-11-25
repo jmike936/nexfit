@@ -9,7 +9,7 @@ Separar grupo de treino, modalidade, equipamento e padrão de movimento. Preserv
 |---|---|---|---|
 | Grupo de treino | `training_exercise_groups` | `training_exercise_catalog_groups` | N:N; no máximo um principal |
 | Modalidade | `training_exercise_modalities` | `training_exercise_catalog_modalities` | N:N |
-| Equipamento | `training_exercise_equipment` | `training_exercise_catalog_equipment` | N:N; no máximo um principal, acessórios permitidos |
+| Equipamento | `training_exercise_equipment` | `training_exercise_catalog_equipment` | N:N; papéis principal, acessório ou alternativa; no máximo um principal |
 | Padrão de movimento | `training_movement_patterns` | `training_exercise_catalog_movement_patterns` | N:N |
 
 Referências usam UUID, código estável único, nome, ativação lógica e data de criação. Relacionamentos usam FKs com `ON DELETE RESTRICT` e chave primária composta.
@@ -20,9 +20,9 @@ Referências usam UUID, código estável único, nome, ativação lógica e data
 
 **Modalidades:** Musculação, Cardio, Funcional, Mobilidade e Alongamento. Pliometria não é modalidade; quando aplicável, usar padrão Saltar.
 
-**Equipamentos:** Peso corporal, Halteres, Barra, Barra W, Kettlebell, Polia, Máquina, Smith, Elástico/miniband, Banco e apoios, Bola suíça, Roda abdominal, Barra fixa, Paralelas, Corda naval, Corda de pular, Esteira, Bicicleta ergométrica, Elíptico, Escada ergométrica, Remo ergométrico, Caixa/step e Medicine ball.
+**Equipamentos:** Peso corporal, Halteres, Barra, Barra W, Kettlebell, Polia, Máquina, Smith, Elástico/miniband, Banco e apoios, Bola suíça, Roda abdominal, Barra fixa, Paralelas, Corda naval, Corda de pular, Esteira, Bicicleta ergométrica, Elíptico, Escada ergométrica, Remo ergométrico, Caixa/step, Medicine ball e Wrist roller.
 
-Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registrados como papel `accessory`, sem explodir o vocabulário. Equipamentos específicos de máquina podem receber detalhe complementar em etapa posterior.
+Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registrados em `accessories` na curadoria, sem criar categorias de equipamento artificiais. No relacionamento de equipamento, `accessory` representa apoios/itens complementares catalogados (ex.: Banco e apoios). `alternative` representa implementos substitutos para a mesma execução (ex.: halter OU kettlebell), sem afirmar que um seja acessório. Equipamentos específicos de máquina podem receber detalhe complementar em etapa posterior.
 
 **Padrões:** Agachar, Avançar, Hinge/dobrar quadril, Empurrar horizontal, Empurrar vertical, Puxar horizontal, Puxar vertical, Abdução, Adução, Flexão, Extensão, Rotação, Anti-rotação, Estabilização, Locomoção, Carregar, Saltar, Arremessar e Transição ao solo/em pé.
 
@@ -32,10 +32,12 @@ Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registra
 3. Modalidades múltiplas somente quando a execução justificar.
 4. Exercícios resistidos convencionais podem ser apenas Musculação.
 5. Equipamento deve ser comprovado pelo nome/instruções.
-6. Acessórios de polia ficam como `accessory`; Polia continua sendo o equipamento.
-7. Padrões múltiplos somente quando biomecanicamente relevantes.
-8. Evidência insuficiente fica pendente, sem suposição.
-9. Não alterar UUIDs, nomes, categoria, músculos, instruções, imagens, `training_exercises`, `identity_id`, sessões ou séries.
+6. Acessórios de polia ficam descritos como acessórios de execução; Polia continua sendo o equipamento principal.
+7. Implementos substitutos ficam como `alternative`; não os classificar como acessórios.
+8. Apoios necessários ficam como `accessory` quando estiverem no vocabulário.
+9. Padrões múltiplos somente quando biomecanicamente relevantes.
+10. Evidência insuficiente fica pendente, sem suposição.
+11. Não alterar UUIDs, nomes, categoria, músculos, instruções, imagens, `training_exercises`, `identity_id`, sessões ou séries.
 
 ## Segurança e compatibilidade
 - RLS habilitada nas oito tabelas.
