@@ -39,10 +39,10 @@ Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registra
 
 ## Segurança e compatibilidade
 - RLS habilitada nas oito tabelas.
-- `anon` não recebe privilégios nas oito tabelas, inclusive quando os default privileges do owner concedem acesso amplo.
+- `PUBLIC` e `anon` não recebem privilégios nas oito tabelas, inclusive quando os default privileges do owner concedem acesso amplo.
 - `authenticated` recebe somente SELECT e não recebe INSERT/UPDATE/DELETE.
 - `service_role` recebe privilégios administrativos explicitamente; no Supabase, esse papel tem bypass de RLS e nunca deve ser exposto no cliente.
-- A migration revoga explicitamente privilégios de `anon` e `authenticated` antes de conceder SELECT; não depende dos default privileges do owner.
+- A migration revoga explicitamente privilégios de `PUBLIC`, `anon` e `authenticated` antes de conceder SELECT; não depende dos default privileges do owner.
 - Curadoria e carga são operações administrativas controladas, executadas no backend confiável ou por sessão administrativa.
 - `category` permanece como fallback legado até a leitura no frontend ser validada.
 - Nenhuma alteração nas tabelas históricas e nenhum backfill nesta migration.
