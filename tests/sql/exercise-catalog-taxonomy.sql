@@ -55,14 +55,14 @@ BEGIN
 
   IF (SELECT count(*) FROM pg_policies
       WHERE schemaname='public' AND tablename = ANY(expected_tables)
-        AND cmd='SELECT' AND roles=ARRAY['authenticated']) <> 8 THEN
+        AND cmd='SELECT' AND roles::text[]=ARRAY['authenticated']) <> 8 THEN
     RAISE EXCEPTION 'Expected exactly eight authenticated SELECT policies for taxonomy tables';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname='public' AND tablename = ANY(expected_tables)
-      AND (cmd <> 'SELECT' OR roles <> ARRAY['authenticated'])
+      AND (cmd <> 'SELECT' OR roles::text[] <> ARRAY['authenticated'])
   ) THEN
     RAISE EXCEPTION 'Unexpected write or non-authenticated policy found on taxonomy tables';
   END IF;
