@@ -36,7 +36,7 @@ Diretriz para o NEXFIT: usar essas funcionalidades como referência de produto, 
 
 Evolução planejada da Biblioteca NEXFIT:
 - [ ] Auditar cobertura atual do catálogo por grupo muscular, equipamento e modalidade; identificar lacunas e duplicidades. Consulta somente leitura preparada em `supabase/operations/audit-exercise-catalog-taxonomy-readonly.sql`; aguarda execução no DBeaver e revisão dos resultados.
-- [ ] Expandir filtros para equipamento, tipo de movimento e finalidade (força, hipertrofia, aquecimento/mobilidade), quando os metadados estiverem disponíveis.
+- [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).\n- [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.\n- [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
 - [ ] Adicionar ao modelo de orientação campos estruturados para erros comuns, dicas de execução, músculos estabilizadores e requisitos de equipamento; preservar compatibilidade com registros existentes.
 - [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
 - [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
@@ -119,7 +119,7 @@ Evolução planejada da Biblioteca NEXFIT:
     - [ ] Validar as 3 classificações de baixa confiança e os 4 equipamentos pendentes antes da carga idempotente dos vínculos.
     - [x] Integrar a leitura da taxonomia na Biblioteca de Exercícios com filtros por grupo, modalidade, equipamento e padrão de movimento; fallback automático para `category` quando as tabelas/vínculos ainda não estiverem disponíveis; PR #272 aprovada no CI e integrada no build 1.4.6.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
-  - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
+  - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.\n  - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
   - [x] Reutilizar o ID canônico do catálogo e o mesmo cache de imagens na biblioteca e durante a execução, sem criar registros ou cópias de arquivos de imagem.
 - [x] Simplificar a tela durante a execução do treino: não exibir a imagem de execução permanentemente junto ao exercício.
