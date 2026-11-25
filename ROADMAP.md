@@ -1,6 +1,6 @@
 # Roadmap NEXFIT
 
-Atualizado em 24/11/2026.
+Atualizado em 25/11/2026.
 
 ## Publicação e cota da Vercel
 
@@ -109,7 +109,12 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Executar a auditoria somente leitura do catálogo no DBeaver e revisar os resultados reais; catálogo com 197 exercícios, 197 instruções de execução preenchidas e 361/361 exercícios de fichas vinculados a IDs canônicos.
     - [x] Criar e revisar instruções originais em português para todos os 197 exercícios ativos; confirmar cobertura de 197/197, sem alterar os campos históricos de `training_exercises`.
     - [ ] Revisar a categoria canônica de exercícios com classificação ambígua no seed (ex.: Agachamento sumô aparece em Quadríceps e Glúteos).
-    - [ ] Definir taxonomia estruturada de equipamento, modalidade e padrão de movimento, incluindo valores controlados e filtros, antes de propor migration aditiva.
+    - [x] Definir a taxonomia estruturada de grupo de treino, modalidade, equipamento e padrão de movimento, com vocabulários controlados e arquitetura aditiva; preservar `category` e os campos de músculos.
+    - [x] Auditar RLS, políticas, grants e default privileges reais do catálogo; manter leitura autenticada e negar acesso `anon` nas novas tabelas.
+    - [x] Preparar migration, rollback e auditoria somente leitura em PR #271; concessões explícitas para `anon`, `authenticated` e `service_role`.
+    - [ ] Revisar/validar a PR #271 e aplicar primeiro em ambiente de teste; executar verificações de estrutura, RLS e privilégios antes de qualquer aplicação no Supabase real.
+    - [ ] Concluir a matriz técnica dos 197 exercícios por UUID, registrar confiança e ambiguidades e só então preparar carga idempotente dos vínculos.
+    - [ ] Integrar a leitura da taxonomia no frontend com fallback para `category`; não remover campos legados.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
