@@ -63,5 +63,7 @@ Antes da aplicação, executar `supabase/operations/audit-taxonomy-rls-readonly.
 - Migration: `supabase/migrations/20261125000100_exercise_catalog_taxonomy.sql`
 - Rollback: `supabase/operations/rollback-exercise-catalog-taxonomy.sql`
 - Verificação pós-migration: `supabase/operations/verify-exercise-catalog-taxonomy-readonly.sql`
+- Teste automatizado de regressão (RLS, grants, seed, FKs e vínculos vazios): `tests/sql/exercise-catalog-taxonomy.sql`.
+- CI PostgreSQL aplica e reaplica as 22 migrations; execução aprovada no PR #271.
 
 O rollback remove a estrutura e os vocabulários desta migration. Usar somente antes de a taxonomia ser preenchida ou consumida.
