@@ -216,7 +216,7 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 .exercise-library-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:6px 0 20px}
 .exercise-library-heading h1{font-size:clamp(23px,5vw,30px);line-height:1.15;margin:6px 0}
 .exercise-library-heading p{margin:0;color:var(--muted);font-size:13px}
-.exercise-library-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,210px);gap:10px;margin-bottom:12px}
+.exercise-library-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}\n.exercise-library-search{grid-column:1/-1}\n.exercise-library-tools select[hidden]{display:none}\n.exercise-library-taxonomy-summary{margin:0 0 12px;color:var(--muted);font-size:11px;line-height:1.5}
 .exercise-library-search{display:flex;align-items:center;gap:9px;min-width:0;padding:0 13px;background:#111922;border:1px solid var(--line);border-radius:13px;color:var(--muted)}
 .exercise-library-search>span{font-size:23px;line-height:1}
 .exercise-library-search input{width:100%;min-width:0;padding:12px 0;background:transparent;border:0;outline:none;color:var(--text);font:inherit;font-size:14px}
@@ -365,14 +365,14 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 <section class="page" id="history"><div class="card"><div class="sectionhead"><h2>Seu histórico</h2><button class="primary" onclick="openModal()">＋ Nova atividade</button></div><div id="allHistory"><div class="empty">Nenhuma atividade registrada ainda.</div></div></div></section>
 <section class="page exercise-library-page" id="exerciseLibraryPage">
 <div class="exercise-library-heading"><div><div class="eyebrow">CONSULTA DE MOVIMENTOS</div><h1>Biblioteca de exercícios</h1><p>Encontre orientações, músculos trabalhados e referências visuais.</p></div><button class="secondary" id="exerciseLibraryRefresh" type="button" aria-label="Atualizar biblioteca">↻</button></div>
-<div class="exercise-library-tools"><label class="exercise-library-search"><span aria-hidden="true">⌕</span><input id="exerciseLibrarySearch" type="search" placeholder="Buscar exercício ou músculo…" autocomplete="off"></label><select id="exerciseLibraryCategory" aria-label="Filtrar por grupo muscular"><option value="">Todos os grupos</option></select></div>
+<div class="exercise-library-tools"><label class="exercise-library-search"><span aria-hidden="true">⌕</span><input id="exerciseLibrarySearch" type="search" placeholder="Buscar exercício, músculo ou movimento…" autocomplete="off"></label><select id="exerciseLibraryCategory" aria-label="Filtrar por grupo"><option value="">Todos os grupos</option></select><select id="exerciseLibraryModality" aria-label="Filtrar por modalidade" hidden><option value="">Todas as modalidades</option></select><select id="exerciseLibraryEquipment" aria-label="Filtrar por equipamento" hidden><option value="">Todos os equipamentos</option></select><select id="exerciseLibraryPattern" aria-label="Filtrar por padrão de movimento" hidden><option value="">Todos os movimentos</option></select></div>
 <div class="exercise-library-meta"><span id="exerciseLibraryCount">0 exercícios</span><span id="exerciseLibrarySyncStatus" role="status" aria-live="polite">Aguardando biblioteca</span></div>
 <div class="exercise-library-results" id="exerciseLibraryResults"><div class="exercise-library-empty">Entre na biblioteca para carregar os exercícios.</div></div>
 <div class="exercise-library-modal" id="exerciseLibraryModal" hidden>
 <div class="exercise-library-dialog" role="dialog" aria-modal="true" aria-labelledby="exerciseLibraryDetailTitle">
 <div class="exercise-library-dialog-head"><div><span class="eyebrow" id="exerciseLibraryDetailCategory">EXERCÍCIO</span><h2 id="exerciseLibraryDetailTitle">Exercício</h2></div><button class="exercise-library-close" id="exerciseLibraryClose" type="button" aria-label="Fechar">×</button></div>
 <div class="exercise-library-images"><figure id="exerciseLibraryStartWrap" hidden><img id="exerciseLibraryStartImage" alt="Posição inicial do exercício"><figcaption>Posição inicial</figcaption></figure><figure id="exerciseLibraryEndWrap" hidden><img id="exerciseLibraryEndImage" alt="Posição final do exercício"><figcaption>Posição final</figcaption></figure><p id="exerciseLibraryImageFallback" hidden>Imagem ilustrativa ainda não disponível.</p></div>
-<div class="exercise-library-detail-block"><h3>Como executar</h3><p id="exerciseLibraryInstructions"></p></div>
+<div class="exercise-library-detail-block"><p class="exercise-library-taxonomy-summary" id="exerciseLibraryTaxonomySummary">Taxonomia estruturada ainda não disponível.</p><h3>Como executar</h3><p id="exerciseLibraryInstructions"></p></div>
 <div class="exercise-library-muscles"><div><small>Músculos principais</small><p id="exerciseLibraryDetailPrimary"></p></div><div><small>Músculos secundários</small><p id="exerciseLibraryDetailSecondary"></p></div></div>
 <p class="exercise-library-disclaimer">As imagens são referências visuais. Respeite sua capacidade e siga a orientação do profissional responsável.</p>
 </div></div>
