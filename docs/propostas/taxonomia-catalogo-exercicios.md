@@ -44,6 +44,8 @@ Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registra
 - `category` permanece como fallback legado até a leitura no frontend ser validada.
 - Nenhuma alteração nas tabelas históricas e nenhum backfill nesta migration.
 
+Antes da aplicação, executar também `supabase/operations/audit-taxonomy-rls-readonly.sql` para comparar RLS, políticas e privilégios atuais do catálogo com a configuração proposta.
+
 ## Sequência de implantação
 1. Aplicar a migration em ambiente de teste.
 2. Validar estrutura, constraints e RLS com identidades anon/authenticated.
