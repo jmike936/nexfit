@@ -99,6 +99,26 @@ function closeDetail(){
  activeItem=null;
  objectUrls.forEach(url=>URL.revokeObjectURL(url));objectUrls=[];
 }
+function renderGuidanceSections(item){
+ const host=$('exerciseLibraryGuidanceSections');if(!host)return;
+ host.innerHTML='';
+ const sections=[
+  {field:'execution_tips',title:'Dicas de execução'},
+  {field:'common_mistakes',title:'Erros comuns'},
+  {field:'stabilizer_muscles',title:'Músculos estabilizadores'},
+  {field:'safety_notes',title:'Cuidados importantes'}
+ ];
+ sections.forEach(section=>{
+  const values=Array.isArray(item[section.field])?item[section.field].filter(value=>typeof value==='string'&&value.trim()):[];
+  if(!values.length)return;
+  const block=document.createElement('section');block.className='exercise-library-guidance-section';
+  const heading=document.createElement('h3');heading.textContent=section.title;block.appendChild(heading);
+  const list=document.createElement('ul');
+  values.forEach(value=>{const entry=document.createElement('li');entry.textContent=value.trim();list.appendChild(entry)});
+  block.appendChild(list);host.appendChild(block);
+ });
+ host.hidden=host.childElementCount===0;
+}
 function openDetail(id){
  const item=items.find(entry=>String(entry.id)===String(id));if(!item)return;
  activeItem=item;const modal=$('exerciseLibraryModal');
@@ -113,6 +133,7 @@ function openDetail(id){
  const patternNames=taxonomyNames(item,'taxonomy_patterns');if(patternNames.length)taxonomyParts.push('Movimento: '+patternNames.join(', '));
  $('exerciseLibraryTaxonomySummary').textContent=taxonomyParts.join(' · ')||'Taxonomia estruturada ainda não disponível; exibindo a classificação legada.';
  $('exerciseLibraryInstructions').textContent=item.execution_instructions||'As instruções deste exercício ainda não foram cadastradas.';
+ renderGuidanceSections(item);
  const start=$('exerciseLibraryStartImage'),end=$('exerciseLibraryEndImage'),startWrap=$('exerciseLibraryStartWrap'),endWrap=$('exerciseLibraryEndWrap');
  start.src='';end.src='';start.hidden=!safeImageUrl(item.demonstration_image_url);end.hidden=!safeImageUrl(item.demonstration_end_image_url);
  startWrap.hidden=start.hidden;endWrap.hidden=end.hidden;
@@ -124,7 +145,7 @@ function openDetail(id){
 }
 async function fetchCatalog(){
  if(!db||!currentUser?.id)throw Error('Entre na sua conta para acessar a biblioteca.');
- let response=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles').eq('is_active',true).order('name');
+ let response=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles,execution_tips,common_mistakes,stabilizer_muscles,safety_notes').eq('is_active',true).order('name');
  if(response.error){
   if(/column .* does not exist|could not find .* column|schema cache/i.test(response.error.message||'')){
    const fallback=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,execution_instructions,primary_muscles').eq('is_active',true).order('name');
