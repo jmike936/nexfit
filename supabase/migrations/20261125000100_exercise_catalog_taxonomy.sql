@@ -194,8 +194,12 @@ begin
     'training_exercise_catalog_movement_patterns'
   ] loop
     execute format('alter table public.%I enable row level security', t);
+    -- Não depender de default privileges: o owner da migration pode variar.
+    -- Clientes autenticados recebem somente leitura; anon não recebe acesso.
     execute format('revoke all on table public.%I from anon, authenticated', t);
     execute format('grant select on table public.%I to authenticated', t);
+    -- Mantém acesso administrativo explícito para operações server-side do Supabase.
+    execute format('grant all on table public.%I to service_role', t);
     execute format('drop policy if exists %I on public.%I', t || '_authenticated_read', t);
     execute format(
       'create policy %I on public.%I for select to authenticated using (true)',
