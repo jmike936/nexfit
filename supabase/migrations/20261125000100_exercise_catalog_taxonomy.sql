@@ -82,7 +82,7 @@ create table if not exists public.training_exercise_catalog_equipment (
   created_at timestamptz not null default now(),
   primary key (catalog_exercise_id, equipment_id),
   constraint training_exercise_catalog_equipment_role_chk
-    check (equipment_role in ('primary', 'accessory'))
+    check (equipment_role in ('primary', 'accessory', 'alternative'))
 );
 
 create unique index if not exists training_exercise_catalog_equipment_one_primary_uidx
@@ -152,7 +152,8 @@ insert into public.training_exercise_equipment (code, name) values
   ('escada_ergometrica', 'Escada ergométrica'),
   ('remo_ergometrico', 'Remo ergométrico'),
   ('caixa_step', 'Caixa/step'),
-  ('medicine_ball', 'Medicine ball')
+  ('medicine_ball', 'Medicine ball'),
+  ('wrist_roller', 'Wrist roller')
 on conflict (code) do update set name = excluded.name;
 
 insert into public.training_movement_patterns (code, name) values
