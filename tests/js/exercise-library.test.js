@@ -19,8 +19,11 @@ test('exercise library reads the canonical catalog and scopes its offline cache 
   assert.match(library, /execution_instructions/);
 });
 
-test('exercise library only renders HTTPS image URLs and supports cached offline images', () => {
+test('exercise library accepts HTTPS and same-origin self-hosted exercise assets only', () => {
   assert.match(library, /url\.protocol==='https:'/);
+  assert.match(library, /url\.pathname\.startsWith\('\/assets\/exercises\/'\)/);
+  assert.match(library, /url\.origin===window\.location\.origin/);
+  assert.match(library, /split\('\/'\)\.includes\('\.\.'\)/);
   assert.match(library, /caches\.open\(IMAGE_CACHE\)/);
   assert.match(library, /if\(!navigator\.onLine\)/);
 });

@@ -21,6 +21,15 @@ Atualizado em 25/11/2026.
 
 - [ ] Evoluir o mapa muscular para um atlas anatômico interativo: silhuetas mais realistas, músculos individuais identificáveis nas vistas frontal e posterior, distinção entre músculos primários e secundários e interação por toque para identificar cada região. Usar ilustrações próprias ou licenciadas e preservar o layout validado da tela “Ver execução” até que a nova experiência esteja pronta.
 
+## Imagens demonstrativas próprias
+
+- [ ] Internalizar no GitHub do NEXFIT somente os arquivos efetivamente referenciados pelo catálogo ativo; deduplicar imagens compartilhadas entre exercícios e manter nomes por slug/posição.
+- [ ] Registrar origem, commit imutável e licença CC0-1.0 em manifesto/atribuição; validar integridade e existência de cada arquivo no CI.
+- [ ] Migrar as URLs do Supabase para caminhos próprios (`/assets/exercises/...`) somente após os binários estarem versionados e validados.
+- [x] Preparar a Biblioteca para aceitar imagens HTTPS legadas e caminhos locais seguros, mantendo cache offline; incluir WebP no cache do Service Worker.
+
+Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença declarada CC0-1.0. O inventário do Supabase foi recebido; o transporte dos arquivos binários ainda precisa ser concluído antes da migração das URLs.
+
 ## Benchmark externo — Biblioteca SmartWorkout
 
 Referência analisada em 24/11/2026: [SmartWorkout — Biblioteca de exercícios](https://smartworkout.app/pt/biblioteca-de-exerc%C3%ADcios).

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nexfit-app-shell-v122';
+const CACHE_NAME = 'nexfit-app-shell-v123';
 const APP_FILES = [
   './',
   './index.html',
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
   }
 
   const isSupabaseSdk = url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/@supabase/supabase-js@2');
-  const isAppAsset = url.origin === self.location.origin && /\.(?:js|json|svg|png|ico|css)$/i.test(url.pathname);
+  const isAppAsset = url.origin === self.location.origin && /\.(?:js|json|svg|png|ico|css|webp)$/i.test(url.pathname);
   if (!isSupabaseSdk && !isAppAsset) return;
 
   event.respondWith(
