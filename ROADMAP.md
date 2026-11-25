@@ -112,7 +112,8 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Definir a taxonomia estruturada de grupo de treino, modalidade, equipamento e padrão de movimento, com vocabulários controlados e arquitetura aditiva; preservar `category` e os campos de músculos.
     - [x] Auditar RLS, políticas, grants e default privileges reais do catálogo; manter leitura autenticada e negar acesso `anon` nas novas tabelas.
     - [x] Preparar migration, rollback e auditoria somente leitura em PR #271; concessões explícitas para `anon`, `authenticated` e `service_role`.
-    - [ ] Revisar/validar a PR #271 e aplicar primeiro em ambiente de teste; executar verificações de estrutura, RLS e privilégios antes de qualquer aplicação no Supabase real.
+    - [x] Revisar e integrar a PR #271 após smoke test PostgreSQL: 22 migrations aplicadas e reaplicadas, RLS, grants, vocabulários, FKs e papéis de equipamento verificados em CI.
+    - [ ] Aplicar a migration em projeto Supabase de homologação e executar `supabase/operations/verify-exercise-catalog-taxonomy-readonly.sql`; não aplicar em produção nesta etapa.
     - [x] Consolidar proposta técnica para os 197 exercícios por UUID; 124 classificações de alta confiança, 70 médias e 3 baixas; 4 equipamentos permanecem sem vínculo por evidência insuficiente.
     - [x] Separar implementos alternativos de acessórios no modelo de equipamento e acrescentar os padrões Protração e o equipamento Wrist roller.
     - [ ] Validar as 3 classificações de baixa confiança e os 4 equipamentos pendentes antes da carga idempotente dos vínculos.
