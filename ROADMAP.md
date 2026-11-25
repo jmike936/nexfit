@@ -48,7 +48,9 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).
 - [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
-- [ ] Implementar o modelo estruturado de orientação (erros comuns, dicas, estabilizadores e observações de segurança) conforme `docs/propostas/orientacao-estruturada-exercicios.md`; reutilizar a taxonomia de equipamento, sem duplicá-la.
+- [x] Implementar a estrutura aditiva e a interface da Biblioteca para dicas, erros comuns, estabilizadores e cuidados importantes; migration e fallback legado preparados, PR #277, build 1.4.9 publicado.
+- [ ] Aplicar `supabase/migrations/20261125000200_structured_exercise_guidance.sql` no Supabase e confirmar as quatro colunas opcionais.
+- [ ] Curar e revisar editorialmente o conteúdo técnico dos exercícios em lotes; manter campos vazios até revisão e medir cobertura por campo.
 - [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
 - [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
 - [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
