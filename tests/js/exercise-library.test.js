@@ -38,3 +38,21 @@ test('exercise library formats all-uppercase exercise names without changing sto
   assert.match(library, /EXERCISE_ACRONYMS/);
   assert.match(library, /SMALL_NAME_WORDS/);
 });
+
+test('exercise library loads all structured taxonomy relations when available and falls back safely when absent', () => {
+  assert.match(library, /from\('training_exercise_catalog_groups'\)/);
+  assert.match(library, /from\('training_exercise_catalog_modalities'\)/);
+  assert.match(library, /from\('training_exercise_catalog_equipment'\)/);
+  assert.match(library, /from\('training_exercise_catalog_movement_patterns'\)/);
+  assert.match(library, /Taxonomia estruturada indisponível; usando category legado/);
+});
+
+test('exercise library exposes filters for group, modality, equipment, and movement pattern', () => {
+  assert.match(index, /id="exerciseLibraryCategory"/);
+  assert.match(index, /id="exerciseLibraryModality"/);
+  assert.match(index, /id="exerciseLibraryEquipment"/);
+  assert.match(index, /id="exerciseLibraryPattern"/);
+  assert.match(library, /function renderFilter/);
+  assert.match(library, /function filteredItems/);
+  assert.match(library, /exerciseLibraryTaxonomySummary/);
+});
