@@ -107,10 +107,19 @@ ORDER BY relation;
 SELECT
   conrelid::regclass AS table_name,
   conname AS constraint_name,
-  confdeltype
+  confdeltype,
+  (confdeltype = 'r') AS on_delete_restrict
 FROM pg_constraint
+JOIN pg_class c ON c.oid = conrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE contype = 'f'
-  AND conrelid::regclass::text LIKE 'training_exercise_catalog_%'
-ORDER BY conrelid::regclass::text, conname;
+  AND n.nspname = 'public'
+  AND c.relname IN (
+    'training_exercise_catalog_groups',
+    'training_exercise_catalog_modalities',
+    'training_exercise_catalog_equipment',
+    'training_exercise_catalog_movement_patterns'
+  )
+ORDER BY c.relname, conname;
 
 COMMIT;
