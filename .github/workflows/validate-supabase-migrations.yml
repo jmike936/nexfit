@@ -31,23 +31,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare minimal Supabase compatibility layer
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/supabase-bootstrap.sql
-      - name: Apply all 21 migrations to an empty database
+      - name: Apply all 22 migrations to an empty database
         shell: bash
         run: |
           set -euo pipefail
           mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' ! -name 'AUDIT.md' | sort)
-          test "${#migrations[@]}" -eq 21
+          test "${#migrations[@]}" -eq 22
           for migration in "${migrations[@]}"; do
             echo "::group::${migration}"
             psql -v ON_ERROR_STOP=1 -f "${migration}"
             echo "::endgroup::"
           done
-      - name: Reapply all 21 migrations to verify schema-level idempotency
+      - name: Reapply all 22 migrations to verify schema-level idempotency
         shell: bash
         run: |
           set -euo pipefail
           mapfile -t migrations < <(find supabase/migrations -maxdepth 1 -type f -name '*.sql' ! -name 'AUDIT.md' | sort)
-          test "${#migrations[@]}" -eq 21
+          test "${#migrations[@]}" -eq 22
           for migration in "${migrations[@]}"; do
             echo "::group::Reapplying ${migration}"
             psql -v ON_ERROR_STOP=1 -f "${migration}"
