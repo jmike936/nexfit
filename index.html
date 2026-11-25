@@ -248,6 +248,11 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 .exercise-library-images p{grid-column:1/-1;text-align:center;padding:24px 8px;color:var(--muted);font-size:12px}
 .exercise-library-images p[hidden]{display:none}
 .exercise-library-detail-block,.exercise-library-muscles>div{padding:14px;margin-top:12px;background:#111922;border:1px solid var(--line);border-radius:13px}
+.exercise-library-guidance-section{padding:13px 14px;margin-top:10px;background:#111922;border:1px solid var(--line);border-radius:13px}
+.exercise-library-guidance-section h3{margin:0 0 8px;font-size:13px}
+.exercise-library-guidance-section ul{margin:0;padding-left:19px;color:var(--muted);font-size:13px;line-height:1.55}
+.exercise-library-guidance-section li+li{margin-top:5px}
+.exercise-library-guidance-sections[hidden]{display:none}
 .exercise-library-detail-block h3{margin:0 0 7px;font-size:13px}
 .exercise-library-detail-block p,.exercise-library-muscles p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;white-space:pre-line}
 .exercise-library-muscles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -372,7 +377,7 @@ body.logged .page.active{padding-bottom:calc(112px + env(safe-area-inset-bottom)
 <div class="exercise-library-dialog" role="dialog" aria-modal="true" aria-labelledby="exerciseLibraryDetailTitle">
 <div class="exercise-library-dialog-head"><div><span class="eyebrow" id="exerciseLibraryDetailCategory">EXERCÍCIO</span><h2 id="exerciseLibraryDetailTitle">Exercício</h2></div><button class="exercise-library-close" id="exerciseLibraryClose" type="button" aria-label="Fechar">×</button></div>
 <div class="exercise-library-images"><figure id="exerciseLibraryStartWrap" hidden><img id="exerciseLibraryStartImage" alt="Posição inicial do exercício"><figcaption>Posição inicial</figcaption></figure><figure id="exerciseLibraryEndWrap" hidden><img id="exerciseLibraryEndImage" alt="Posição final do exercício"><figcaption>Posição final</figcaption></figure><p id="exerciseLibraryImageFallback" hidden>Imagem ilustrativa ainda não disponível.</p></div>
-<div class="exercise-library-detail-block"><p class="exercise-library-taxonomy-summary" id="exerciseLibraryTaxonomySummary">Taxonomia estruturada ainda não disponível.</p><h3>Como executar</h3><p id="exerciseLibraryInstructions"></p></div>
+<div class="exercise-library-detail-block"><p class="exercise-library-taxonomy-summary" id="exerciseLibraryTaxonomySummary">Taxonomia estruturada ainda não disponível.</p><h3>Como executar</h3><p id="exerciseLibraryInstructions"></p></div><div class="exercise-library-guidance-sections" id="exerciseLibraryGuidanceSections" hidden></div>
 <div class="exercise-library-muscles"><div><small>Músculos principais</small><p id="exerciseLibraryDetailPrimary"></p></div><div><small>Músculos secundários</small><p id="exerciseLibraryDetailSecondary"></p></div></div>
 <p class="exercise-library-disclaimer">As imagens são referências visuais. Respeite sua capacidade e siga a orientação do profissional responsável.</p>
 </div></div>
