@@ -74,3 +74,11 @@ test('exercise library remains compatible with cached legacy equipment names wit
   assert.ok(library.includes("typeof entry==='string'||!entry?.role"));
   assert.match(library, /Outros equipamentos/);
 });
+
+test('exercise library renders only populated structured guidance using text nodes', () => {
+  for (const field of ['execution_tips','common_mistakes','stabilizer_muscles','safety_notes']) assert.ok(library.includes(field));
+  assert.match(library, /function renderGuidanceSections/);
+  assert.match(library, /entry\.textContent=value\.trim\(\)/);
+  assert.match(library, /host\.hidden=host\.childElementCount===0/);
+  assert.match(index, /id="exerciseLibraryGuidanceSections" hidden/);
+});
