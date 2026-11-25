@@ -56,3 +56,18 @@ test('exercise library exposes filters for group, modality, equipment, and movem
   assert.match(library, /function filteredItems/);
   assert.match(library, /exerciseLibraryTaxonomySummary/);
 });
+
+
+test('exercise library preserves equipment roles and labels primary, accessories, and alternatives in details', () => {
+  assert.match(library, /equipment_role/);
+  assert.match(library, /role:row\\.equipment_role\\|\\|''/);
+  assert.match(library, /function equipmentSummary/);
+  assert.match(library, /Equipamento principal/);
+  assert.match(library, /Acessórios/);
+  assert.match(library, /Alternativas/);
+});
+
+test('exercise library remains compatible with cached legacy equipment names without role metadata', () => {
+  assert.match(library, /typeof entry==='string'\\|\\|!entry\\?\\.role/);
+  assert.match(library, /Outros equipamentos/);
+});
