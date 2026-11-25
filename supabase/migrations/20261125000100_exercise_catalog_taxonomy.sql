@@ -196,7 +196,7 @@ begin
     execute format('alter table public.%I enable row level security', t);
     -- Não depender de default privileges: o owner da migration pode variar.
     -- Clientes autenticados recebem somente leitura; anon não recebe acesso.
-    execute format('revoke all on table public.%I from anon, authenticated', t);
+    execute format('revoke all on table public.%I from public, anon, authenticated', t);
     execute format('grant select on table public.%I to authenticated', t);
     -- Mantém acesso administrativo explícito para operações server-side do Supabase.
     execute format('grant all on table public.%I to service_role', t);
