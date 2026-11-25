@@ -35,7 +35,7 @@ A página apresenta uma biblioteca com mais de 1.000 exercícios e destaca:
 Diretriz para o NEXFIT: usar essas funcionalidades como referência de produto, sem copiar vídeos, textos, imagens ou banco de dados de terceiros. Priorizar conteúdo próprio/licenciado e manter catálogo, identidade canônica, RLS e cache offline já existentes.
 
 Evolução planejada da Biblioteca NEXFIT:
-- [ ] Auditar cobertura atual do catálogo por grupo muscular, equipamento e modalidade; identificar lacunas e duplicidades.
+- [ ] Auditar cobertura atual do catálogo por grupo muscular, equipamento e modalidade; identificar lacunas e duplicidades. Consulta somente leitura preparada em `supabase/operations/audit-exercise-catalog-taxonomy-readonly.sql`; aguarda execução no DBeaver e revisão dos resultados.
 - [ ] Expandir filtros para equipamento, tipo de movimento e finalidade (força, hipertrofia, aquecimento/mobilidade), quando os metadados estiverem disponíveis.
 - [ ] Adicionar ao modelo de orientação campos estruturados para erros comuns, dicas de execução, músculos estabilizadores e requisitos de equipamento; preservar compatibilidade com registros existentes.
 - [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
