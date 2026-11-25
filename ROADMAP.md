@@ -117,7 +117,7 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Consolidar proposta técnica para os 197 exercícios por UUID; 124 classificações de alta confiança, 70 médias e 3 baixas; 4 equipamentos permanecem sem vínculo por evidência insuficiente.
     - [x] Separar implementos alternativos de acessórios no modelo de equipamento e acrescentar os padrões Protração e o equipamento Wrist roller.
     - [ ] Validar as 3 classificações de baixa confiança e os 4 equipamentos pendentes antes da carga idempotente dos vínculos.
-    - [ ] Integrar a leitura da taxonomia no frontend com fallback para `category`; não remover campos legados.
+    - [x] Integrar a leitura da taxonomia na Biblioteca de Exercícios com filtros por grupo, modalidade, equipamento e padrão de movimento; fallback automático para `category` quando as tabelas/vínculos ainda não estiverem disponíveis; PR #272 aprovada no CI e integrada no build 1.4.6.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
