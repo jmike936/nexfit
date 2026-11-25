@@ -24,7 +24,7 @@ Referências usam UUID, código estável único, nome, ativação lógica e data
 
 Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registrados em `accessories` na curadoria, sem criar categorias de equipamento artificiais. No relacionamento de equipamento, `accessory` representa apoios/itens complementares catalogados (ex.: Banco e apoios). `alternative` representa implementos substitutos para a mesma execução (ex.: halter OU kettlebell), sem afirmar que um seja acessório. Equipamentos específicos de máquina podem receber detalhe complementar em etapa posterior.
 
-**Padrões:** Agachar, Avançar, Hinge/dobrar quadril, Empurrar horizontal, Empurrar vertical, Puxar horizontal, Puxar vertical, Abdução, Adução, Flexão, Extensão, Rotação, Anti-rotação, Estabilização, Locomoção, Carregar, Saltar, Arremessar e Transição ao solo/em pé.
+**Padrões:** Agachar, Avançar, Hinge/dobrar quadril, Empurrar horizontal, Empurrar vertical, Puxar horizontal, Puxar vertical, Abdução, Adução, Protração, Flexão, Extensão, Rotação, Anti-rotação, Estabilização, Locomoção, Carregar, Saltar, Arremessar e Transição ao solo/em pé.
 
 ## Regras de curadoria
 1. Grupo principal representa o foco no planejamento, não é derivado automaticamente dos músculos.
