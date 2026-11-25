@@ -47,7 +47,7 @@ Acessórios de polia (corda, barra reta, triângulo, tornozeleira) são registra
 - `category` permanece como fallback legado até a leitura no frontend ser validada.
 - Nenhuma alteração nas tabelas históricas e nenhum backfill nesta migration.
 
-Antes da aplicação, executar também `supabase/operations/audit-taxonomy-rls-readonly.sql` para comparar RLS, políticas e privilégios atuais do catálogo com a configuração proposta.
+Antes da aplicação, executar `supabase/operations/audit-taxonomy-rls-readonly.sql` para comparar RLS, políticas e privilégios atuais do catálogo. Após aplicar em ambiente de teste, executar `supabase/operations/verify-exercise-catalog-taxonomy-readonly.sql` para conferir as oito tabelas, RLS, policies, privilégios efetivos, vocabulários, vínculos vazios e FKs.
 
 ## Sequência de implantação
 1. Aplicar a migration em ambiente de teste.
@@ -60,5 +60,6 @@ Antes da aplicação, executar também `supabase/operations/audit-taxonomy-rls-r
 ## Arquivos
 - Migration: `supabase/migrations/20261125000100_exercise_catalog_taxonomy.sql`
 - Rollback: `supabase/operations/rollback-exercise-catalog-taxonomy.sql`
+- Verificação pós-migration: `supabase/operations/verify-exercise-catalog-taxonomy-readonly.sql`
 
 O rollback remove a estrutura e os vocabulários desta migration. Usar somente antes de a taxonomia ser preenchida ou consumida.
