@@ -55,6 +55,8 @@ jobs:
           done
       - name: Verify exercise catalog taxonomy security and seed
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/exercise-catalog-taxonomy.sql
+      - name: Verify structured exercise guidance columns
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/exercise-guidance-columns.sql
       - name: Verify athlete and professional RLS isolation
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/rls-isolation.sql
       - name: Verify schema objects and activity RLS isolation
