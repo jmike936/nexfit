@@ -122,4 +122,13 @@ WHERE contype = 'f'
   )
 ORDER BY c.relname, conname;
 
+
+-- 7) Confirmar que a coluna aceita os três papéis semânticos.
+SELECT
+  conname,
+  pg_get_constraintdef(oid) AS definition
+FROM pg_constraint
+WHERE conrelid = 'public.training_exercise_catalog_equipment'::regclass
+  AND conname = 'training_exercise_catalog_equipment_role_chk';
+
 COMMIT;
