@@ -166,6 +166,7 @@ insert into public.training_movement_patterns (code, name) values
   ('puxar_vertical', 'Puxar vertical'),
   ('abducao', 'Abdução'),
   ('aducao', 'Adução'),
+  ('protracao', 'Protração'),
   ('flexao', 'Flexão'),
   ('extensao', 'Extensão'),
   ('rotacao', 'Rotação'),
