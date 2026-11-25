@@ -28,6 +28,21 @@ function cacheKey(){return CACHE_KEY_PREFIX+activeUserId}
 function readCache(){try{const raw=localStorage.getItem(cacheKey());if(!raw)return null;const parsed=JSON.parse(raw);return Array.isArray(parsed.items)?parsed.items:null}catch(_){return null}}
 function writeCache(data){try{localStorage.setItem(cacheKey(),JSON.stringify({savedAt:new Date().toISOString(),items:data}))}catch(error){console.warn('[NEXFIT] Biblioteca: cache local indisponível',error)}}
 function taxonomyNames(item,key){return (Array.isArray(item[key])?item[key]:[]).map(value=>typeof value==='string'?value:value?.name).filter(Boolean)}
+function equipmentSummary(item){
+ const equipment=Array.isArray(item.taxonomy_equipment)?item.taxonomy_equipment:[];
+ const groups=[
+  {role:'primary',label:'Equipamento principal'},
+  {role:'accessory',label:'Acessórios'},
+  {role:'alternative',label:'Alternativas'}
+ ];
+ const parts=groups.map(group=>{
+  const names=equipment.filter(entry=>typeof entry==='object'&&entry?.role===group.role).map(entry=>entry.name).filter(Boolean);
+  return names.length?group.label+': '+names.join(', '):'';
+ }).filter(Boolean);
+ const legacy=equipment.filter(entry=>typeof entry==='string'||!entry?.role).map(entry=>typeof entry==='string'?entry:entry?.name).filter(Boolean);
+ if(legacy.length)parts.push((parts.length?'Outros equipamentos':'Equipamento')+': '+legacy.join(', '));
+ return parts;
+}
 function primaryGroup(item){return (item.taxonomy_groups||[]).find(group=>group.is_primary)?.name||item.taxonomy_groups?.[0]?.name||item.category||'Outros'}
 function filteredItems(){
  const query=normalize($('exerciseLibrarySearch')?.value),group=$('exerciseLibraryCategory')?.value||'';
@@ -94,7 +109,7 @@ function openDetail(id){
  const taxonomyParts=[];
  const groupNames=taxonomyNames(item,'taxonomy_groups');if(groupNames.length)taxonomyParts.push('Grupo: '+groupNames.join(', '));
  const modalityNames=taxonomyNames(item,'taxonomy_modalities');if(modalityNames.length)taxonomyParts.push('Modalidade: '+modalityNames.join(', '));
- const equipmentNames=taxonomyNames(item,'taxonomy_equipment');if(equipmentNames.length)taxonomyParts.push('Equipamento: '+equipmentNames.join(', '));
+ const equipmentParts=equipmentSummary(item);taxonomyParts.push(...equipmentParts);
  const patternNames=taxonomyNames(item,'taxonomy_patterns');if(patternNames.length)taxonomyParts.push('Movimento: '+patternNames.join(', '));
  $('exerciseLibraryTaxonomySummary').textContent=taxonomyParts.join(' · ')||'Taxonomia estruturada ainda não disponível; exibindo a classificação legada.';
  $('exerciseLibraryInstructions').textContent=item.execution_instructions||'As instruções deste exercício ainda não foram cadastradas.';
@@ -134,7 +149,7 @@ async function fetchCatalog(){
    ...item,
    taxonomy_groups:(groupMap.get(item.id)||[]).map(row=>({name:row.group?.name||'',is_primary:!!row.is_primary})).filter(row=>row.name),
    taxonomy_modalities:(modalityMap.get(item.id)||[]).map(row=>row.modality?.name||'').filter(Boolean),
-   taxonomy_equipment:(equipmentMap.get(item.id)||[]).map(row=>row.equipment?.name||'').filter(Boolean),
+   taxonomy_equipment:(equipmentMap.get(item.id)||[]).map(row=>({name:row.equipment?.name||'',role:row.equipment_role||''})).filter(row=>row.name),
    taxonomy_patterns:(patternMap.get(item.id)||[]).map(row=>row.pattern?.name||'').filter(Boolean)
   }));
  }catch(error){
