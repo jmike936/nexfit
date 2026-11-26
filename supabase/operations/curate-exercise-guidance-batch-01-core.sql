@@ -151,7 +151,8 @@ WHERE id IN (
 '1e15b371-d2cc-4064-a6f4-8c566975deab','5849d2ca-3c8b-43e6-ad47-3bcd5fde5952',
 'f69f3729-3f69-4a16-87c9-2ef6baad0c02','e0d7831d-1b29-4bfb-b105-67cac017e448',
 'afed2c1e-903e-419b-a5a6-cca2f193a5c9','bc45d0df-6cbc-434c-9a5f-f0d6da8a32ae',
-'ae7d8ab6-29c8-47f6-856f-70c4ddf7b29b','66d390be-f7ee-4789-b8dc-caf11adb86d3'
+'ae7d8ab6-29c8-47f6-856f-70c4ddf7b29b','66d390be-f7ee-4789-b8dc-caf11adb86d3',
+'a81d7944-a55d-4b45-89ac-d255e732e208'
 );
 
 -- Se os resultados estiverem corretos, COMMIT; caso contrário, ROLLBACK.
