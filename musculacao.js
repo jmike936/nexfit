@@ -1321,24 +1321,34 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(q.error||!q.data){await showWorkoutDialog({title:'Não foi possível abrir o exercício',message:q.error?.message||'Registro não encontrado.',confirmLabel:'Entendi',danger:true});return false}
   let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())await showWorkoutDialog({title:'Não foi possível carregar o catálogo',message:err.message,confirmLabel:'Entendi',danger:true});return false}
   if(!isCurrentEditor())return false;
-  const e=q.data,initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
+  const e=q.data,initialMode=(e.sets||[]).some(x=>x.mode==='countdown')?'countdown':(e.sets||[]).some(x=>x.mode==='stopwatch')?'stopwatch':'reps';
+  const initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
+  const initialCount=Math.max(1,(e.sets||[]).length||1),initialTarget=(e.sets||[]).find(x=>x.mode==='countdown')?.target_seconds||40;
   const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise" required>'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
-   +editorField('editorExerciseReps','Séries e repetições',initialReps,'text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
-   +editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')
-   +'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p>'
+   +'<div class="field"><label for="editorExerciseMode">Tipo de exercício</label><select id="editorExerciseMode"><option value="reps" '+(initialMode==='reps'?'selected':'')+'>Peso e repetições</option><option value="countdown" '+(initialMode==='countdown'?'selected':'')+'>Tempo com duração-alvo</option><option value="stopwatch" '+(initialMode==='stopwatch'?'selected':'')+'>Cronômetro livre</option></select></div>'
+   +'<div id="editorTimedSetFields" style="display:'+(initialMode==='reps'?'none':'block')+'">'+editorField('editorTimedSetCount','Quantidade de séries',String(initialCount),'number')+( '<div id="editorTargetSecondsField" style="display:'+(initialMode==='countdown'?'block':'none')+'">'+editorField('editorTargetSeconds','Duração-alvo (segundos)',String(initialTarget),'number')+'</div>')+'</div>'
+   +'<div id="editorRepFields" style="display:'+(initialMode==='reps'?'block':'none')+'">'+editorField('editorExerciseReps','Séries e repetições',initialReps||'3 x 10','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')+editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')+'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p></div>'
    +editorField('editorExerciseRest','Descanso',String(e.rest_seconds??0),'text','Segundos, mm:ss ou minutos');
   showProgramEditor('Editar exercício',fields,async()=>{
    if(!isCurrentEditor())return false;
    const catalogId=$('editorCatalogExercise').value,item=catalog.find(x=>String(x.id)===String(catalogId));
    if(!item){await showWorkoutDialog({title:'Exercício não selecionado',message:'Selecione um exercício do catálogo para continuar.',confirmLabel:'Entendi'});return false}
-   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){await showWorkoutDialog({title:'Séries ou repetições inválidas',message:err.message,confirmLabel:'Corrigir'});return false}
-   const loadText=$('editorExerciseLoads').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
-   let loads;
-   if(loadText===initialLoads)loads=reps.map((_,i)=>oldLoads[i]??(i>0?oldLoads[i-1]??null:null));
-   else if(!loadText.trim())loads=reps.map(()=>null);
-   else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){await showWorkoutDialog({title:'Cargas incompletas',message:'Informe uma carga ou um valor por série.',confirmLabel:'Corrigir'});return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){await showWorkoutDialog({title:'Carga inválida',message:'Revise as cargas informadas. Use valores iguais ou maiores que zero.',confirmLabel:'Corrigir'});return false}}
+   const exerciseMode=$('editorExerciseMode').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
+   let sets;
+   if(exerciseMode==='reps'){
+    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){await showWorkoutDialog({title:'Séries ou repetições inválidas',message:err.message,confirmLabel:'Corrigir'});return false}
+    const loadText=$('editorExerciseLoads').value;let loads;
+    if(loadText===initialLoads)loads=reps.map((_,i)=>oldLoads[i]??(i>0?oldLoads[i-1]??null:null));
+    else if(!loadText.trim())loads=reps.map(()=>null);
+    else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){await showWorkoutDialog({title:'Cargas incompletas',message:'Informe uma carga ou um valor por série.',confirmLabel:'Corrigir'});return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){await showWorkoutDialog({title:'Carga inválida',message:'Revise as cargas informadas. Use valores iguais ou maiores que zero.',confirmLabel:'Corrigir'});return false}}
+    sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null,mode:'reps'}));
+   }else{
+    const count=Number($('editorTimedSetCount').value),target=Number($('editorTargetSeconds')?.value)||0;
+    if(!Number.isInteger(count)||count<1||count>30){await showWorkoutDialog({title:'Quantidade de séries inválida',message:'Informe entre 1 e 30 séries.',confirmLabel:'Corrigir'});return false}
+    if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){await showWorkoutDialog({title:'Duração-alvo inválida',message:'Informe uma duração entre 1 segundo e 24 horas.',confirmLabel:'Corrigir'});return false}
+    sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}));
+   }
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){await showWorkoutDialog({title:'Descanso inválido',message:err.message,confirmLabel:'Corrigir'});return false}
-   const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const sameCatalog=String(item.id)===String(e.catalog_exercise_id);
    // Trocar por outro exercício cria uma nova identidade lógica; renomear ou apenas
    // vincular um registro legado ao mesmo item do catálogo preserva o histórico.
@@ -1352,6 +1362,12 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(error){await showWorkoutDialog({title:'Não foi possível salvar o exercício',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
+  $('editorExerciseMode').onchange=()=>{
+   const timed=$('editorExerciseMode').value!=='reps';
+   $('editorTimedSetFields').style.display=timed?'block':'none';
+   $('editorRepFields').style.display=timed?'none':'block';
+   $('editorTargetSecondsField').style.display=$('editorExerciseMode').value==='countdown'?'block':'none';
+  };
  }
  async function deleteExercise(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
