@@ -1324,7 +1324,16 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const e=q.data,initialMode=(e.sets||[]).some(x=>x.mode==='countdown')?'countdown':(e.sets||[]).some(x=>x.mode==='stopwatch')?'stopwatch':'reps';
   const initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
   const initialCount=Math.max(1,(e.sets||[]).length||1),initialTarget=(e.sets||[]).find(x=>x.mode==='countdown')?.target_seconds||40;
-  const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise" required>'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
+  const selectedCatalogItem=catalog.find(item=>String(item.id)===String(e.catalog_exercise_id));
+  const selectedCatalogLabel=selectedCatalogItem?normalizeHumanText(selectedCatalogItem.name):'Selecione um exercício…';
+  const fields='<div class="field"><label for="editCatalogPickerToggle">Exercício</label><div class="catalog-picker" style="position:relative">'
+   +'<button type="button" id="editCatalogPickerToggle" class="secondary" aria-expanded="false" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><span id="editCatalogPickerLabel">'+esc(selectedCatalogLabel)+'</span><span aria-hidden="true">▾</span></button>'
+   +'<div id="editCatalogPickerPanel" style="display:none;position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;background:#111a23;border:1px solid #354454;border-radius:10px;padding:10px;box-shadow:0 12px 28px #0009;max-height:320px;overflow:auto">'
+   +'<input id="editSearchCatalogExercise" type="search" placeholder="Pesquisar exercício, músculo ou equipamento…" aria-label="Pesquisar exercício" style="width:100%;margin-bottom:8px">'
+   +'<div class="catalog-picker-filters" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px">'
+   +'<select id="editCatalogFilterGroup" aria-label="Filtrar grupo"><option value="">Todos os grupos</option></select><select id="editCatalogFilterModality" aria-label="Filtrar modalidade"><option value="">Todas as modalidades</option></select>'
+   +'<select id="editCatalogFilterEquipment" aria-label="Filtrar equipamento"><option value="">Todos os equipamentos</option></select><select id="editCatalogFilterPattern" aria-label="Filtrar movimento"><option value="">Todos os movimentos</option></select></div>'
+   +'<div id="editCatalogPickerResults"></div></div></div><select id="editorCatalogExercise" required style="display:none">'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
    +'<div class="field"><label for="editorExerciseMode">Tipo de exercício</label><select id="editorExerciseMode"><option value="reps" '+(initialMode==='reps'?'selected':'')+'>Peso e repetições</option><option value="countdown" '+(initialMode==='countdown'?'selected':'')+'>Tempo com duração-alvo</option><option value="stopwatch" '+(initialMode==='stopwatch'?'selected':'')+'>Cronômetro livre</option></select></div>'
    +'<div id="editorTimedSetFields" style="display:'+(initialMode==='reps'?'none':'block')+'">'+editorField('editorTimedSetCount','Quantidade de séries',String(initialCount),'number')+( '<div id="editorTargetSecondsField" style="display:'+(initialMode==='countdown'?'block':'none')+'">'+editorField('editorTargetSeconds','Duração-alvo (segundos)',String(initialTarget),'number')+'</div>')+'</div>'
    +'<div id="editorRepFields" style="display:'+(initialMode==='reps'?'block':'none')+'">'+editorField('editorExerciseReps','Séries e repetições',initialReps||'3 x 10','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')+editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')+'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p></div>'
@@ -1362,6 +1371,52 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(error){await showWorkoutDialog({title:'Não foi possível salvar o exercício',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
+  const editPickerPanel=$('editCatalogPickerPanel'),editPickerToggle=$('editCatalogPickerToggle'),editPickerSelect=$('editorCatalogExercise');
+  const editFilterValues=field=>[...new Set(catalog.flatMap(item=>(item[field]||[]).map(value=>typeof value==='string'?value:value?.name).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const fillEditFilter=(id,field,label)=>{
+   const select=$(id),values=editFilterValues(field);
+   select.innerHTML='<option value="">'+label+'</option>'+values.map(value=>'<option value="'+esc(value)+'">'+esc(value)+'</option>').join('');
+  };
+  fillEditFilter('editCatalogFilterGroup','taxonomy_groups','Todos os grupos');
+  fillEditFilter('editCatalogFilterModality','taxonomy_modalities','Todas as modalidades');
+  fillEditFilter('editCatalogFilterEquipment','taxonomy_equipment','Todos os equipamentos');
+  fillEditFilter('editCatalogFilterPattern','taxonomy_patterns','Todos os movimentos');
+  const renderEditCatalogPicker=(query='')=>{
+   const key=exerciseSearchKey(query),group=$('editCatalogFilterGroup').value,modality=$('editCatalogFilterModality').value,equipment=$('editCatalogFilterEquipment').value,pattern=$('editCatalogFilterPattern').value;
+   const filtered=catalog.filter(item=>{
+    const groups=(item.taxonomy_groups||[]).map(value=>typeof value==='string'?value:value.name);
+    const modalities=(item.taxonomy_modalities||[]).map(value=>typeof value==='string'?value:value?.name);
+    const equipments=(item.taxonomy_equipment||[]).map(value=>typeof value==='string'?value:value?.name);
+    const patterns=(item.taxonomy_patterns||[]).map(value=>typeof value==='string'?value:value?.name);
+    const text=[item.name,item.category,...groups,...modalities,...equipments,...patterns,...(item.primary_muscles||[]),...(item.secondary_muscles||[])].join(' ');
+    return (!key||exerciseSearchKey(text).includes(key))&&(!group||groups.includes(group)||(!groups.length&&item.category===group))&&(!modality||modalities.includes(modality))&&(!equipment||equipments.includes(equipment))&&(!pattern||patterns.includes(pattern));
+   });
+   const grouped=new Map();
+   filtered.forEach(item=>{const category=normalizeHumanText(item.category||'Outros');if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push(item)});
+   const html=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).map(([category,items])=>
+    '<div style="font-weight:700;padding:7px 5px 3px;color:var(--text-muted,#9aa8b7)">'+esc(category)+'</div>'+
+    items.sort((a,b)=>normalizeHumanText(a.name).localeCompare(normalizeHumanText(b.name),'pt-BR',{sensitivity:'base'})).map(item=>
+     '<button type="button" data-edit-catalog-pick="'+esc(item.id)+'" style="display:block;width:100%;text-align:left;padding:9px 8px;border:0;border-radius:6px;background:transparent;color:inherit">'+esc(normalizeHumanText(item.name))+'</button>'
+    ).join('')
+   ).join('');
+   $('editCatalogPickerResults').innerHTML=html||'<p class="muted" style="padding:8px">Nenhum exercício encontrado.</p>';
+  };
+  renderEditCatalogPicker();
+  editPickerToggle.onclick=()=>{
+   const opening=editPickerPanel.style.display==='none';
+   editPickerPanel.style.display=opening?'block':'none';
+   editPickerToggle.setAttribute('aria-expanded',String(opening));
+   if(opening)$('editSearchCatalogExercise').focus();
+  };
+  $('editSearchCatalogExercise').oninput=()=>renderEditCatalogPicker($('editSearchCatalogExercise').value);
+  ['editCatalogFilterGroup','editCatalogFilterModality','editCatalogFilterEquipment','editCatalogFilterPattern'].forEach(id=>$(id).onchange=()=>renderEditCatalogPicker($('editSearchCatalogExercise').value));
+  $('editCatalogPickerResults').onclick=event=>{
+   const option=event.target.closest('[data-edit-catalog-pick]');if(!option)return;
+   const item=catalog.find(value=>String(value.id)===String(option.dataset.editCatalogPick));if(!item)return;
+   editPickerSelect.value=String(item.id);
+   $('editCatalogPickerLabel').textContent=normalizeHumanText(item.name);
+   editPickerPanel.style.display='none';editPickerToggle.setAttribute('aria-expanded','false');
+  };
   $('editorExerciseMode').onchange=()=>{
    const timed=$('editorExerciseMode').value!=='reps';
    $('editorTimedSetFields').style.display=timed?'block':'none';
