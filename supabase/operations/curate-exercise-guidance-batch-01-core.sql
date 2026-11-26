@@ -1,5 +1,5 @@
 -- NEXFIT | Curadoria editorial de orientação estruturada
--- Lote 01/?? — exercícios de Core (17 registros)
+-- Lote 01 — exercícios de Core (16 registros)
 -- Execute no DBeaver após revisar. Atualiza somente os quatro campos novos.
 -- Preserva qualquer conteúdo já preenchido; não altera instruções, músculos,
 -- taxonomia, equipamentos, imagens, IDs ou histórico.
@@ -120,8 +120,7 @@ updated AS (
                ELSE c.stabilizer_muscles END,
            safety_notes = CASE
                WHEN c.safety_notes IS NULL OR cardinality(c.safety_notes) = 0 THEN v.safety_notes
-               ELSE c.safety_notes END,
-           updated_at = NOW()
+               ELSE c.safety_notes END
       FROM curated AS v
      WHERE c.id = v.id
        AND c.is_active = true
