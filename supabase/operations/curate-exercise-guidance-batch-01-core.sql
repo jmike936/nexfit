@@ -105,7 +105,13 @@ WITH curated (
      ARRAY['Mantenha os pés firmes e distribua a rotação pelo tronco e quadris conforme a variação.','Conduza o cabo em trajetória diagonal sem deixar a carga puxar o corpo.','Mantenha abdômen ativo e joelhos destravados.','Retorne lentamente à posição inicial.']::text[],
      ARRAY['Puxar o cabo apenas com os braços.','Girar de forma brusca ou hiperestender a lombar.','Deixar os pés ou joelhos perderem a estabilidade.']::text[],
      ARRAY['Transverso do abdômen','Multífidos','Glúteo médio','Oblíquos']::text[],
-     ARRAY['Ajuste a carga para conseguir controlar a rotação e o retorno.','Confira o encaixe do puxador e mantenha espaço livre na trajetória do cabo.']::text[])
+     ARRAY['Ajuste a carga para conseguir controlar a rotação e o retorno.','Confira o encaixe do puxador e mantenha espaço livre na trajetória do cabo.']::text[]),
+
+    ('a81d7944-a55d-4b45-89ac-d255e732e208'::uuid,
+     ARRAY['Comece com o halter próximo ao tronco e os pés firmes no chão.','Gire o tronco lentamente para um lado, mantendo a pelve relativamente estável.','Retorne ao centro antes de iniciar a rotação para o lado oposto.','Use uma amplitude confortável e mantenha a carga próxima ao corpo durante todo o movimento.']::text[],
+     ARRAY['Usar o impulso dos braços para acelerar a rotação.','Girar bruscamente ou forçar o fim da amplitude.','Deixar os quadris acompanharem excessivamente o giro, perdendo o controle do tronco.','Afastar o halter do corpo e aumentar desnecessariamente a alavanca.']::text[],
+     ARRAY['Transverso do abdômen','Multífidos','Eretores da coluna','Glúteo médio']::text[],
+     ARRAY['Use carga leve o suficiente para manter a rotação lenta e controlada.','Não force a amplitude nem faça movimentos bruscos; mantenha os pés apoiados e o espaço ao redor livre.']::text[])
 ),
 updated AS (
     UPDATE public.training_exercise_catalog AS c
