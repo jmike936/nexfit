@@ -1,5 +1,5 @@
 -- NEXFIT | Curadoria editorial de orientação estruturada
--- Lote 01 — exercícios de Core (16 registros)
+-- Lote 01 — exercícios de Core (17 registros)
 -- Execute no DBeaver após revisar. Atualiza somente os quatro campos novos.
 -- Preserva qualquer conteúdo já preenchido; não altera instruções, músculos,
 -- taxonomia, equipamentos, imagens, IDs ou histórico.
