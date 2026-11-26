@@ -1042,7 +1042,29 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(!query.error)return (query.data||[]).map(item=>({...item,demonstration_end_image_url:null,secondary_muscles:null,__visualFieldsAvailable:false}));
   }
   if(query.error)throw Error('Não foi possível carregar o banco de exercícios. '+query.error.message);
-  return (query.data||[]).map(item=>({...item,__visualFieldsAvailable:true}));
+  const catalog=(query.data||[]).map(item=>({...item,__visualFieldsAvailable:true}));
+  try{
+   const [groups,modalities,equipment,patterns]=await Promise.all([
+    expectedDb.from('training_exercise_catalog_groups').select('catalog_exercise_id,is_primary,group:training_exercise_groups(name)'),
+    expectedDb.from('training_exercise_catalog_modalities').select('catalog_exercise_id,modality:training_exercise_modalities(name)'),
+    expectedDb.from('training_exercise_catalog_equipment').select('catalog_exercise_id,equipment:training_exercise_equipment(name)'),
+    expectedDb.from('training_exercise_catalog_movement_patterns').select('catalog_exercise_id,pattern:training_movement_patterns(name)')
+   ]);
+   const failed=[groups,modalities,equipment,patterns].find(result=>result.error);
+   if(failed)throw failed.error;
+   const index=rows=>rows.reduce((map,row)=>{const list=map.get(row.catalog_exercise_id)||[];list.push(row);map.set(row.catalog_exercise_id,list);return map},new Map());
+   const groupMap=index(groups.data||[]),modalityMap=index(modalities.data||[]),equipmentMap=index(equipment.data||[]),patternMap=index(patterns.data||[]);
+   return catalog.map(item=>({
+    ...item,
+    taxonomy_groups:(groupMap.get(item.id)||[]).map(row=>({name:row.group?.name||'',is_primary:!!row.is_primary})).filter(row=>row.name),
+    taxonomy_modalities:(modalityMap.get(item.id)||[]).map(row=>row.modality?.name||'').filter(Boolean),
+    taxonomy_equipment:(equipmentMap.get(item.id)||[]).map(row=>row.equipment?.name||'').filter(Boolean),
+    taxonomy_patterns:(patternMap.get(item.id)||[]).map(row=>row.pattern?.name||'').filter(Boolean)
+   }));
+  }catch(error){
+   console.info('[NEXFIT] Taxonomia do seletor indisponível; usando category legado.',error?.message||error);
+   return catalog;
+  }
  }
  function exerciseCatalogOptions(items,selectedId=''){
   const grouped=new Map();
@@ -1097,7 +1119,10 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   const fields='<div class="field"><label>Exercício</label><div class="catalog-picker" style="position:relative">'
    +'<button type="button" id="catalogPickerToggle" class="secondary" aria-expanded="false" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><span id="catalogPickerLabel">Selecione um exercício…</span><span aria-hidden="true">▾</span></button>'
    +'<div id="catalogPickerPanel" style="display:none;position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;background:#111a23;border:1px solid #354454;border-radius:10px;padding:10px;box-shadow:0 12px 28px #0009;max-height:320px;overflow:auto">'
-   +'<input id="searchCatalogExercise" type="search" placeholder="Pesquisar exercício ou grupo…" aria-label="Pesquisar exercício" style="width:100%;margin-bottom:8px">'
+   +'<input id="searchCatalogExercise" type="search" placeholder="Pesquisar exercício, músculo ou equipamento…" aria-label="Pesquisar exercício" style="width:100%;margin-bottom:8px">'
+   +'<div class="catalog-picker-filters" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px">'
+   +'<select id="catalogFilterGroup" aria-label="Filtrar grupo"><option value="">Todos os grupos</option></select><select id="catalogFilterModality" aria-label="Filtrar modalidade"><option value="">Todas as modalidades</option></select>'
+   +'<select id="catalogFilterEquipment" aria-label="Filtrar equipamento"><option value="">Todos os equipamentos</option></select><select id="catalogFilterPattern" aria-label="Filtrar movimento"><option value="">Todos os movimentos</option></select></div>'
    +'<div id="catalogPickerResults"></div></div></div><select id="editorCatalogExercise" style="display:none">'+exerciseCatalogOptions(catalog)+'</select></div>'
    +'<button type="button" class="secondary" id="toggleNewCatalogExercise" style="margin:4px 0 12px">＋ Cadastrar novo exercício</button>'
    +'<div id="newCatalogExerciseFields" style="display:none;border:1px solid #354454;border-radius:10px;padding:12px;margin-bottom:12px">'
@@ -1131,9 +1156,23 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   });
   $('editorExerciseMode').onchange=()=>{$('timedExerciseFields').style.display=$('editorExerciseMode').value==='reps'?'none':'block';$('editorExerciseReps').parentElement.style.display=$('editorExerciseMode').value==='reps'?'block':'none';$('targetSecondsField').style.display=$('editorExerciseMode').value==='countdown'?'block':'none'};
   const pickerPanel=$('catalogPickerPanel'),pickerToggle=$('catalogPickerToggle'),pickerSelect=$('editorCatalogExercise');
+  const filterValues=(field)=>[...new Set(catalog.flatMap(item=>(item[field]||[]).map(value=>typeof value==='string'?value:value?.name).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const fillFilter=(id,field,label)=>{
+   const select=$(id),previous=select.value,values=filterValues(field);
+   select.innerHTML='<option value="">'+label+'</option>'+values.map(value=>'<option value="'+esc(value)+'">'+esc(value)+'</option>').join('');
+   if(values.includes(previous))select.value=previous;
+  };
+  fillFilter('catalogFilterGroup','taxonomy_groups','Todos os grupos');
+  fillFilter('catalogFilterModality','taxonomy_modalities','Todas as modalidades');
+  fillFilter('catalogFilterEquipment','taxonomy_equipment','Todos os equipamentos');
+  fillFilter('catalogFilterPattern','taxonomy_patterns','Todos os movimentos');
   const renderCatalogPicker=(query='')=>{
-   const key=exerciseSearchKey(query);
-   const filtered=key?catalog.filter(item=>exerciseSearchKey(item.name+' '+(item.category||'')).includes(key)):catalog;
+   const key=exerciseSearchKey(query),group=$('catalogFilterGroup').value,modality=$('catalogFilterModality').value,equipment=$('catalogFilterEquipment').value,pattern=$('catalogFilterPattern').value;
+   const filtered=catalog.filter(item=>{
+    const groups=(item.taxonomy_groups||[]).map(value=>typeof value==='string'?value:value.name);
+    const text=[item.name,item.category,...groups,...(item.taxonomy_modalities||[]),...(item.taxonomy_equipment||[]),...(item.taxonomy_patterns||[]),...(item.primary_muscles||[]),...(item.secondary_muscles||[])].join(' ');
+    return (!key||exerciseSearchKey(text).includes(key))&&(!group||groups.includes(group)||(!groups.length&&item.category===group))&&(!modality||(item.taxonomy_modalities||[]).includes(modality))&&(!equipment||(item.taxonomy_equipment||[]).includes(equipment))&&(!pattern||(item.taxonomy_patterns||[]).includes(pattern));
+   });
    const grouped=new Map();
    filtered.forEach(item=>{const category=normalizeHumanText(item.category||'Outros');if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push(item)});
    const html=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).map(([category,items])=>
@@ -1152,6 +1191,7 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(opening)$('searchCatalogExercise').focus();
   };
   $('searchCatalogExercise').oninput=()=>renderCatalogPicker($('searchCatalogExercise').value);
+  ['catalogFilterGroup','catalogFilterModality','catalogFilterEquipment','catalogFilterPattern'].forEach(id=>$(id).onchange=()=>renderCatalogPicker($('searchCatalogExercise').value));
   $('catalogPickerResults').onclick=e=>{
    const option=e.target.closest('[data-catalog-pick]');if(!option)return;
    const item=catalog.find(x=>String(x.id)===String(option.dataset.catalogPick));if(!item)return;
@@ -1281,24 +1321,43 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
   if(q.error||!q.data){await showWorkoutDialog({title:'Não foi possível abrir o exercício',message:q.error?.message||'Registro não encontrado.',confirmLabel:'Entendi',danger:true});return false}
   let catalog;try{catalog=await loadExerciseCatalog(db)}catch(err){if(isCurrentEditor())await showWorkoutDialog({title:'Não foi possível carregar o catálogo',message:err.message,confirmLabel:'Entendi',danger:true});return false}
   if(!isCurrentEditor())return false;
-  const e=q.data,initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
-  const fields='<div class="field"><label for="editorCatalogExercise">Exercício</label><select id="editorCatalogExercise" required>'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
-   +editorField('editorExerciseReps','Séries e repetições',initialReps,'text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')
-   +editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')
-   +'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p>'
+  const e=q.data,initialMode=(e.sets||[]).some(x=>x.mode==='countdown')?'countdown':(e.sets||[]).some(x=>x.mode==='stopwatch')?'stopwatch':'reps';
+  const initialReps=(e.sets||[]).map(x=>x.reps).join(', '),initialLoads=(e.sets||[]).map(x=>x.load_kg??'').join(';');
+  const initialCount=Math.max(1,(e.sets||[]).length||1),initialTarget=(e.sets||[]).find(x=>x.mode==='countdown')?.target_seconds||40;
+  const selectedCatalogItem=catalog.find(item=>String(item.id)===String(e.catalog_exercise_id));
+  const selectedCatalogLabel=selectedCatalogItem?normalizeHumanText(selectedCatalogItem.name):'Selecione um exercício…';
+  const fields='<div class="field"><label for="editCatalogPickerToggle">Exercício</label><div class="catalog-picker" style="position:relative">'
+   +'<button type="button" id="editCatalogPickerToggle" class="secondary" aria-expanded="false" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><span id="editCatalogPickerLabel">'+esc(selectedCatalogLabel)+'</span><span aria-hidden="true">▾</span></button>'
+   +'<div id="editCatalogPickerPanel" style="display:none;position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;background:#111a23;border:1px solid #354454;border-radius:10px;padding:10px;box-shadow:0 12px 28px #0009;max-height:320px;overflow:auto">'
+   +'<input id="editSearchCatalogExercise" type="search" placeholder="Pesquisar exercício, músculo ou equipamento…" aria-label="Pesquisar exercício" style="width:100%;margin-bottom:8px">'
+   +'<div class="catalog-picker-filters" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px">'
+   +'<select id="editCatalogFilterGroup" aria-label="Filtrar grupo"><option value="">Todos os grupos</option></select><select id="editCatalogFilterModality" aria-label="Filtrar modalidade"><option value="">Todas as modalidades</option></select>'
+   +'<select id="editCatalogFilterEquipment" aria-label="Filtrar equipamento"><option value="">Todos os equipamentos</option></select><select id="editCatalogFilterPattern" aria-label="Filtrar movimento"><option value="">Todos os movimentos</option></select></div>'
+   +'<div id="editCatalogPickerResults"></div></div></div><select id="editorCatalogExercise" required style="display:none">'+exerciseCatalogOptions(catalog,e.catalog_exercise_id)+'</select></div>'
+   +'<div class="field"><label for="editorExerciseMode">Tipo de exercício</label><select id="editorExerciseMode"><option value="reps" '+(initialMode==='reps'?'selected':'')+'>Peso e repetições</option><option value="countdown" '+(initialMode==='countdown'?'selected':'')+'>Tempo com duração-alvo</option><option value="stopwatch" '+(initialMode==='stopwatch'?'selected':'')+'>Cronômetro livre</option></select></div>'
+   +'<div id="editorTimedSetFields" style="display:'+(initialMode==='reps'?'none':'block')+'">'+editorField('editorTimedSetCount','Quantidade de séries',String(initialCount),'number')+( '<div id="editorTargetSecondsField" style="display:'+(initialMode==='countdown'?'block':'none')+'">'+editorField('editorTargetSeconds','Duração-alvo (segundos)',String(initialTarget),'number')+'</div>')+'</div>'
+   +'<div id="editorRepFields" style="display:'+(initialMode==='reps'?'block':'none')+'">'+editorField('editorExerciseReps','Séries e repetições',initialReps||'3 x 10','text','Ex.: 3 x 10, 3 x MR ou 12, 10, 8')+editorField('editorExerciseLoads','Carga por série (kg)',initialLoads,'text','Ex.: 50; 50; 45')+'<p class="muted">Use ponto e vírgula para informar uma carga por série. Um único valor é aplicado a todas as séries. Se mudar a quantidade de séries e mantiver as cargas atuais, elas serão preservadas por posição.</p></div>'
    +editorField('editorExerciseRest','Descanso',String(e.rest_seconds??0),'text','Segundos, mm:ss ou minutos');
   showProgramEditor('Editar exercício',fields,async()=>{
    if(!isCurrentEditor())return false;
    const catalogId=$('editorCatalogExercise').value,item=catalog.find(x=>String(x.id)===String(catalogId));
    if(!item){await showWorkoutDialog({title:'Exercício não selecionado',message:'Selecione um exercício do catálogo para continuar.',confirmLabel:'Entendi'});return false}
-   let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){await showWorkoutDialog({title:'Séries ou repetições inválidas',message:err.message,confirmLabel:'Corrigir'});return false}
-   const loadText=$('editorExerciseLoads').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
-   let loads;
-   if(loadText===initialLoads)loads=reps.map((_,i)=>oldLoads[i]??(i>0?oldLoads[i-1]??null:null));
-   else if(!loadText.trim())loads=reps.map(()=>null);
-   else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){await showWorkoutDialog({title:'Cargas incompletas',message:'Informe uma carga ou um valor por série.',confirmLabel:'Corrigir'});return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){await showWorkoutDialog({title:'Carga inválida',message:'Revise as cargas informadas. Use valores iguais ou maiores que zero.',confirmLabel:'Corrigir'});return false}}
+   const exerciseMode=$('editorExerciseMode').value,oldLoads=(e.sets||[]).map(x=>x.load_kg??null);
+   let sets;
+   if(exerciseMode==='reps'){
+    let reps;try{reps=parseRepScheme($('editorExerciseReps').value)}catch(err){await showWorkoutDialog({title:'Séries ou repetições inválidas',message:err.message,confirmLabel:'Corrigir'});return false}
+    const loadText=$('editorExerciseLoads').value;let loads;
+    if(loadText===initialLoads)loads=reps.map((_,i)=>oldLoads[i]??(i>0?oldLoads[i-1]??null:null));
+    else if(!loadText.trim())loads=reps.map(()=>null);
+    else{let parts=loadText.split(';').map(x=>x.trim());if(parts.length===1&&reps.length>1)parts=Array(reps.length).fill(parts[0]);if(parts.length!==reps.length){await showWorkoutDialog({title:'Cargas incompletas',message:'Informe uma carga ou um valor por série.',confirmLabel:'Corrigir'});return false}loads=parts.map(v=>v===''||v==='-'?null:Number(v.replace(',','.')));if(loads.some(v=>v!==null&&(!Number.isFinite(v)||v<0))){await showWorkoutDialog({title:'Carga inválida',message:'Revise as cargas informadas. Use valores iguais ou maiores que zero.',confirmLabel:'Corrigir'});return false}}
+    sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null,mode:'reps'}));
+   }else{
+    const count=Number($('editorTimedSetCount').value),target=Number($('editorTargetSeconds')?.value)||0;
+    if(!Number.isInteger(count)||count<1||count>30){await showWorkoutDialog({title:'Quantidade de séries inválida',message:'Informe entre 1 e 30 séries.',confirmLabel:'Corrigir'});return false}
+    if(exerciseMode==='countdown'&&(!Number.isInteger(target)||target<1||target>86400)){await showWorkoutDialog({title:'Duração-alvo inválida',message:'Informe uma duração entre 1 segundo e 24 horas.',confirmLabel:'Corrigir'});return false}
+    sets=Array.from({length:count},()=>({reps:0,load_kg:null,mode:exerciseMode,target_seconds:exerciseMode==='countdown'?target:null}));
+   }
    let rest;try{rest=parseRestSeconds($('editorExerciseRest').value.trim())}catch(err){await showWorkoutDialog({title:'Descanso inválido',message:err.message,confirmLabel:'Corrigir'});return false}
-   const sets=reps.map((r,i)=>({reps:r,load_kg:loads[i]??null}));
    const sameCatalog=String(item.id)===String(e.catalog_exercise_id);
    // Trocar por outro exercício cria uma nova identidade lógica; renomear ou apenas
    // vincular um registro legado ao mesmo item do catálogo preserva o histórico.
@@ -1312,6 +1371,58 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(error){await showWorkoutDialog({title:'Não foi possível salvar o exercício',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
+  const editPickerPanel=$('editCatalogPickerPanel'),editPickerToggle=$('editCatalogPickerToggle'),editPickerSelect=$('editorCatalogExercise');
+  const editFilterValues=field=>[...new Set(catalog.flatMap(item=>(item[field]||[]).map(value=>typeof value==='string'?value:value?.name).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const fillEditFilter=(id,field,label)=>{
+   const select=$(id),values=editFilterValues(field);
+   select.innerHTML='<option value="">'+label+'</option>'+values.map(value=>'<option value="'+esc(value)+'">'+esc(value)+'</option>').join('');
+  };
+  fillEditFilter('editCatalogFilterGroup','taxonomy_groups','Todos os grupos');
+  fillEditFilter('editCatalogFilterModality','taxonomy_modalities','Todas as modalidades');
+  fillEditFilter('editCatalogFilterEquipment','taxonomy_equipment','Todos os equipamentos');
+  fillEditFilter('editCatalogFilterPattern','taxonomy_patterns','Todos os movimentos');
+  const renderEditCatalogPicker=(query='')=>{
+   const key=exerciseSearchKey(query),group=$('editCatalogFilterGroup').value,modality=$('editCatalogFilterModality').value,equipment=$('editCatalogFilterEquipment').value,pattern=$('editCatalogFilterPattern').value;
+   const filtered=catalog.filter(item=>{
+    const groups=(item.taxonomy_groups||[]).map(value=>typeof value==='string'?value:value.name);
+    const modalities=(item.taxonomy_modalities||[]).map(value=>typeof value==='string'?value:value?.name);
+    const equipments=(item.taxonomy_equipment||[]).map(value=>typeof value==='string'?value:value?.name);
+    const patterns=(item.taxonomy_patterns||[]).map(value=>typeof value==='string'?value:value?.name);
+    const text=[item.name,item.category,...groups,...modalities,...equipments,...patterns,...(item.primary_muscles||[]),...(item.secondary_muscles||[])].join(' ');
+    return (!key||exerciseSearchKey(text).includes(key))&&(!group||groups.includes(group)||(!groups.length&&item.category===group))&&(!modality||modalities.includes(modality))&&(!equipment||equipments.includes(equipment))&&(!pattern||patterns.includes(pattern));
+   });
+   const grouped=new Map();
+   filtered.forEach(item=>{const category=normalizeHumanText(item.category||'Outros');if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push(item)});
+   const html=[...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR',{sensitivity:'base'})).map(([category,items])=>
+    '<div style="font-weight:700;padding:7px 5px 3px;color:var(--text-muted,#9aa8b7)">'+esc(category)+'</div>'+
+    items.sort((a,b)=>normalizeHumanText(a.name).localeCompare(normalizeHumanText(b.name),'pt-BR',{sensitivity:'base'})).map(item=>
+     '<button type="button" data-edit-catalog-pick="'+esc(item.id)+'" style="display:block;width:100%;text-align:left;padding:9px 8px;border:0;border-radius:6px;background:transparent;color:inherit">'+esc(normalizeHumanText(item.name))+'</button>'
+    ).join('')
+   ).join('');
+   $('editCatalogPickerResults').innerHTML=html||'<p class="muted" style="padding:8px">Nenhum exercício encontrado.</p>';
+  };
+  renderEditCatalogPicker();
+  editPickerToggle.onclick=()=>{
+   const opening=editPickerPanel.style.display==='none';
+   editPickerPanel.style.display=opening?'block':'none';
+   editPickerToggle.setAttribute('aria-expanded',String(opening));
+   if(opening)$('editSearchCatalogExercise').focus();
+  };
+  $('editSearchCatalogExercise').oninput=()=>renderEditCatalogPicker($('editSearchCatalogExercise').value);
+  ['editCatalogFilterGroup','editCatalogFilterModality','editCatalogFilterEquipment','editCatalogFilterPattern'].forEach(id=>$(id).onchange=()=>renderEditCatalogPicker($('editSearchCatalogExercise').value));
+  $('editCatalogPickerResults').onclick=event=>{
+   const option=event.target.closest('[data-edit-catalog-pick]');if(!option)return;
+   const item=catalog.find(value=>String(value.id)===String(option.dataset.editCatalogPick));if(!item)return;
+   editPickerSelect.value=String(item.id);
+   $('editCatalogPickerLabel').textContent=normalizeHumanText(item.name);
+   editPickerPanel.style.display='none';editPickerToggle.setAttribute('aria-expanded','false');
+  };
+  $('editorExerciseMode').onchange=()=>{
+   const timed=$('editorExerciseMode').value!=='reps';
+   $('editorTimedSetFields').style.display=timed?'block':'none';
+   $('editorRepFields').style.display=timed?'none':'block';
+   $('editorTargetSecondsField').style.display=$('editorExerciseMode').value==='countdown'?'block':'none';
+  };
  }
  async function deleteExercise(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,focusedSubworkoutId=editorSubworkoutId;
