@@ -40,3 +40,4 @@ jobs:
           node --test tests/js/exercise-evolution-trends.test.js
           node --check exercise-library.js
           node --test tests/js/exercise-library.test.js
+          node --test tests/js/workout-catalog-picker.test.js
