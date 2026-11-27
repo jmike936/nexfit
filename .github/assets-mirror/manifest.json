@@ -1,0 +1,1115 @@
+{
+  "source": "MarvinNazari/exercise-images",
+  "sourceCommit": "2786aefa4b36a08faeca8114e0d1eb0af3ef6732",
+  "license": "CC0-1.0",
+  "files": [
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/ab-wheel-rollout/end.webp",
+      "path": "public/exercise-images/library/ab-wheel-rollout/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/ab-wheel-rollout/start.webp",
+      "path": "public/exercise-images/library/ab-wheel-rollout/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/air-bike/hold.webp",
+      "path": "public/exercise-images/library/air-bike/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/alternating-dumbbell-curl/end.webp",
+      "path": "public/exercise-images/library/alternating-dumbbell-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/alternating-dumbbell-curl/start.webp",
+      "path": "public/exercise-images/library/alternating-dumbbell-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/arnold-press/end.webp",
+      "path": "public/exercise-images/library/arnold-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/arnold-press/start.webp",
+      "path": "public/exercise-images/library/arnold-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/back-extensions/end.webp",
+      "path": "public/exercise-images/library/back-extensions/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/back-extensions/start.webp",
+      "path": "public/exercise-images/library/back-extensions/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/barbell-curl/end.webp",
+      "path": "public/exercise-images/library/barbell-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/barbell-curl/start.webp",
+      "path": "public/exercise-images/library/barbell-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/barbell-glute-bridge/end.webp",
+      "path": "public/exercise-images/library/barbell-glute-bridge/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/barbell-glute-bridge/start.webp",
+      "path": "public/exercise-images/library/barbell-glute-bridge/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/battle-rope-double-waves/end.webp",
+      "path": "public/exercise-images/library/battle-rope-double-waves/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/battle-rope-double-waves/start.webp",
+      "path": "public/exercise-images/library/battle-rope-double-waves/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bear-crawl/end.webp",
+      "path": "public/exercise-images/library/bear-crawl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bear-crawl/start.webp",
+      "path": "public/exercise-images/library/bear-crawl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bench-dip/end.webp",
+      "path": "public/exercise-images/library/bench-dip/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bench-dip/start.webp",
+      "path": "public/exercise-images/library/bench-dip/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bench-press/end.webp",
+      "path": "public/exercise-images/library/bench-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bench-press/start.webp",
+      "path": "public/exercise-images/library/bench-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bent-over-row/end.webp",
+      "path": "public/exercise-images/library/bent-over-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bent-over-row/start.webp",
+      "path": "public/exercise-images/library/bent-over-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/biceps-curl/end.webp",
+      "path": "public/exercise-images/library/biceps-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/biceps-curl/start.webp",
+      "path": "public/exercise-images/library/biceps-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bicycle-crunch/end.webp",
+      "path": "public/exercise-images/library/bicycle-crunch/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bicycle-crunch/start.webp",
+      "path": "public/exercise-images/library/bicycle-crunch/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/box-jump/end.webp",
+      "path": "public/exercise-images/library/box-jump/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/box-jump/start.webp",
+      "path": "public/exercise-images/library/box-jump/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bulgarian-split-squat/end.webp",
+      "path": "public/exercise-images/library/bulgarian-split-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/bulgarian-split-squat/start.webp",
+      "path": "public/exercise-images/library/bulgarian-split-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/burpees/end.webp",
+      "path": "public/exercise-images/library/burpees/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/burpees/start.webp",
+      "path": "public/exercise-images/library/burpees/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-crossover/end.webp",
+      "path": "public/exercise-images/library/cable-crossover/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-crossover/start.webp",
+      "path": "public/exercise-images/library/cable-crossover/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-crunch/end.webp",
+      "path": "public/exercise-images/library/cable-crunch/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-crunch/start.webp",
+      "path": "public/exercise-images/library/cable-crunch/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-curl/end.webp",
+      "path": "public/exercise-images/library/cable-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-curl/start.webp",
+      "path": "public/exercise-images/library/cable-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-external-rotation/end.webp",
+      "path": "public/exercise-images/library/cable-external-rotation/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-external-rotation/start.webp",
+      "path": "public/exercise-images/library/cable-external-rotation/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-fly-high-to-low/end.webp",
+      "path": "public/exercise-images/library/cable-fly-high-to-low/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-fly-high-to-low/start.webp",
+      "path": "public/exercise-images/library/cable-fly-high-to-low/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-fly-low-to-high/end.webp",
+      "path": "public/exercise-images/library/cable-fly-low-to-high/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-fly-low-to-high/start.webp",
+      "path": "public/exercise-images/library/cable-fly-low-to-high/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-front-raise/end.webp",
+      "path": "public/exercise-images/library/cable-front-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-front-raise/start.webp",
+      "path": "public/exercise-images/library/cable-front-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-kickback/end.webp",
+      "path": "public/exercise-images/library/cable-kickback/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-kickback/start.webp",
+      "path": "public/exercise-images/library/cable-kickback/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-lateral-raise/end.webp",
+      "path": "public/exercise-images/library/cable-lateral-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-lateral-raise/start.webp",
+      "path": "public/exercise-images/library/cable-lateral-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-overhead-triceps-extension/end.webp",
+      "path": "public/exercise-images/library/cable-overhead-triceps-extension/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-overhead-triceps-extension/start.webp",
+      "path": "public/exercise-images/library/cable-overhead-triceps-extension/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-upright-row/end.webp",
+      "path": "public/exercise-images/library/cable-upright-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-upright-row/start.webp",
+      "path": "public/exercise-images/library/cable-upright-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-woodchopper/end.webp",
+      "path": "public/exercise-images/library/cable-woodchopper/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/cable-woodchopper/start.webp",
+      "path": "public/exercise-images/library/cable-woodchopper/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/calf-raises/end.webp",
+      "path": "public/exercise-images/library/calf-raises/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/calf-raises/start.webp",
+      "path": "public/exercise-images/library/calf-raises/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/chest-press-machine/end.webp",
+      "path": "public/exercise-images/library/chest-press-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/chest-press-machine/start.webp",
+      "path": "public/exercise-images/library/chest-press-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/chin-up/end.webp",
+      "path": "public/exercise-images/library/chin-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/chin-up/start.webp",
+      "path": "public/exercise-images/library/chin-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/close-grip-bench-press/end.webp",
+      "path": "public/exercise-images/library/close-grip-bench-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/close-grip-bench-press/start.webp",
+      "path": "public/exercise-images/library/close-grip-bench-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/close-grip-lat-pulldown/end.webp",
+      "path": "public/exercise-images/library/close-grip-lat-pulldown/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/close-grip-lat-pulldown/start.webp",
+      "path": "public/exercise-images/library/close-grip-lat-pulldown/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/concentration-curl/end.webp",
+      "path": "public/exercise-images/library/concentration-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/concentration-curl/start.webp",
+      "path": "public/exercise-images/library/concentration-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/crunches/end.webp",
+      "path": "public/exercise-images/library/crunches/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/crunches/start.webp",
+      "path": "public/exercise-images/library/crunches/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/deadlift/end.webp",
+      "path": "public/exercise-images/library/deadlift/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/deadlift/start.webp",
+      "path": "public/exercise-images/library/deadlift/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/decline-bench-press/end.webp",
+      "path": "public/exercise-images/library/decline-bench-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/decline-bench-press/start.webp",
+      "path": "public/exercise-images/library/decline-bench-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/decline-push-up/end.webp",
+      "path": "public/exercise-images/library/decline-push-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/decline-push-up/start.webp",
+      "path": "public/exercise-images/library/decline-push-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dips/end.webp",
+      "path": "public/exercise-images/library/dips/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dips/start.webp",
+      "path": "public/exercise-images/library/dips/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-chest-press/end.webp",
+      "path": "public/exercise-images/library/dumbbell-chest-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-chest-press/start.webp",
+      "path": "public/exercise-images/library/dumbbell-chest-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-decline-press/end.webp",
+      "path": "public/exercise-images/library/dumbbell-decline-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-decline-press/start.webp",
+      "path": "public/exercise-images/library/dumbbell-decline-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-fly/end.webp",
+      "path": "public/exercise-images/library/dumbbell-fly/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-fly/start.webp",
+      "path": "public/exercise-images/library/dumbbell-fly/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-kickback/end.webp",
+      "path": "public/exercise-images/library/dumbbell-kickback/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-kickback/start.webp",
+      "path": "public/exercise-images/library/dumbbell-kickback/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-lunge/end.webp",
+      "path": "public/exercise-images/library/dumbbell-lunge/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-lunge/start.webp",
+      "path": "public/exercise-images/library/dumbbell-lunge/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-preacher-curl/end.webp",
+      "path": "public/exercise-images/library/dumbbell-preacher-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-preacher-curl/start.webp",
+      "path": "public/exercise-images/library/dumbbell-preacher-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-pullover/end.webp",
+      "path": "public/exercise-images/library/dumbbell-pullover/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-pullover/start.webp",
+      "path": "public/exercise-images/library/dumbbell-pullover/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-romanian-deadlift/end.webp",
+      "path": "public/exercise-images/library/dumbbell-romanian-deadlift/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-romanian-deadlift/start.webp",
+      "path": "public/exercise-images/library/dumbbell-romanian-deadlift/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-row/end.webp",
+      "path": "public/exercise-images/library/dumbbell-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-row/start.webp",
+      "path": "public/exercise-images/library/dumbbell-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-shoulder-press/end.webp",
+      "path": "public/exercise-images/library/dumbbell-shoulder-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-shoulder-press/start.webp",
+      "path": "public/exercise-images/library/dumbbell-shoulder-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-skull-crusher/end.webp",
+      "path": "public/exercise-images/library/dumbbell-skull-crusher/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/dumbbell-skull-crusher/start.webp",
+      "path": "public/exercise-images/library/dumbbell-skull-crusher/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/elliptical/end.webp",
+      "path": "public/exercise-images/library/elliptical/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/elliptical/start.webp",
+      "path": "public/exercise-images/library/elliptical/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/ez-bar-curl/end.webp",
+      "path": "public/exercise-images/library/ez-bar-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/ez-bar-curl/start.webp",
+      "path": "public/exercise-images/library/ez-bar-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/face-pulls/end.webp",
+      "path": "public/exercise-images/library/face-pulls/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/face-pulls/start.webp",
+      "path": "public/exercise-images/library/face-pulls/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/farmers-walk/end.webp",
+      "path": "public/exercise-images/library/farmers-walk/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/farmers-walk/start.webp",
+      "path": "public/exercise-images/library/farmers-walk/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/front-raises/end.webp",
+      "path": "public/exercise-images/library/front-raises/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/front-raises/start.webp",
+      "path": "public/exercise-images/library/front-raises/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/front-squat/end.webp",
+      "path": "public/exercise-images/library/front-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/front-squat/start.webp",
+      "path": "public/exercise-images/library/front-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/goblet-squat/end.webp",
+      "path": "public/exercise-images/library/goblet-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/goblet-squat/start.webp",
+      "path": "public/exercise-images/library/goblet-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/good-morning/end.webp",
+      "path": "public/exercise-images/library/good-morning/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/good-morning/start.webp",
+      "path": "public/exercise-images/library/good-morning/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hack-squat/end.webp",
+      "path": "public/exercise-images/library/hack-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hack-squat/start.webp",
+      "path": "public/exercise-images/library/hack-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hammer-curls/end.webp",
+      "path": "public/exercise-images/library/hammer-curls/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hammer-curls/start.webp",
+      "path": "public/exercise-images/library/hammer-curls/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hanging-knee-raise/end.webp",
+      "path": "public/exercise-images/library/hanging-knee-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hanging-knee-raise/start.webp",
+      "path": "public/exercise-images/library/hanging-knee-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-abduction-machine/end.webp",
+      "path": "public/exercise-images/library/hip-abduction-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-abduction-machine/start.webp",
+      "path": "public/exercise-images/library/hip-abduction-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-thrust-machine/end.webp",
+      "path": "public/exercise-images/library/hip-thrust-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-thrust-machine/start.webp",
+      "path": "public/exercise-images/library/hip-thrust-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-thrusts/end.webp",
+      "path": "public/exercise-images/library/hip-thrusts/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/hip-thrusts/start.webp",
+      "path": "public/exercise-images/library/hip-thrusts/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-bench-press/end.webp",
+      "path": "public/exercise-images/library/incline-bench-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-bench-press/start.webp",
+      "path": "public/exercise-images/library/incline-bench-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-curl/end.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-curl/start.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-fly/end.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-fly/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-fly/start.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-fly/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-press/end.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-dumbbell-press/start.webp",
+      "path": "public/exercise-images/library/incline-dumbbell-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-push-up/end.webp",
+      "path": "public/exercise-images/library/incline-push-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/incline-push-up/start.webp",
+      "path": "public/exercise-images/library/incline-push-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/inverted-row/end.webp",
+      "path": "public/exercise-images/library/inverted-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/inverted-row/start.webp",
+      "path": "public/exercise-images/library/inverted-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/jump-rope/end.webp",
+      "path": "public/exercise-images/library/jump-rope/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/jump-rope/start.webp",
+      "path": "public/exercise-images/library/jump-rope/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/jumping-jacks/end.webp",
+      "path": "public/exercise-images/library/jumping-jacks/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/jumping-jacks/start.webp",
+      "path": "public/exercise-images/library/jumping-jacks/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/kettlebell-swing/end.webp",
+      "path": "public/exercise-images/library/kettlebell-swing/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/kettlebell-swing/start.webp",
+      "path": "public/exercise-images/library/kettlebell-swing/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/lat-pulldown/end.webp",
+      "path": "public/exercise-images/library/lat-pulldown/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/lat-pulldown/start.webp",
+      "path": "public/exercise-images/library/lat-pulldown/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/lateral-raises/end.webp",
+      "path": "public/exercise-images/library/lateral-raises/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/lateral-raises/start.webp",
+      "path": "public/exercise-images/library/lateral-raises/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-curl/end.webp",
+      "path": "public/exercise-images/library/leg-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-curl/start.webp",
+      "path": "public/exercise-images/library/leg-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-extension/end.webp",
+      "path": "public/exercise-images/library/leg-extension/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-extension/start.webp",
+      "path": "public/exercise-images/library/leg-extension/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-press-calf-raise/end.webp",
+      "path": "public/exercise-images/library/leg-press-calf-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-press-calf-raise/start.webp",
+      "path": "public/exercise-images/library/leg-press-calf-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-press/end.webp",
+      "path": "public/exercise-images/library/leg-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-press/start.webp",
+      "path": "public/exercise-images/library/leg-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-raises/end.webp",
+      "path": "public/exercise-images/library/leg-raises/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/leg-raises/start.webp",
+      "path": "public/exercise-images/library/leg-raises/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-abdominal-crunch/end.webp",
+      "path": "public/exercise-images/library/machine-abdominal-crunch/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-abdominal-crunch/start.webp",
+      "path": "public/exercise-images/library/machine-abdominal-crunch/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-glute-kickback/end.webp",
+      "path": "public/exercise-images/library/machine-glute-kickback/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-glute-kickback/start.webp",
+      "path": "public/exercise-images/library/machine-glute-kickback/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-lateral-raise/end.webp",
+      "path": "public/exercise-images/library/machine-lateral-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-lateral-raise/start.webp",
+      "path": "public/exercise-images/library/machine-lateral-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-preacher-curl/end.webp",
+      "path": "public/exercise-images/library/machine-preacher-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-preacher-curl/start.webp",
+      "path": "public/exercise-images/library/machine-preacher-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-pullover/end.webp",
+      "path": "public/exercise-images/library/machine-pullover/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-pullover/start.webp",
+      "path": "public/exercise-images/library/machine-pullover/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-row/end.webp",
+      "path": "public/exercise-images/library/machine-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/machine-row/start.webp",
+      "path": "public/exercise-images/library/machine-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/mountain-climbers/end.webp",
+      "path": "public/exercise-images/library/mountain-climbers/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/mountain-climbers/start.webp",
+      "path": "public/exercise-images/library/mountain-climbers/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/neutral-grip-pull-up/end.webp",
+      "path": "public/exercise-images/library/neutral-grip-pull-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/neutral-grip-pull-up/start.webp",
+      "path": "public/exercise-images/library/neutral-grip-pull-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/nordic-hamstring-curl/end.webp",
+      "path": "public/exercise-images/library/nordic-hamstring-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/nordic-hamstring-curl/start.webp",
+      "path": "public/exercise-images/library/nordic-hamstring-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/oblique-crunch/end.webp",
+      "path": "public/exercise-images/library/oblique-crunch/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/oblique-crunch/start.webp",
+      "path": "public/exercise-images/library/oblique-crunch/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/overhead-press/end.webp",
+      "path": "public/exercise-images/library/overhead-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/overhead-press/start.webp",
+      "path": "public/exercise-images/library/overhead-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/overhead-triceps-extension/end.webp",
+      "path": "public/exercise-images/library/overhead-triceps-extension/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/overhead-triceps-extension/start.webp",
+      "path": "public/exercise-images/library/overhead-triceps-extension/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pallof-press/end.webp",
+      "path": "public/exercise-images/library/pallof-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pallof-press/start.webp",
+      "path": "public/exercise-images/library/pallof-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pec-deck/end.webp",
+      "path": "public/exercise-images/library/pec-deck/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pec-deck/start.webp",
+      "path": "public/exercise-images/library/pec-deck/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/plank/hold.webp",
+      "path": "public/exercise-images/library/plank/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/preacher-curl/end.webp",
+      "path": "public/exercise-images/library/preacher-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/preacher-curl/start.webp",
+      "path": "public/exercise-images/library/preacher-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pull-up/end.webp",
+      "path": "public/exercise-images/library/pull-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/pull-up/start.webp",
+      "path": "public/exercise-images/library/pull-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/push-up/end.webp",
+      "path": "public/exercise-images/library/push-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/push-up/start.webp",
+      "path": "public/exercise-images/library/push-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rear-delt-fly/end.webp",
+      "path": "public/exercise-images/library/rear-delt-fly/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rear-delt-fly/start.webp",
+      "path": "public/exercise-images/library/rear-delt-fly/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-crunch/end.webp",
+      "path": "public/exercise-images/library/reverse-crunch/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-crunch/start.webp",
+      "path": "public/exercise-images/library/reverse-crunch/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-curl/end.webp",
+      "path": "public/exercise-images/library/reverse-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-curl/start.webp",
+      "path": "public/exercise-images/library/reverse-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-grip-lat-pulldown/end.webp",
+      "path": "public/exercise-images/library/reverse-grip-lat-pulldown/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-grip-lat-pulldown/start.webp",
+      "path": "public/exercise-images/library/reverse-grip-lat-pulldown/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-pec-deck/end.webp",
+      "path": "public/exercise-images/library/reverse-pec-deck/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-pec-deck/start.webp",
+      "path": "public/exercise-images/library/reverse-pec-deck/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-wrist-curl/end.webp",
+      "path": "public/exercise-images/library/reverse-wrist-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/reverse-wrist-curl/start.webp",
+      "path": "public/exercise-images/library/reverse-wrist-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/romanian-deadlift/end.webp",
+      "path": "public/exercise-images/library/romanian-deadlift/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/romanian-deadlift/start.webp",
+      "path": "public/exercise-images/library/romanian-deadlift/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rope-hammer-curl/end.webp",
+      "path": "public/exercise-images/library/rope-hammer-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rope-hammer-curl/start.webp",
+      "path": "public/exercise-images/library/rope-hammer-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rowing-machine/end.webp",
+      "path": "public/exercise-images/library/rowing-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/rowing-machine/start.webp",
+      "path": "public/exercise-images/library/rowing-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/russian-twists/end.webp",
+      "path": "public/exercise-images/library/russian-twists/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/russian-twists/start.webp",
+      "path": "public/exercise-images/library/russian-twists/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/seated-calf-raise/end.webp",
+      "path": "public/exercise-images/library/seated-calf-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/seated-calf-raise/start.webp",
+      "path": "public/exercise-images/library/seated-calf-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/seated-leg-press/end.webp",
+      "path": "public/exercise-images/library/seated-leg-press/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/seated-leg-press/start.webp",
+      "path": "public/exercise-images/library/seated-leg-press/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/shoulder-press-machine/end.webp",
+      "path": "public/exercise-images/library/shoulder-press-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/shoulder-press-machine/start.webp",
+      "path": "public/exercise-images/library/shoulder-press-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/side-plank/hold.webp",
+      "path": "public/exercise-images/library/side-plank/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-arm-cable-row/end.webp",
+      "path": "public/exercise-images/library/single-arm-cable-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-arm-cable-row/start.webp",
+      "path": "public/exercise-images/library/single-arm-cable-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-leg-calf-raise/end.webp",
+      "path": "public/exercise-images/library/single-leg-calf-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-leg-calf-raise/start.webp",
+      "path": "public/exercise-images/library/single-leg-calf-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-leg-glute-bridge/end.webp",
+      "path": "public/exercise-images/library/single-leg-glute-bridge/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/single-leg-glute-bridge/start.webp",
+      "path": "public/exercise-images/library/single-leg-glute-bridge/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sissy-squat/end.webp",
+      "path": "public/exercise-images/library/sissy-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sissy-squat/start.webp",
+      "path": "public/exercise-images/library/sissy-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/skull-crushers/end.webp",
+      "path": "public/exercise-images/library/skull-crushers/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/skull-crushers/start.webp",
+      "path": "public/exercise-images/library/skull-crushers/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-calf-raise/end.webp",
+      "path": "public/exercise-images/library/smith-machine-calf-raise/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-calf-raise/start.webp",
+      "path": "public/exercise-images/library/smith-machine-calf-raise/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-lunge/end.webp",
+      "path": "public/exercise-images/library/smith-machine-lunge/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-lunge/start.webp",
+      "path": "public/exercise-images/library/smith-machine-lunge/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-squat/end.webp",
+      "path": "public/exercise-images/library/smith-machine-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/smith-machine-squat/start.webp",
+      "path": "public/exercise-images/library/smith-machine-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/squat/end.webp",
+      "path": "public/exercise-images/library/squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/squat/start.webp",
+      "path": "public/exercise-images/library/squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/stair-climber/hold.webp",
+      "path": "public/exercise-images/library/stair-climber/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-cable-hip-abduction/end.webp",
+      "path": "public/exercise-images/library/standing-cable-hip-abduction/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-cable-hip-abduction/start.webp",
+      "path": "public/exercise-images/library/standing-cable-hip-abduction/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-hip-abduction/end.webp",
+      "path": "public/exercise-images/library/standing-hip-abduction/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-hip-abduction/start.webp",
+      "path": "public/exercise-images/library/standing-hip-abduction/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-leg-curl-machine/end.webp",
+      "path": "public/exercise-images/library/standing-leg-curl-machine/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/standing-leg-curl-machine/start.webp",
+      "path": "public/exercise-images/library/standing-leg-curl-machine/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/stationary-bike/hold.webp",
+      "path": "public/exercise-images/library/stationary-bike/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/step-ups/end.webp",
+      "path": "public/exercise-images/library/step-ups/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/step-ups/start.webp",
+      "path": "public/exercise-images/library/step-ups/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/straight-arm-pulldown/end.webp",
+      "path": "public/exercise-images/library/straight-arm-pulldown/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/straight-arm-pulldown/start.webp",
+      "path": "public/exercise-images/library/straight-arm-pulldown/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sumo-deadlift/end.webp",
+      "path": "public/exercise-images/library/sumo-deadlift/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sumo-deadlift/start.webp",
+      "path": "public/exercise-images/library/sumo-deadlift/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sumo-squat/end.webp",
+      "path": "public/exercise-images/library/sumo-squat/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/sumo-squat/start.webp",
+      "path": "public/exercise-images/library/sumo-squat/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/t-bar-row/end.webp",
+      "path": "public/exercise-images/library/t-bar-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/t-bar-row/start.webp",
+      "path": "public/exercise-images/library/t-bar-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/thruster/end.webp",
+      "path": "public/exercise-images/library/thruster/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/thruster/start.webp",
+      "path": "public/exercise-images/library/thruster/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/treadmill-incline-walk/hold.webp",
+      "path": "public/exercise-images/library/treadmill-incline-walk/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/treadmill-run/hold.webp",
+      "path": "public/exercise-images/library/treadmill-run/hold.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/tricep-pushdowns/end.webp",
+      "path": "public/exercise-images/library/tricep-pushdowns/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/tricep-pushdowns/start.webp",
+      "path": "public/exercise-images/library/tricep-pushdowns/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/turkish-get-up/end.webp",
+      "path": "public/exercise-images/library/turkish-get-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/turkish-get-up/start.webp",
+      "path": "public/exercise-images/library/turkish-get-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/upright-row/end.webp",
+      "path": "public/exercise-images/library/upright-row/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/upright-row/start.webp",
+      "path": "public/exercise-images/library/upright-row/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/v-up/end.webp",
+      "path": "public/exercise-images/library/v-up/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/v-up/start.webp",
+      "path": "public/exercise-images/library/v-up/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/wrist-curl/end.webp",
+      "path": "public/exercise-images/library/wrist-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/wrist-curl/start.webp",
+      "path": "public/exercise-images/library/wrist-curl/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/wrist-roller/end.webp",
+      "path": "public/exercise-images/library/wrist-roller/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/wrist-roller/start.webp",
+      "path": "public/exercise-images/library/wrist-roller/start.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/zottman-curl/end.webp",
+      "path": "public/exercise-images/library/zottman-curl/end.webp"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MarvinNazari/exercise-images/2786aefa4b36a08faeca8114e0d1eb0af3ef6732/images/zottman-curl/start.webp",
+      "path": "public/exercise-images/library/zottman-curl/start.webp"
+    }
+  ]
+}

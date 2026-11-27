@@ -1,0 +1,83 @@
+{
+  "source": "user-upload",
+  "folder": "public/exercise-images/custom",
+  "format": "webp",
+  "naming": {
+    "inicio": "start",
+    "fim": "end"
+  },
+  "exercises": [
+    {
+      "name": "Avanço",
+      "slug": "avanco",
+      "start": "avanco_inicio.webp",
+      "end": "avanco_fim.webp"
+    },
+    {
+      "name": "Prancha na bola suíça",
+      "slug": "prancha-bola-suica",
+      "start": "prancha_bola_suica_inicio.webp",
+      "end": "prancha_bola_suica_fim.webp"
+    },
+    {
+      "name": "Puxada alta unilateral",
+      "slug": "puxada-alta-unilateral",
+      "start": "puxada_alta_unilateral_inicio.webp",
+      "end": "puxada_alta_unilateral_fim.webp"
+    },
+    {
+      "name": "Remada baixa pegada aberta",
+      "slug": "remada-baixa-pegada-aberta",
+      "start": "remada_baixa_pegada_aberta_inicio.webp",
+      "end": "remada_baixa_pegada_aberta_fim.webp"
+    },
+    {
+      "name": "Remada curvada com halteres",
+      "slug": "remada-curvada-halteres",
+      "start": "remada_curvada_halteres_inicio.webp",
+      "end": "remada_curvada_halteres_fim.webp"
+    },
+    {
+      "name": "Rotação de tronco com halter",
+      "slug": "rotacao-tronco-halter",
+      "start": "rotacao_tronco_halter_inicio.webp",
+      "end": "rotacao_tronco_halter_fim.webp"
+    },
+    {
+      "name": "Wall ball",
+      "slug": "wall-ball",
+      "start": "wall_ball_inicio.webp",
+      "end": "wall_ball_fim.webp"
+    },
+    {
+      "name": "Serratus punch na polia",
+      "slug": "serratus-punch-polia",
+      "start": "serratus_punch_polia_inicio.webp",
+      "end": "serratus_punch_polia_fim.webp"
+    },
+    {
+      "name": "Tríceps barra na polia",
+      "slug": "triceps-barra-polia",
+      "start": "triceps_barra_polia_inicio.webp",
+      "end": "triceps_barra_polia_fim.webp"
+    },
+    {
+      "name": "Tríceps francês unilateral",
+      "slug": "triceps-frances-unilateral",
+      "start": "triceps_frances_unilateral_inicio.webp",
+      "end": "triceps_frances_unilateral_fim.webp"
+    },
+    {
+      "name": "Tríceps com pegada inversa",
+      "slug": "triceps-pegada-inversa",
+      "start": "triceps_pegada_inversa_inicio.webp",
+      "end": "triceps_pegada_inversa_fim.webp"
+    },
+    {
+      "name": "Tríceps Testa",
+      "slug": "triceps-testa",
+      "start": "triceps_testa_inicio.webp",
+      "end": "triceps_testa_fim.webp"
+    }
+  ]
+}
