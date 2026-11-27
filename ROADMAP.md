@@ -68,7 +68,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Medir cobertura no Supabase: 191/191 exercícios ativos possuem conteúdo nos quatro campos estruturados (27/11/2026); revisão qualitativa concluída, sem campos editoriais vazios.
 - [x] Suportar vídeos demonstrativos próprios/licenciados em MP4/WebM: coluna opcional `demonstration_video_url`, carregamento somente após ação do usuário, fallback para imagens e exclusão do cache automático do Service Worker; build 1.5.2 publicado. Nenhum vídeo foi vinculado ainda porque não há arquivos/URLs de vídeo fornecidos no acervo.
 - [x] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico; seletor com busca e filtros estruturados na inclusão/edição, coberto por `tests/js/workout-catalog-picker.test.js`.
-- [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
+- [x] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas; critérios e checklist em `docs/exercise-catalog-editorial-review.md`.
 - [ ] Medir cobertura e qualidade do catálogo com testes/relatórios, sem prometer quantidade de exercícios sem conteúdo validado.
 
 ## Prioridade 1 — Integridade dos programas e histórico
@@ -141,9 +141,9 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Registro de atividades e perfil: substituir alertas de validação/erro e o prompt de edição do nome por feedback e diálogos do próprio app; manter o prompt de instalação nativo do navegador, que é uma API específica da PWA.
 - [x] Criar uma Biblioteca de Exercícios, acessível em área própria e fácil de encontrar, para consulta por atletas e personais.
   - [x] Organizar a biblioteca por nome e grupo muscular, com busca e filtros.
-  - [ ] Completar a cobertura de orientações objetivas para todos os exercícios; a interface já apresenta instruções e referências visuais quando disponíveis, com fallback para itens sem material.
+  - [x] Completar a cobertura de orientações objetivas para todos os exercícios ativos: 191/191 possuem instruções, dicas, erros comuns, estabilizadores e cuidados; seis registros permanecem inativos. Auditoria em `docs/auditorias/2026-11-27-exercise-guidance-coverage.md`.
     - [x] Auditar estaticamente o modelo e as migrações do catálogo; preparar diagnóstico somente leitura para medir a cobertura real no Supabase.
-    - [x] Executar a auditoria somente leitura do catálogo no DBeaver e revisar os resultados reais; catálogo com 197 exercícios, 197 instruções de execução preenchidas e 361/361 exercícios de fichas vinculados a IDs canônicos.
+    - [x] Executar a auditoria somente leitura do catálogo no DBeaver e revisar os resultados reais; catálogo com 197 registros (191 ativos, 6 inativos), 191 instruções de execução preenchidas nos ativos e 361/361 exercícios de fichas vinculados a IDs canônicos.
     - [x] Criar e revisar instruções originais em português para todos os 197 exercícios ativos; confirmar cobertura de 197/197, sem alterar os campos históricos de `training_exercises`.
     - [x] Auditar os valores legados de `category` contra o grupo principal estruturado; revisão somente leitura de 191 exercícios ativos: 151 iguais, 40 divergências em sete pares semânticos, zero sem grupo principal/cardinalidade irregular. Relatório em `docs/auditorias/2026-11-27-category-vs-primary-group.md`; nenhum dado foi alterado.
       - [x] Incluir as duas consultas diagnósticas somente leitura na validação PostgreSQL do CI.
