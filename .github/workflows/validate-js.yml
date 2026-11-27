@@ -25,6 +25,7 @@ jobs:
           node --check musculacao.js
           node --test tests/js/workout-load-controls.test.js
           node --test tests/js/training-management-lazy-load.test.js
+          node --test tests/js/personal-program-fork.test.js
           node --test tests/js/exercise-guidance.test.js
           node --test tests/js/workout-sync-core.test.js
           node --test tests/js/release-version.test.js
