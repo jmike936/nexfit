@@ -1,6 +1,6 @@
 # Proposta: finalidade dos exercícios na Biblioteca NEXFIT
 
-Status: proposta para validação; nenhuma tabela ou classificação foi alterada no Supabase.
+Status: estrutura criada no Supabase em 27/11/2026; vocabulário inicial aprovado como base técnica. Classificações permanecem vazias até curadoria editorial.
 
 ## Diagnóstico atual
 
@@ -33,14 +33,22 @@ Vocabulário inicial proposto:
 6. Não confundir mobilidade com alongamento estático; podem se relacionar, mas não são sinônimos.
 7. O filtro deve ser cumulativo com grupo, modalidade, equipamento e padrão de movimento, sem alterar a identidade canônica do exercício.
 
+## Implementação concluída
+
+- Criadas as tabelas `training_exercise_purposes` e `training_exercise_catalog_purposes`.
+- Cadastrados os quatro propósitos iniciais, com códigos estáveis e descrições.
+- Relação muitos-para-muitos permite múltiplas finalidades por exercício.
+- Vínculos têm estado de revisão (`pending`, `approved`, `rejected`); somente `approved` é visível para clientes autenticados.
+- RLS habilitado nas duas tabelas. `anon` não recebe acesso; clientes autenticados têm somente leitura; `service_role` mantém acesso administrativo.
+- Nenhum exercício foi classificado automaticamente. A interface de filtro não deve ser liberada até haver vínculos aprovados.
+
 ## Plano de validação
 
-1. Validar os quatro rótulos e critérios com o responsável pelo catálogo.
-2. Fazer uma classificação piloto de exercícios de diferentes grupos e modalidades.
-3. Revisar casos ambíguos e medir quantos exercícios ficam sem finalidade.
-4. Só então criar a tabela de vocabulário e a relação muitos-para-muitos, com RLS, grants, FKs e testes de CI.
-5. Implementar o filtro na Biblioteca com seleção múltipla e fallback quando a relação ainda não estiver disponível.
+1. Fazer uma classificação piloto de exercícios de diferentes grupos e modalidades, com justificativa por vínculo.
+2. Revisar casos ambíguos e medir quantos exercícios ficam sem finalidade.
+3. Inserir apenas vínculos aprovados, com data e nota de revisão.
+4. Implementar o filtro na Biblioteca com seleção múltipla e estado vazio informativo, sem esconder exercícios não classificados.
 
-## Decisão pendente
+## Próxima decisão editorial
 
-Aprovar ou ajustar o vocabulário e os critérios antes de criar migrations ou preencher vínculos no Supabase.
+O vocabulário está implantado como estrutura técnica. A etapa pendente é a curadoria dos vínculos exercício-finalidade; não se deve inferir finalidade apenas pela modalidade, equipamento ou grupo muscular.
