@@ -490,6 +490,24 @@
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
   host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>runWorkoutStart(button,()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout)));
  }
+ async function copyAssignedProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const userId=expectedUserId,db=expectedDb,source=plans.find(p=>String(p.id)===String(id));
+  const isSameAccount=()=>!!userId&&userRef()?.id===userId;
+  if(!db||!isSameAccount()||!source||!isPersonalForkSourceProgram(source,userId))return false;
+  if(await showWorkoutDialog({title:'Criar cópia pessoal?',message:'Será criada uma cópia independente deste programa. Suas alterações e novos treinos ficarão somente no seu perfil; o programa original do profissional e o histórico existente serão preservados.',confirmLabel:'Criar cópia pessoal',cancelLabel:'Cancelar'})!==true)return false;
+  if(!isSameAccount())return false;
+  const {data,error}=await db.rpc('nexfit_fork_assigned_program',{p_program:id});
+  if(!isSameAccount())return false;
+  if(error){
+   const message=error.message||String(error);
+   await showWorkoutDialog({title:'Não foi possível criar a cópia pessoal',message:/nexfit_fork_assigned_program|function.*exist|schema cache|42883/i.test(message)?'A função de cópia pessoal ainda não está instalada no Supabase. A cópia não foi criada e o programa original permanece intacto.':message,confirmLabel:'Entendi',danger:true});
+   return false;
+  }
+  if(!data){await showWorkoutDialog({title:'Cópia não confirmada',message:'O banco não retornou a identificação da cópia. Atualize a tela antes de tentar novamente.',confirmLabel:'Entendi',danger:true});return false}
+  await showWorkoutDialog({title:'Cópia pessoal criada',message:'Agora você pode editar seus treinos sem alterar o programa original do profissional.',confirmLabel:'Continuar'});
+  await home();
+  return true;
+ }
  async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const isSameAccount=()=>userRef()?.id===expectedUserId;
   if(!expectedUserId||!expectedDb||!isSameAccount())return false;
@@ -661,8 +679,14 @@
   const host=$('programManagement');if(!host)return;
   const renderUserId=userRef()?.id,renderDb=dbRef();
   if(!renderUserId||!renderDb)return;
-  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
-  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&!isHiddenByPersonalFork(p,renderUserId));
+  host.innerHTML=active.length?active.map(p=>{
+   if(isPersonalForkSourceProgram(p,renderUserId)){
+    return '<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · Programa recebido do profissional · Original preservado</small></div><div class="training-row-actions"><button class="btn" data-fork-program="'+esc(p.id)+'">Criar cópia pessoal</button></div></div>';
+   }
+   return '<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.source_program_id?'Cópia pessoal · ':'')+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>';
+  }).join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  host.querySelectorAll('[data-fork-program]').forEach(b=>b.onclick=()=>copyAssignedProgram(b.dataset.forkProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic,renderUserId,renderDb));
