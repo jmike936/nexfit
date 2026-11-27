@@ -63,7 +63,7 @@ VALUES
    'e2000000-0000-4000-8000-000000000001',1,10,40);
 
 GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT SELECT ON public.training_programs,public.training_program_versions,
+GRANT SELECT ON public.athlete_professional_access,public.training_programs,public.training_program_versions,
   public.training_subworkouts,public.training_exercises,public.training_sessions,
   public.training_set_logs TO authenticated;
 
