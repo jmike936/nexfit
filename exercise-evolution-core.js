@@ -21,6 +21,13 @@
   if(/antebraco|forearm/.test(key))return 'Antebraços';
   return String(value).trim().replace(/\s+/g,' ');
  }
+ function estimateOneRepMax(load,reps,formula='epley'){
+  const weight=Number(load),count=Number(reps);
+  if(!Number.isFinite(weight)||weight<=0||!Number.isInteger(count)||count<1)return null;
+  if(formula==='epley')return count<=12?weight*(1+count/30):null;
+  if(formula==='brzycki')return count<=10?36*weight/(37-count):null;
+  return null;
+ }
  function weekStartKey(value){
   const raw=String(value??'').slice(0,10);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(raw))return '';
@@ -57,5 +64,5 @@
   const weeks=[...weekSet].sort();
   return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalVolume-a.totalVolume||a.muscle.localeCompare(b.muscle,'pt-BR'))};
  }
- return {canonicalMuscle,weekStartKey,aggregateWeeklyVolume};
+ return {canonicalMuscle,weekStartKey,aggregateWeeklyVolume,estimateOneRepMax};
 });
