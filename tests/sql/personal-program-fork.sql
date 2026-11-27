@@ -136,7 +136,7 @@ BEGIN
   second_fork := public.nexfit_fork_assigned_program('a2000000-0000-4000-8000-000000000001');
   IF second_fork <> fork_id THEN RAISE EXCEPTION 'Fork RPC is not idempotent'; END IF;
 
-END $;
+END $$;
 RESET ROLE;
 
 -- Create a pending version as the database owner, then confirm it as the athlete.
@@ -162,7 +162,7 @@ BEGIN
       <> 'c2000000-0000-4000-8000-000000000001'::uuid THEN
     RAISE EXCEPTION 'Confirming the personal version changed the source program';
   END IF;
-END $;
+END $$;
 RESET ROLE;
 
 -- A different athlete and the linked professional cannot fork another athlete's assignment.
