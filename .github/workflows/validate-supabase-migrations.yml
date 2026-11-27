@@ -4,6 +4,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'tests/sql/**'
+      - 'supabase/operations/**'
       - '.github/workflows/validate-supabase-migrations.yml'
 jobs:
   postgres-smoke:
@@ -53,6 +54,8 @@ jobs:
             psql -v ON_ERROR_STOP=1 -f "${migration}"
             echo "::endgroup::"
           done
+      - name: Verify read-only legacy identity preflight query
+        run: psql -v ON_ERROR_STOP=1 -f supabase/operations/preview_legacy_workout_identity_reconciliation.sql
       - name: Verify exercise catalog taxonomy security and seed
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/exercise-catalog-taxonomy.sql
       - name: Verify structured exercise guidance columns
