@@ -58,8 +58,8 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Confirmar no Supabase real a presença das quatro colunas opcionais de orientação estruturada (`execution_tips`, `common_mistakes`, `stabilizer_muscles`, `safety_notes`), todas como arrays.
 - [ ] Curar e revisar editorialmente o conteúdo técnico dos exercícios em lotes; manter campos vazios até revisão e medir cobertura por campo.
   - [x] Medir cobertura no Supabase: 191/191 exercícios ativos possuem conteúdo nos quatro campos estruturados (27/11/2026); a revisão editorial qualitativa continua pendente.
-- [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
-- [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
+- [x] Suportar vídeos demonstrativos próprios/licenciados em MP4/WebM: coluna opcional `demonstration_video_url`, carregamento somente após ação do usuário, fallback para imagens e exclusão do cache automático do Service Worker; build 1.5.2 publicado. Nenhum vídeo foi vinculado ainda porque não há arquivos/URLs de vídeo fornecidos no acervo.
+- [x] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico; seletor com busca e filtros estruturados na inclusão/edição, coberto por `tests/js/workout-catalog-picker.test.js`.
 - [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
 - [ ] Medir cobertura e qualidade do catálogo com testes/relatórios, sem prometer quantidade de exercícios sem conteúdo validado.
 
