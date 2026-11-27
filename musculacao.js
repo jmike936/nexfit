@@ -1730,7 +1730,7 @@ function renderSessionStep(){
   };
   const loadGuidanceImage=async img=>{
    const original=img.dataset.guidanceSrc||'';
-   let safe='';try{const parsed=new URL(original);if(parsed.protocol==='https:')safe=parsed.href}catch(_){}
+   let safe='';try{const parsed=new URL(original,window.location.origin);if(parsed.protocol==='https:'||(parsed.origin===window.location.origin&&(parsed.pathname.startsWith('/exercise-images/')||parsed.pathname.startsWith('/assets/exercises/'))&&!parsed.pathname.split('/').includes('..')))safe=parsed.href}catch(_){}
    if(!safe)return;
    try{
     if('caches' in window){
