@@ -47,8 +47,12 @@ Diretriz para o NEXFIT: usar essas funcionalidades como referência de produto, 
 Evolução planejada da Biblioteca NEXFIT:
 - [x] Auditar a cobertura do catálogo por grupo, modalidade, equipamento e padrão; consulta no DBeaver confirmou cobertura estrutural de 197/197 exercícios nas quatro dimensões, sem vínculos inválidos (25/11/2026).
 - [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).
-- [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.
-  - [x] Auditar o schema: não há metadados de finalidade; modalidades atuais (Musculação, Cardio, Funcional, Mobilidade e Alongamento) não substituem objetivos. Proposta de vocabulário e critérios criada em [docs/propostas/finalidades-exercicios.md](docs/propostas/finalidades-exercicios.md); aguarda validação antes de migration/classificação.
+- [x] Criar vocabulário de finalidades e filtro cumulativo na Biblioteca; migration `20261127173903_exercise_catalog_purposes.sql`, RLS e testes de CI implementados. Publicado no app 1.5.1 / build 20261127.002.
+  - [x] Cadastrar Força, Hipertrofia, Aquecimento e Mobilidade em relação muitos-para-muitos, com aprovação e rastreabilidade dos vínculos.
+  - [x] Curadoria piloto: 21 exercícios com Força, 134 com Hipertrofia e 136 exercícios distintos classificados (155 vínculos aprovados).
+  - [ ] Curar Aquecimento e Mobilidade somente quando houver exercícios específicos e justificativa técnica; nenhum foi classificado nesta rodada.
+  - [x] Adicionar filtro por finalidade na Biblioteca; somente finalidades com vínculos aprovados aparecem, e os exercícios sem classificação continuam visíveis quando o filtro está limpo.
+  - [x] Validar filtro e migration no CI (PR #283 aprovada e integrada).
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
 - [x] Implementar a estrutura aditiva e a interface da Biblioteca para dicas, erros comuns, estabilizadores e cuidados importantes; migration e fallback legado preparados, PR #277, build 1.4.9 publicado.
 - [x] Confirmar no Supabase real a presença das quatro colunas opcionais de orientação estruturada (`execution_tips`, `common_mistakes`, `stabilizer_muscles`, `safety_notes`), todas como arrays.
