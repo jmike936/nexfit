@@ -4,7 +4,7 @@ PWA de acompanhamento de treinos, cargas, repetições, duração e evolução, 
 
 ## Publicação e proteção da cota da Vercel
 
-Em 27/11/2026, foram configurados pela API da Vercel o Ignore Build Step (para ignorar alterações somente em Markdown, `docs/`, `supabase/`, `tests/` e `.github/`) e `previewDeploymentsDisabled=true`. A validação prática ainda está pendente: confirmar que commits somente documentais são ignorados e que mudanças do app continuam publicando, além de verificar que branches/PRs não geram Previews. O GitHub Actions executa validações automatizadas nos pull requests. A publicação deve ser reservada à branch `main`, após revisão e merge; não criar deploys manuais/repetidos para testar mudanças pequenas.
+Em 27/11/2026, foram configurados pela API da Vercel o Ignore Build Step (para ignorar alterações somente em Markdown, `docs/`, `supabase/`, `tests/` e `.github/`) e `previewDeploymentsDisabled=true`. A validação dos commits documentais foi concluída: os logs de dois commits na `main` confirmaram que o comando retornou código 0 e o deploy foi ignorado. Ainda falta validar uma alteração real do app e confirmar que branches/PRs não geram Previews. O GitHub Actions executa validações automatizadas nos pull requests. A publicação deve ser reservada à branch `main`, após revisão e merge; não criar deploys manuais/repetidos para testar mudanças pequenas.
 
 Regras operacionais:
 - Não disparar deploy manual de Preview como etapa padrão de PR.
