@@ -5,6 +5,10 @@
 
 begin;
 
+create unique index if not exists training_programs_one_active_personal_fork_uidx
+  on public.training_programs(athlete_id, source_program_id)
+  where source_program_id is not null and status = 'active';
+
 create or replace function public.nexfit_fork_assigned_program(p_program uuid)
 returns uuid
 language plpgsql
@@ -36,7 +40,7 @@ begin
     and p.created_by <> v_user
     and p.source_program_id is null
     and p.status = 'active'
-  for share;
+  for update;
 
   if not found then
     raise exception 'Programa compartilhado não encontrado ou não disponível para personalização.';
@@ -67,7 +71,7 @@ begin
   end if;
 
   v_category := lower(trim(coalesce(
-    substring(v_source.description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+    substring(v_source.description from '\[MODALIDADE:\s*([^\]]+)\]'),
     'Musculação'
   )));
 
@@ -77,7 +81,7 @@ begin
     and p.status = 'active'
     and p.id <> v_source.id
     and lower(trim(coalesce(
-      substring(p.description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+      substring(p.description from '\[MODALIDADE:\s*([^\]]+)\]'),
       'Musculação'
     ))) = v_category
     and p.source_program_id is distinct from v_source.id
@@ -183,7 +187,7 @@ begin
   end if;
 
   v_category := lower(trim(coalesce(
-    substring(v_description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+    substring(v_description from '\[MODALIDADE:\s*([^\]]+)\]'),
     'Musculação'
   )));
 
@@ -197,7 +201,7 @@ begin
       )
       and p.status = 'active'
       and lower(trim(coalesce(
-        substring(p.description from '\\[MODALIDADE:\\s*([^\\]]+)\\]'),
+        substring(p.description from '\[MODALIDADE:\s*([^\]]+)\]'),
         'Musculação'
       ))) = v_category
   ) then
