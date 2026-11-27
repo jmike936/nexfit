@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const CACHE_KEY_PREFIX='nexfit-exercise-library:v1:';
+const CACHE_KEY_PREFIX='nexfit-exercise-library:v2:';
 const IMAGE_CACHE='nexfit-exercise-library-images-v1';
 const $=id=>document.getElementById(id);
 let items=[],activeUserId=null,activeItem=null,objectUrls=[];
@@ -46,12 +46,12 @@ function equipmentSummary(item){
 function primaryGroup(item){return (item.taxonomy_groups||[]).find(group=>group.is_primary)?.name||item.taxonomy_groups?.[0]?.name||item.category||'Outros'}
 function filteredItems(){
  const query=normalize($('exerciseLibrarySearch')?.value),group=$('exerciseLibraryCategory')?.value||'';
- const modality=$('exerciseLibraryModality')?.value||'',equipment=$('exerciseLibraryEquipment')?.value||'',pattern=$('exerciseLibraryPattern')?.value||'';
+ const modality=$('exerciseLibraryModality')?.value||'',equipment=$('exerciseLibraryEquipment')?.value||'',pattern=$('exerciseLibraryPattern')?.value||'',purpose=$('exerciseLibraryPurpose')?.value||'';
  return items.filter(item=>{
   const groups=taxonomyNames(item,'taxonomy_groups');if(!groups.length&&item.category)groups.push(item.category);
-  const modalities=taxonomyNames(item,'taxonomy_modalities'),equipmentNames=taxonomyNames(item,'taxonomy_equipment'),patterns=taxonomyNames(item,'taxonomy_patterns');
-  const text=[item.name,item.category,primaryGroup(item),...groups,...modalities,...equipmentNames,...patterns,...(item.primary_muscles||[]),...(item.secondary_muscles||[])].join(' ');
-  return (!group||groups.includes(group))&&(!modality||modalities.includes(modality))&&(!equipment||equipmentNames.includes(equipment))&&(!pattern||patterns.includes(pattern))&&(!query||normalize(text).includes(query));
+  const modalities=taxonomyNames(item,'taxonomy_modalities'),equipmentNames=taxonomyNames(item,'taxonomy_equipment'),patterns=taxonomyNames(item,'taxonomy_patterns'),purposes=taxonomyNames(item,'taxonomy_purposes');
+  const text=[item.name,item.category,primaryGroup(item),...groups,...modalities,...equipmentNames,...patterns,...purposes,...(item.primary_muscles||[]),...(item.secondary_muscles||[])].join(' ');
+  return (!group||groups.includes(group))&&(!modality||modalities.includes(modality))&&(!equipment||equipmentNames.includes(equipment))&&(!pattern||patterns.includes(pattern))&&(!purpose||purposes.includes(purpose))&&(!query||normalize(text).includes(query));
  });
 }
 function renderFilter(id,values,label){
@@ -78,6 +78,7 @@ function renderCategories(){
  renderFilter('exerciseLibraryModality',items.flatMap(item=>taxonomyNames(item,'taxonomy_modalities')),'Todas as modalidades');
  renderFilter('exerciseLibraryEquipment',items.flatMap(item=>taxonomyNames(item,'taxonomy_equipment')),'Todos os equipamentos');
  renderFilter('exerciseLibraryPattern',items.flatMap(item=>taxonomyNames(item,'taxonomy_patterns')),'Todos os movimentos');
+ renderFilter('exerciseLibraryPurpose',items.flatMap(item=>taxonomyNames(item,'taxonomy_purposes')),'Todas as finalidades');
 }
 async function loadImage(url,img){
  const safe=safeImageUrl(url);if(!safe||!img)return;
@@ -131,6 +132,7 @@ function openDetail(id){
  const modalityNames=taxonomyNames(item,'taxonomy_modalities');if(modalityNames.length)taxonomyParts.push('Modalidade: '+modalityNames.join(', '));
  const equipmentParts=equipmentSummary(item);taxonomyParts.push(...equipmentParts);
  const patternNames=taxonomyNames(item,'taxonomy_patterns');if(patternNames.length)taxonomyParts.push('Movimento: '+patternNames.join(', '));
+ const purposeNames=taxonomyNames(item,'taxonomy_purposes');if(purposeNames.length)taxonomyParts.push('Finalidade: '+purposeNames.join(', '));
  $('exerciseLibraryTaxonomySummary').textContent=taxonomyParts.join(' · ')||'Taxonomia estruturada ainda não disponível; exibindo a classificação legada.';
  $('exerciseLibraryInstructions').textContent=item.execution_instructions||'As instruções deste exercício ainda não foram cadastradas.';
  renderGuidanceSections(item);
@@ -155,23 +157,25 @@ async function fetchCatalog(){
  }
  const catalog=response.data||[];
  try{
-  const [groups,modalities,equipment,patterns]=await Promise.all([
+  const [groups,modalities,equipment,patterns,purposes]=await Promise.all([
    db.from('training_exercise_catalog_groups').select('catalog_exercise_id,is_primary,group:training_exercise_groups(code,name)'),
    db.from('training_exercise_catalog_modalities').select('catalog_exercise_id,modality:training_exercise_modalities(code,name)'),
    db.from('training_exercise_catalog_equipment').select('catalog_exercise_id,equipment_role,equipment:training_exercise_equipment(code,name)'),
-   db.from('training_exercise_catalog_movement_patterns').select('catalog_exercise_id,pattern:training_movement_patterns(code,name)')
+   db.from('training_exercise_catalog_movement_patterns').select('catalog_exercise_id,pattern:training_movement_patterns(code,name)'),
+   db.from('training_exercise_catalog_purposes').select('catalog_exercise_id,purpose:training_exercise_purposes(code,name)').eq('review_status','approved')
   ]);
-  const results=[groups,modalities,equipment,patterns];
+  const results=[groups,modalities,equipment,patterns,purposes];
   const failed=results.find(result=>result.error);
   if(failed)throw failed.error;
   const byId=(rows)=>rows.reduce((map,row)=>{const list=map.get(row.catalog_exercise_id)||[];list.push(row);map.set(row.catalog_exercise_id,list);return map},new Map());
-  const groupMap=byId(groups.data||[]),modalityMap=byId(modalities.data||[]),equipmentMap=byId(equipment.data||[]),patternMap=byId(patterns.data||[]);
+  const groupMap=byId(groups.data||[]),modalityMap=byId(modalities.data||[]),equipmentMap=byId(equipment.data||[]),patternMap=byId(patterns.data||[]),purposeMap=byId(purposes.data||[]);
   return catalog.map(item=>({
    ...item,
    taxonomy_groups:(groupMap.get(item.id)||[]).map(row=>({name:row.group?.name||'',is_primary:!!row.is_primary})).filter(row=>row.name),
    taxonomy_modalities:(modalityMap.get(item.id)||[]).map(row=>row.modality?.name||'').filter(Boolean),
    taxonomy_equipment:(equipmentMap.get(item.id)||[]).map(row=>({name:row.equipment?.name||'',role:row.equipment_role||''})).filter(row=>row.name),
-   taxonomy_patterns:(patternMap.get(item.id)||[]).map(row=>row.pattern?.name||'').filter(Boolean)
+   taxonomy_patterns:(patternMap.get(item.id)||[]).map(row=>row.pattern?.name||'').filter(Boolean),
+   taxonomy_purposes:(purposeMap.get(item.id)||[]).map(row=>row.purpose?.name||'').filter(Boolean)
   }));
  }catch(error){
   console.info('[NEXFIT] Taxonomia estruturada indisponível; usando category legado.',error?.message||error);
@@ -202,7 +206,7 @@ function init(){
  if(!$('exerciseLibraryPage'))return;
  const detailModal=$('exerciseLibraryModal');
  if(detailModal&&detailModal.parentElement!==document.body)document.body.appendChild(detailModal);
- ['exerciseLibrarySearch','exerciseLibraryCategory','exerciseLibraryModality','exerciseLibraryEquipment','exerciseLibraryPattern'].forEach(id=>$(id)?.addEventListener(id==='exerciseLibrarySearch'?'input':'change',render));
+ ['exerciseLibrarySearch','exerciseLibraryCategory','exerciseLibraryModality','exerciseLibraryEquipment','exerciseLibraryPattern','exerciseLibraryPurpose'].forEach(id=>$(id)?.addEventListener(id==='exerciseLibrarySearch'?'input':'change',render));
  $('exerciseLibraryRefresh').addEventListener('click',load);
  $('exerciseLibraryClose').addEventListener('click',closeDetail);
  $('exerciseLibraryModal').addEventListener('click',event=>{if(event.target===$('exerciseLibraryModal'))closeDetail()});
