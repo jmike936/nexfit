@@ -213,6 +213,8 @@ function init(){
  ['exerciseLibrarySearch','exerciseLibraryCategory','exerciseLibraryModality','exerciseLibraryEquipment','exerciseLibraryPattern','exerciseLibraryPurpose'].forEach(id=>$(id)?.addEventListener(id==='exerciseLibrarySearch'?'input':'change',render));
  $('exerciseLibraryRefresh').addEventListener('click',load);
  $('exerciseLibraryClose').addEventListener('click',closeDetail);
+ // A navegação fixa fica acima do modal; feche o detalhe antes de trocar de seção.
+ document.querySelectorAll('.nav button').forEach(button=>button.addEventListener('click',closeDetail,{capture:true}));
  $('exerciseLibraryVideoLoad')?.addEventListener('click',()=>{const url=safeVideoUrl(activeItem?.demonstration_video_url),video=$('exerciseLibraryVideo');if(!url||!video)return;video.src=url;video.hidden=false;video.load();$('exerciseLibraryVideoLoad').hidden=true;});
  $('exerciseLibraryModal').addEventListener('click',event=>{if(event.target===$('exerciseLibraryModal'))closeDetail()});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('exerciseLibraryModal').hidden)closeDetail()});
