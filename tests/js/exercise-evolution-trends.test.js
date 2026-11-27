@@ -7,7 +7,9 @@ const evolution=fs.readFileSync('exercise-evolution.js','utf8');
 test('exercise history exposes separate load, session-volume and estimated-1RM series',()=>{
  assert.match(evolution,/addPoint\('load',load\)/);
  assert.match(evolution,/addPoint\('volume',load\*reps\)/);
- assert.match(evolution,/addPoint\('estimated1RM',load\*\(1\+reps\/30\)\)/);
+ assert.match(evolution,/estimateOneRepMax\(load,reps,'epley'\)/);
+ assert.match(evolution,/estimateOneRepMax\(load,reps,'brzycki'\)/);
+ assert.match(evolution,/addPoint\('estimated1RMBrzycki',brzycki\)/);
 });
 
 test('session volume sums sets while other metrics keep the best set per session',()=>{
