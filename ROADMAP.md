@@ -106,6 +106,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Extrair e testar as primitivas determinísticas de sincronização offline: isolamento por conta, merge de séries, payloads idempotentes, fila de cancelamento e single-flight por atleta.
   - [x] Testar o fluxo de sincronização com banco simulado: falha/retry, conclusão idempotente, corrida de criação de atividade e troca de conta durante upload.
   - [x] Simular duas abas sincronizando a mesma sessão concluída sem Web Locks: preservar uma sessão, uma série e uma única atividade mesmo com corrida de inserção.
+  - [x] Cobrir troca de conta durante a consulta do marcador da atividade e falhas na conclusão da sessão/consulta do marcador, sem criar atividade parcial.
 
 ## Prioridade 4 — Experiência e desempenho
 
