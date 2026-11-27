@@ -48,6 +48,36 @@
       "slug": "wall-ball",
       "start": "wall_ball_inicio.webp",
       "end": "wall_ball_fim.webp"
+    },
+    {
+      "name": "Serratus punch na polia",
+      "slug": "serratus-punch-polia",
+      "start": "serratus_punch_polia_inicio.webp",
+      "end": "serratus_punch_polia_fim.webp"
+    },
+    {
+      "name": "Tríceps barra na polia",
+      "slug": "triceps-barra-polia",
+      "start": "triceps_barra_polia_inicio.webp",
+      "end": "triceps_barra_polia_fim.webp"
+    },
+    {
+      "name": "Tríceps francês unilateral",
+      "slug": "triceps-frances-unilateral",
+      "start": "triceps_frances_unilateral_inicio.webp",
+      "end": "triceps_frances_unilateral_fim.webp"
+    },
+    {
+      "name": "Tríceps com pegada inversa",
+      "slug": "triceps-pegada-inversa",
+      "start": "triceps_pegada_inversa_inicio.webp",
+      "end": "triceps_pegada_inversa_fim.webp"
+    },
+    {
+      "name": "Tríceps Testa",
+      "slug": "triceps-testa",
+      "start": "triceps_testa_inicio.webp",
+      "end": "triceps_testa_fim.webp"
     }
   ]
 }
