@@ -255,3 +255,36 @@ test('legacy set-log payloads default RPE and RIR to null',()=>{
  assert.equal(row.rpe,null);
  assert.equal(row.rir,null);
 });
+
+test('account change during activity marker lookup stops before creating an activity',async()=>{
+ const saved=completedSnapshot(),db=makeSyncAdapter();
+ let activeUser='athlete-a';
+ db.findActivityByMarker=async()=>{db.state.calls.lookup++;activeUser='athlete-b';return {data:null,error:null}};
+ const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>activeUser==='athlete-a'});
+ assert.equal(result.ok,false);
+ assert.equal(result.reason,'account_changed');
+ assert.equal(db.state.calls.session,1);
+ assert.equal(db.state.calls.logs,1);
+ assert.equal(db.state.calls.complete,1);
+ assert.equal(db.state.calls.lookup,1);
+ assert.equal(db.state.calls.insert,0);
+});
+
+test('session completion and activity lookup failures never create a partial activity',async()=>{
+ const saved=completedSnapshot();
+ const completionDb=makeSyncAdapter();
+ completionDb.completeSession=async()=>({error:new Error('completion failed')});
+ const completion=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db:completionDb,isCurrent:()=>true});
+ assert.equal(completion.ok,false);
+ assert.equal(completion.reason,'session_complete');
+ assert.equal(completionDb.state.calls.lookup,0);
+ assert.equal(completionDb.state.calls.insert,0);
+
+ const lookupDb=makeSyncAdapter();
+ lookupDb.findActivityByMarker=async()=>({data:null,error:new Error('lookup failed')});
+ const lookup=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db:lookupDb,isCurrent:()=>true});
+ assert.equal(lookup.ok,false);
+ assert.equal(lookup.reason,'activity_lookup');
+ assert.equal(lookupDb.state.calls.complete,1);
+ assert.equal(lookupDb.state.calls.insert,0);
+});
