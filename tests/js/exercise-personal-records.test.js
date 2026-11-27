@@ -9,7 +9,8 @@ test('evolution computes progressive personal records for load, reps and Epley 1
  assert.match(evolution,/labels\.push\('Carga'\)/);
  assert.match(evolution,/labels\.push\('Repetições'\)/);
  assert.match(evolution,/labels\.push\('1RM estimado'\)/);
- assert.match(evolution,/point\.value\*\(1\+point\.reps\/30\)/);
+ assert.match(evolution,/estimateOneRepMax\(point\.value,point\.reps,metricType==='estimated1RMBrzycki'\?'brzycki':'epley'\)/);
+ assert.match(evolution,/estimateOneRepMax\(load,reps,'epley'\)/);
 });
 
 test('timed exercise history identifies duration records',()=>{
