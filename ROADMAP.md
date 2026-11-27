@@ -4,8 +4,8 @@ Atualizado em 27/11/2026.
 
 ## Itens adicionados — sem prioridade definida
 
-- [x] **Detalhar exercícios e séries no histórico de atividades do atleta:** ao abrir uma atividade concluída, permitir consultar os exercícios realizados e os dados de cada série em formato de tabela, com as colunas **Exercício | Repetições | Carga**. Cada linha representa uma série, com o exercício identificado e colunas de repetições/carga. Implementado na PR em revisão.
-- [x] **Tornar a evolução mais compreensível:** revisar a apresentação dos indicadores para que o atleta entenda facilmente o que está evoluindo. Não apresentar a evolução como uma operação ou combinação pouco intuitiva de **carga × repetições**; usar indicadores e rótulos claros. O resumo semanal agora conta séries por grupo muscular, sem multiplicar carga por repetições; as métricas de carga, repetições e 1RM permanecem separadas. Implementado na PR em revisão.
+- [x] **Detalhar exercícios e séries no histórico de atividades do atleta:** ao abrir uma atividade concluída, permitir consultar os exercícios realizados e os dados de cada série em formato de tabela, com as colunas **Exercício | Repetições | Carga**. Cada linha representa uma série, com o exercício identificado e colunas de repetições/carga. PR #293 integrada e publicada em produção em 27/11/2026.
+- [x] **Tornar a evolução mais compreensível:** revisar a apresentação dos indicadores para que o atleta entenda facilmente o que está evoluindo. Não apresentar a evolução como uma operação ou combinação pouco intuitiva de **carga × repetições**; usar indicadores e rótulos claros. O resumo semanal agora conta séries por grupo muscular, sem multiplicar carga por repetições; as métricas de carga, repetições e 1RM permanecem separadas. PR #293 integrada e publicada em produção em 27/11/2026.
 
 ## Publicação e cota da Vercel
 
