@@ -10,6 +10,7 @@ Estes scripts não fazem parte da sequência padrão de migrações. São corre�
 | `training_set_log_integrity_manual.sql` | `supabase-training-set-log-integrity.sql` | Remove duplicatas idênticas de séries e cria índice único; interrompe se encontrar divergências. |
 | `audit-rls-storage-readonly.sql` | Diagnóstico de segurança | Somente SELECT: inventário de RLS, policies, grants de funções SECURITY DEFINER, permissões de tabelas, buckets e triggers de Auth. |
 | `audit-security-definer-acl-readonly.sql` | Diagnóstico complementar de segurança | Somente SELECT: definições completas das funções SECURITY DEFINER, ACL explícita e efetiva, default privileges, grants em tabelas e presença do histórico de migrations. |
+| `preview_legacy_workout_identity_reconciliation.sql` | Prévia de identidades legadas | Somente SELECT: conta treinos/exercícios elegíveis, identidades que seriam atualizadas e sessões/séries associadas preservadas antes da migration 017. |
 | `rollback_harden_public_schema_privileges.sql` | Rollback emergencial | Restaura os grants inseguros observados antes do hardening; uso somente em emergência e após avaliar o risco. |
 
 Os arquivos `audit-rls-storage-readonly.sql` e `audit-security-definer-acl-readonly.sql` são exclusivamente diagnósticos: contêm somente consultas SELECT e não alteram dados, schema, funções ou permissões. O segundo pode retornar o texto integral de funções; revise/redija segredos hardcoded antes de compartilhar os resultados.

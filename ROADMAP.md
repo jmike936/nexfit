@@ -79,6 +79,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (fluxo de versão isolada em implementação).
 - [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões (incluindo compatibilidade com registros anteriores à identidade estável).
   - [ ] Aplicar reconciliação conservadora de identidades legadas por título e composição única do treino; validar as contagens após a execução do SQL.
+  - [x] Preparar prévia somente leitura para contar candidatos, sessões e séries preservadas antes da migration (PR #291; consulta validada no PostgreSQL efêmero).
   - [x] Corrigir fallback de contagem: sessões com identidade estável não contaminam a contagem legada por título; erros de consulta ao histórico deixam de ser exibidos como zero.
 - [x] Preservar a evolução de carga e tempo dos exercícios pela identidade estável entre versões, inclusive quando o exercício é renomeado; manter fallback por nome para registros legados.
 - [x] Limitar o fallback de contagem por título a treinos legados sem identidade estável, evitando herdar histórico em treinos novos homônimos.
