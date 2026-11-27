@@ -302,6 +302,15 @@
  let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,skippingSet=false,skippingExercise=false,finishingSession=false,finishingSessionOwner=null,workoutSyncCoordinator=workoutSyncCore.createSyncCoordinator();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
+ function activePersonalForkSourceIds(userId=userRef()?.id){
+  return new Set(plans.filter(p=>String(p.athlete_id)===String(userId)&&String(p.created_by)===String(userId)&&p.source_program_id&&p.status==='active').map(p=>String(p.source_program_id)));
+ }
+ function isPersonalForkSourceProgram(p,userId=userRef()?.id){
+  return !!p&&String(p.athlete_id)===String(userId)&&String(p.created_by)!==String(userId)&&!p.source_program_id;
+ }
+ function isHiddenByPersonalFork(p,userId=userRef()?.id){
+  return isPersonalForkSourceProgram(p,userId)&&activePersonalForkSourceIds(userId).has(String(p.id));
+ }
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
  const trashIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
  function go(){if(typeof window.go==='function')window.go('strengthPage');else{document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section))}home()}
@@ -350,7 +359,8 @@
    return;
   }
   window.__nexfitOfflineMode=false;
-  const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
+  const hiddenForkSources=activePersonalForkSourceIds(renderUserId);
+  const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id&&!hiddenForkSources.has(String(p.id)));
    if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
    const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
    const [workoutsQuery,versionsQuery]=await Promise.all([
@@ -367,6 +377,7 @@
    const workouts=[];
    const offlineKey='nexfit-offline-workouts:'+String(renderUserId);
    let offlineSnapshots=[];try{const cached=JSON.parse(localStorage.getItem(offlineKey)||'[]');if(Array.isArray(cached))offlineSnapshots=cached}catch(_){}
+   offlineSnapshots=offlineSnapshots.filter(snapshot=>!isHiddenByPersonalFork(snapshot.program,renderUserId));
    for(const p of programs){
     const versionRow=versionById.get(String(p.current_version_id));
     if(!versionRow)continue;
@@ -418,11 +429,11 @@
     if(!previous||date>previous)lastExecution.set(key,date);
    }
   }
-  const lastExecutionForWorkout=(programId,workout)=>{
+  const lastExecutionForWorkout=(programId,workout,sourceProgramId=null)=>{
    const identityId=String(workout.identity_id||'');
-   if(identityId)return lastExecution.get(workoutHistoryKey(programId,'identity',identityId))||null;
+   if(identityId)return lastExecution.get(workoutHistoryKey(programId,'identity',identityId))||(sourceProgramId?lastExecution.get(workoutHistoryKey(sourceProgramId,'identity',identityId)):null)||null;
    const legacyTitle=String(workout.title||'').trim().toLocaleLowerCase('pt-BR');
-   return legacyTitle?lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||null:null;
+   return legacyTitle?(lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||(sourceProgramId?lastExecution.get(workoutHistoryKey(sourceProgramId,'legacy-title',legacyTitle)):null)||null):null;
   };
   const dateLabel=value=>{
    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
@@ -430,7 +441,7 @@
    return day+'/'+month+'/'+year;
   };
   workouts.sort((a,b)=>{
-   const da=lastExecutionForWorkout(a.program.id,a.workout),db=lastExecutionForWorkout(b.program.id,b.workout);
+   const da=lastExecutionForWorkout(a.program.id,a.workout,a.program.source_program_id),db=lastExecutionForWorkout(b.program.id,b.workout,b.program.source_program_id);
    if(!da&&db)return -1;if(da&&!db)return 1;
    if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
@@ -660,7 +671,8 @@
  }
  function populateProgramSelectors(){
   const select=$('workoutProgram');if(!select)return;
-  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
+  const userId=userRef()?.id;
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id&&!isPersonalForkSourceProgram(p,userId)&&!isHiddenByPersonalFork(p,userId));
   select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+normalizeHumanText(p.title))+'</option>').join('');
  }
  async function toggleProgramVisibility(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
@@ -741,7 +753,7 @@
   const host=$('trainingManagement');if(!host)return;
   const renderUserId=userRef()?.id,renderDb=dbRef(),isSameAccount=()=>userRef()?.id===renderUserId;
   if(!renderUserId||!renderDb)return;
-  const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id);
+  const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id&&!isPersonalForkSourceProgram(x,renderUserId));
   const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
   const programByVersion=new Map(programs.map(p=>[String(p.current_version_id),p]));
   let workouts=[];
@@ -861,6 +873,7 @@
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
   if(!db||!userId||userRef()?.id!==userId||!program)return false;
+  if(isPersonalForkSourceProgram(program,userId)){await showWorkoutDialog({title:'Programa compartilhado',message:'Para fazer alterações individuais, crie uma cópia pessoal. O programa original do profissional será preservado.',confirmLabel:'Entendi'});return false}
   const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id&&editorSubworkoutId===null;
   editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
@@ -1006,9 +1019,10 @@
    if(!db||!expectedUserId||!isCurrent())return;
    const workoutIds=workoutRows.map(item=>item.id),exercisesByWorkout=new Map(),sessionCountsByWorkout=new Map(),sessionsByIdentity=new Map(),sessionsByTitle=new Map();
    if(workoutIds.length){
-    const [exerciseQuery,doneQuery]=await Promise.all([
+    const historyProgramIds=[programId,...(current?.id===programId&&current.source_program_id?[current.source_program_id]:[])];
+   const [exerciseQuery,doneQuery]=await Promise.all([
      db.from('training_exercises').select('*').in('subworkout_id',workoutIds).order('position'),
-     db.from('training_sessions').select('subworkout_id').eq('program_id',programId).eq('athlete_id',expectedUserId).eq('status','completed')
+     db.from('training_sessions').select('subworkout_id').in('program_id',historyProgramIds).eq('athlete_id',expectedUserId).eq('status','completed')
     ]);
     if(!isCurrent())return;
     for(const exercise of exerciseQuery.data||[]){const key=String(exercise.subworkout_id);if(!exercisesByWorkout.has(key))exercisesByWorkout.set(key,[]);exercisesByWorkout.get(key).push(exercise)}
