@@ -50,14 +50,12 @@
    const date=sessionDateById.get(String(log.session_id))||log.completed_at||'';
    const week=weekStartKey(date);if(!week)continue;
    weekSet.add(week);
-   const share=1/muscles.length,volume=load*reps*share;
+   const share=1/muscles.length;
    for(const muscle of muscles){
-    if(!groups.has(muscle))groups.set(muscle,{muscle,totalVolume:0,totalSets:0,weeks:{}});
+    if(!groups.has(muscle))groups.set(muscle,{muscle,totalSets:0,weeks:{}});
     const group=groups.get(muscle);
-    if(!group.weeks[week])group.weeks[week]={volume:0,sets:0};
-    group.weeks[week].volume+=volume;
+    if(!group.weeks[week])group.weeks[week]={sets:0};
     group.weeks[week].sets+=share;
-    group.totalVolume+=volume;
     group.totalSets+=share;
    }
   }
