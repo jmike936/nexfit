@@ -57,6 +57,16 @@ Os resultados não justificam revogar indiscriminadamente EXECUTE de `authentica
 
 A consulta a `information_schema.triggers` não encontrou triggers em tabelas do schema `auth`. Isso não substitui a inspeção das configurações de provedores, MFA, confirmação de e-mail, expiração de sessão, proteção contra senhas vazadas ou URLs de redirecionamento no Dashboard.
 
+### Advisor de segurança e chave do cliente
+
+A consulta ao Security Advisor do Supabase, em 27/11/2026, retornou:
+
+- Um aviso `function_search_path_mutable` para `public.nexfit_cleanup_deleted_workout_activity()`. A correção correspondente está preparada na PR #285, mas a migration ainda não foi aplicada em produção; portanto, o aviso continua válido no banco atual. [Orientação do Supabase](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable).
+- Onze avisos `authenticated_security_definer_function_executable`, correspondentes às 11 funções já inventariadas. O advisor aponta a exposição RPC a usuários autenticados; a permissão pode ser intencional para operações do app, então cada função precisa de revisão de autorização/uso antes de qualquer revogação. Não foi feita revogação em lote. [Orientação do Supabase](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+- Um aviso de proteção contra senhas vazadas desabilitada. A configuração não foi alterada; habilitá-la exige revisão no Dashboard e pode afetar a validação de novas senhas. [Orientação do Supabase](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+A revisão estática dos 11 arquivos de código cliente (HTML principal, Service Worker e JavaScript de aplicação na raiz) encontrou no HTML principal uma chave com prefixo `sb_publishable_`, destinada a uso público no cliente. Não foram encontrados literais `sb_secret_`, `SUPABASE_SERVICE_ROLE` ou `service_role` nesses arquivos. O escopo não inclui secrets de configurações da Vercel/GitHub nem substitui a revisão de variáveis de ambiente e integrações fora do código versionado.
+
 ## Conclusão e próximos passos
 
 **Resultado parcial favorável:** RLS está habilitado em todas as tabelas de negócio de `public`; o bucket de avatares é privado e as policies observadas restringem operações ao diretório do próprio usuário; as 11 funções `SECURITY DEFINER` não são executáveis por `anon`.
