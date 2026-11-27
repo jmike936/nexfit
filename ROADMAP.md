@@ -185,6 +185,8 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
+  - [x] Verificar sintaxe de todos os arquivos JavaScript da aplicação e dos testes em cada PR que altera JavaScript (incluído nesta PR).
+  - [ ] Adotar lint sem mascarar problemas legados nem introduzir dependências desnecessárias.
 - [x] Reescrever o README: apresenta o app e sua arquitetura, configuração/segurança do Supabase, ordem dos SQLs, execução local, testes automatizados e política de publicação.
 - [ ] Concluir auditoria RLS ponta a ponta: validar policies extras/permissivas, chamadas PostgREST, Storage/Auth e chave pública no front-end.
   - [x] Analisar os retornos reais de RLS/Storage, funções `SECURITY DEFINER`, grants efetivos e default privileges; identificar grants diretos a `anon` que a migration 19 não removia.

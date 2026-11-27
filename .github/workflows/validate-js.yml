@@ -17,6 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check syntax of every JavaScript source and test file
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -not -path './node_modules/*' -print0 | sort -z)
       - name: Check JavaScript syntax
         run: |
           node --check workout-personal-records.js
