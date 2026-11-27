@@ -50,9 +50,9 @@ A política de cancelamento está versionada em `supabase/migrations/20261122001
 
 ## Biblioteca visual de exercícios
 
-A biblioteca de demonstrações usa o projeto [Open Exercise Illustrations](https://github.com/MarvinNazari/exercise-images), snapshot `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, com licença **CC0 1.0**. São 415 exercícios com imagens de posição inicial/final e grupos musculares principais e secundários. As ilustrações são referências visuais geradas por IA, não substituem orientação profissional nem validação técnica de execução.
+A biblioteca de demonstrações usa uma cópia própria dos 277 arquivos WEBP referenciados pelo catálogo, armazenada em `public/exercise-images/library/`, a partir do projeto [Open Exercise Illustrations](https://github.com/MarvinNazari/exercise-images), snapshot `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, com licença **CC0 1.0**. As imagens próprias ficam em `public/exercise-images/custom/` e são associadas por `manifest.json`. As ilustrações são referências visuais geradas por IA, não substituem orientação profissional nem validação técnica de execução.
 
-A associação e os metadados estão incluídos nas migrações `20261122001000`, `20261122001100` e `20261122001800`.
+A associação e os metadados estão incluídos nas migrações `20261122001000`, `20261122001100` e `20261122001800`. O app carrega imagens do catálogo por URL HTTPS ou por caminhos locais seguros em `/exercise-images/`, com cache offline sob demanda.
 
 ## Validação de banco em CI
 
