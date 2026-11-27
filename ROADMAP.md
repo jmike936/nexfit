@@ -1,6 +1,6 @@
 # Roadmap NEXFIT
 
-Atualizado em 25/11/2026.
+Atualizado em 27/11/2026.
 
 ## Publicação e cota da Vercel
 
@@ -23,12 +23,13 @@ Atualizado em 25/11/2026.
 
 ## Imagens demonstrativas próprias
 
-- [ ] Internalizar no GitHub do NEXFIT somente os arquivos efetivamente referenciados pelo catálogo ativo; deduplicar imagens compartilhadas entre exercícios e manter nomes por slug/posição.
-- [ ] Registrar origem, commit imutável e licença CC0-1.0 em manifesto/atribuição; validar integridade e existência de cada arquivo no CI.
-- [ ] Migrar as URLs do Supabase para caminhos próprios (`/assets/exercises/...`) somente após os binários estarem versionados e validados.
-- [x] Preparar a Biblioteca para aceitar imagens HTTPS legadas e caminhos locais seguros, mantendo cache offline; incluir WebP no cache do Service Worker.
+- [x] Internalizar no GitHub do NEXFIT os 277 arquivos WEBP do inventário do catálogo, deduplicados por URL e organizados por slug/posição em `public/exercise-images/library/`.
+- [x] Adicionar 24 imagens próprias (12 pares início/fim) em `public/exercise-images/custom/`, com manifesto de associação aos exercícios do catálogo.
+- [x] Registrar origem, commit imutável e licença CC0-1.0 no manifesto; validar existência e assinatura RIFF/WEBP de todos os arquivos espelhados e personalizados em teste automatizado do CI.
+- [ ] Migrar as URLs do Supabase para caminhos próprios (`/exercise-images/...`) após a integração ser publicada em produção.
+- [x] Preparar a Biblioteca e a tela de execução para aceitar imagens HTTPS legadas e caminhos locais seguros em `/exercise-images/`, mantendo cache offline e carregamento sob demanda.
 
-Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença CC0-1.0. Inventário de URLs do Supabase recebido; transporte dos binários aguarda o arquivo ZIP de origem. O suporte do app a caminhos locais foi integrado na PR #275 e publicado em produção.
+Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença CC0-1.0. Os 277 arquivos do inventário foram espelhados na branch da PR #282; as 24 imagens próprias também foram versionadas. A PR inclui suporte do app a `/exercise-images/` e testes de integridade. A migração final do Supabase para caminhos locais depende da publicação desses assets e do código.
 
 ## Benchmark externo — Biblioteca SmartWorkout
 
@@ -135,7 +136,7 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Revisar as classificações de confiança média/baixa e resolver os quatro equipamentos inicialmente pendentes com evidência das instruções; cobertura final de equipamento 197/197.
     - [x] Integrar a leitura da taxonomia na Biblioteca de Exercícios com filtros por grupo, modalidade, equipamento e padrão de movimento; fallback automático para `category` quando as tabelas/vínculos ainda não estiverem disponíveis; PR #272 aprovada no CI e integrada no build 1.4.6.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
-    - [ ] Internalizar as imagens demonstrativas no repositório GitHub do NEXFIT para eliminar dependência de hospedagem externa: inventariar URLs e arquivos atuais, verificar licença/atribuição e autorização de redistribuição, baixar apenas ativos permitidos para diretório versionado (ex.: `assets/exercises/`), padronizar nomes/formato/tamanho, atualizar `demonstration_image_url` e `demonstration_end_image_url` para caminhos próprios estáveis, preservar créditos e origem em manifesto, validar integridade/arquivos ausentes no CI e testar carregamento online/offline. Não copiar imagens sem licença compatível; substituir por material próprio ou licenciado quando necessário. Considerar Git LFS apenas se o volume/tamanho justificar.
+    - [ ] Concluir a internalização no fluxo de produção: após publicar a PR #282, migrar os campos `demonstration_image_url` e `demonstration_end_image_url` do Supabase para caminhos locais `/exercise-images/library/...` ou `/exercise-images/custom/...`; validar carregamento online/offline na Biblioteca e na tela “Ver execução”. A cópia dos binários, a origem/licença, os manifestos e os testes de integridade já estão preparados na PR #282.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
   - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
