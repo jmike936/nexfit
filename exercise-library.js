@@ -143,7 +143,7 @@ function openDetail(id){
  const start=$('exerciseLibraryStartImage'),end=$('exerciseLibraryEndImage'),startWrap=$('exerciseLibraryStartWrap'),endWrap=$('exerciseLibraryEndWrap');
  start.src='';end.src='';start.hidden=!safeImageUrl(item.demonstration_image_url);end.hidden=!safeImageUrl(item.demonstration_end_image_url);
  startWrap.hidden=start.hidden;endWrap.hidden=end.hidden;
- $('exerciseLibraryImageFallback').hidden=!(start.hidden&&end.hidden);
+ $('exerciseLibraryImageFallback').hidden=!(start.hidden&&end.hidden&&!videoUrl);
  modal.hidden=false;
  loadImage(item.demonstration_image_url,start);
  loadImage(item.demonstration_end_image_url,end);
