@@ -101,6 +101,8 @@ Evolução planejada da Biblioteca NEXFIT:
 
 ## Prioridade 4 — Experiência e desempenho
 
+- [ ] Restaurar os controles `+` e `−` de ajuste de carga durante a execução do treino; investigar regressão de eventos/toque e validar em celular.
+
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [x] Revisar transições entre séries, exercícios e descansos: avanço protegido contra callbacks duplicados/atrasados, validação da etapa ativa, encerramento consistente de timers e retomada idempotente do descanso.
 - [x] Ajustar a navegação de retorno durante a execução: ao tocar em Voltar dentro de um exercício, retornar à seleção/lista de exercícios do treino sem encerrar a sessão nem exigir confirmação de saída; solicitar “Sair sem finalizar” somente quando o atleta escolher sair do treino inteiro. Preservar séries já registradas e permitir selecionar outro exercício não iniciado (por exemplo, em caso de dor/lesão), sem marcar automaticamente o exercício anterior como concluído ou pulado.
@@ -121,6 +123,8 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Histórico: reduzir colunas retornadas nas consultas de sessões, exercícios e séries; evitar consultas `.in()` vazias e indexar séries por exercício/número para eliminar buscas repetidas durante a renderização.
 
 ## Prioridade 5 — Comunicação e orientação visual
+
+- [ ] Na Biblioteca, ao selecionar um menu com o detalhe de um exercício aberto, fechar o detalhe e trazer o menu selecionado para primeiro plano; corrigir a sobreposição/z-index e validar a navegação em celular.
 - [x] Substituir alertas, confirmações e prompts nativos por mensagens e diálogos consistentes em todas as áreas do aplicativo. Exceção intencional: `promptEvent.prompt()` permanece para acionar a API nativa de instalação PWA do navegador, não sendo um diálogo de alerta/entrada do app.
   - [x] Metas: substituir alertas por mensagens consistentes e trocar prompt/confirm nativos por diálogo acessível para atualizar progresso e excluir metas.
   - [x] Histórico: substituir prompt/confirm nativos na edição e exclusão de atividades por diálogos próprios, mantendo a validação de data, duração e observações.
@@ -176,6 +180,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Analisar os retornos reais de RLS/Storage, funções `SECURITY DEFINER`, grants efetivos e default privileges; identificar grants diretos a `anon` que a migration 19 não removia.
   - [x] Preparar migration idempotente de hardening, rollback emergencial e regressões SQL em CI; preservar CRUD autenticado e acesso de `service_role`.
   - [ ] Aplicar a migration 20 no Supabase real após backup e validação do aviso sobre os default privileges de `supabase_admin`; executar novamente as consultas de auditoria e confirmar os privilégios efetivos.
+    - [ ] Bloqueio operacional: o usuário informou que não consegue realizar backup pelo painel do Supabase; não aplicar mudanças de hardening em produção até existir uma cópia recuperável/verificada ou uma estratégia alternativa de recuperação aprovada.
 - [ ] Separar o JS da raiz em módulos (`src/`), sem alterar o comportamento.
 
 ## Prioridade 7 — Análise de evolução do atleta
