@@ -2,6 +2,11 @@
 
 Atualizado em 27/11/2026.
 
+## Itens adicionados — sem prioridade definida
+
+- [ ] **Detalhar exercícios e séries no histórico de atividades do atleta:** ao abrir uma atividade concluída, permitir consultar os exercícios realizados e os dados de cada série em formato de tabela, com as colunas **Exercício | Repetições | Carga**. Cada linha deve representar uma série, mantendo o exercício identificável quando houver várias séries.
+- [ ] **Tornar a evolução mais compreensível:** revisar a apresentação dos indicadores para que o atleta entenda facilmente o que está evoluindo. Não apresentar a evolução como uma operação ou combinação pouco intuitiva de **carga × repetições**; usar indicadores e rótulos claros, explicando o significado dos números e distinguindo carga utilizada, repetições e desempenho/volume quando aplicável.
+
 ## Publicação e cota da Vercel
 
 - [x] Configurar Ignore Build Step na Vercel para pular deploy quando a alteração for somente Markdown, Supabase, testes ou workflows do GitHub Actions.
