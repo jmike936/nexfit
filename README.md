@@ -4,7 +4,7 @@ PWA de acompanhamento de treinos, cargas, repetições, duração e evolução, 
 
 ## Publicação e proteção da cota da Vercel
 
-O projeto mantém os deploys de Preview desativados na Vercel para evitar que cada atualização de branch/PR consuma a cota de builds. O GitHub Actions continua executando as validações automatizadas nos pull requests. A publicação é reservada à branch `main`, após revisão e merge; não criar deploys manuais/repetidos para testar mudanças pequenas.
+A configuração de Preview desativado e as regras de Ignore Build Step precisam ser confirmadas no painel da Vercel. Não presumir que estão ativas: o histórico recente mostra deploys de Production disparados por commits somente documentais. O GitHub Actions executa validações automatizadas nos pull requests. A publicação deve ser reservada à branch `main`, após revisão e merge; não criar deploys manuais/repetidos para testar mudanças pequenas.
 
 Regras operacionais:
 - Não disparar deploy manual de Preview como etapa padrão de PR.
@@ -18,7 +18,7 @@ Para testar uma interface sem Preview, usar CI automatizado e revisão de códig
 
 ### Economia de builds
 
-A Vercel usa um comando de Ignore Build Step para comparar o commit anterior com o atual. Alterações exclusivamente em documentação Markdown, migrações/arquivos Supabase, testes e workflows do GitHub Actions não geram build/deploy. Se não houver SHA anterior disponível, o comando falha de forma segura e permite o build.
+A estratégia pretendida é usar o Ignore Build Step da Vercel para comparar o commit anterior com o atual e ignorar alterações exclusivamente documentais, de banco, testes e workflows. **Essa configuração ainda não foi verificada no projeto.** O histórico de deploys precisa ser reavaliado após a configuração; se não houver SHA anterior disponível, o comportamento deve permitir o build para não bloquear mudanças reais do app.
 
 Regras para preservar a cota:
 - Não atualizar `version.json`, o identificador de build no HTML ou o cache do Service Worker em tarefas exclusivamente documentais/testes/banco.
