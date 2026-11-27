@@ -155,6 +155,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
   if(!catalogQ.error)catalogById=new Map((catalogQ.data||[]).map(item=>[String(item.id),item]));
  }
  const weeklyVolume=evolutionCore.aggregateWeeklyVolume({logs,exerciseById:exerciseMap,catalogById,sessionDateById:activityDateBySession});
+ const weeklyActivity=evolutionCore.aggregateWeeklyActivity({logs,sessionDateById:activityDateBySession});
  const grouped=new Map();
  for(const log of logs){
   const exercise=exerciseMap.get(log.exercise_id);if(!exercise?.name)continue;
@@ -185,7 +186,23 @@ async function load(expectedUserId,expectedClient,isCurrent){
  }
  const result=[...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
  result.weeklyVolume=weeklyVolume;
+ result.weeklyActivity=weeklyActivity;
  return result;
+}
+function renderWeeklyActivityPanel(data){
+ const core=window.NexfitExerciseEvolutionCore;
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const part=key=>parts.find(x=>x.type===key)?.value||'';
+ const today=part('year')+'-'+part('month')+'-'+part('day'),currentWeek=core.weekStartKey(today);
+ if(!currentWeek)return '';
+ const previousDate=new Date(currentWeek+'T12:00:00Z');previousDate.setUTCDate(previousDate.getUTCDate()-7);
+ const previousWeek=previousDate.toISOString().slice(0,10);
+ const find=key=>(data||[]).find(x=>x.week===key)||{sessions:0,sets:0,exercises:0};
+ const current=find(currentWeek),previous=find(previousWeek);
+ const format=value=>Number(value||0).toLocaleString('pt-BR');
+ const delta=(value,old)=>value-old;
+ const change=(value,old)=>{const d=delta(value,old);return d===0?'Sem alteração':(d>0?'+':'')+format(d)+' vs. semana anterior'};
+ return '<div class="evolution-panel"><h3>Resumo da semana</h3><p class="evolution-intro">Atividade registrada de segunda-feira até hoje. Compare com a semana anterior; os números contam apenas treinos com séries registradas.</p><div class="evolution-stats"><div class="evolution-stat"><span>Treinos registrados</span><strong>'+format(current.sessions)+'</strong><small>'+change(current.sessions,previous.sessions)+'</small></div><div class="evolution-stat"><span>Séries registradas</span><strong>'+format(current.sets)+'</strong><small>'+change(current.sets,previous.sets)+'</small></div><div class="evolution-stat"><span>Exercícios realizados</span><strong>'+format(current.exercises)+'</strong><small>'+change(current.exercises,previous.exercises)+'</small></div></div><p class="evolution-intro">Aderência ao programa ainda não é calculada: falta uma agenda semanal planejada confiável para comparar com os treinos realizados.</p></div>';
 }
 function renderWeeklyVolumePanel(data){
  if(!data?.groups?.length||!data?.weeks?.length)return '<div class="evolution-panel"><h3>Séries semanais por grupo muscular</h3><p class="evolution-intro">Ainda não há séries registradas com grupo muscular identificado para este resumo.</p></div>';
@@ -218,7 +235,7 @@ async function render(host){
   cache=loaded;
   if(!cache?.length){host.innerHTML='<div class="evolution-empty"><strong>Nenhuma evolução disponível ainda</strong><p>Conclua um treino e registre a carga ou a duração das séries. Depois, o histórico aparecerá aqui.</p></div>';return}
   const options=cache.map((x,i)=>'<option value="'+i+'">'+esc(normalizeHumanText(x.name))+'</option>').join('');
-  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p>'+renderWeeklyVolumePanel(cache.weeklyVolume)+'<div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
+  host.innerHTML='<div class="evolution-wrap"><p class="evolution-intro">Acompanhe a evolução das cargas e durações em cada exercício. O histórico reúne registros do mesmo exercício lógico entre versões do programa.</p>'+renderWeeklyActivityPanel(cache.weeklyActivity)+renderWeeklyVolumePanel(cache.weeklyVolume)+'<div class="evolution-panel"><label for="evolutionExerciseSelect">Exercício</label><select id="evolutionExerciseSelect">'+options+'</select></div><div id="evolutionDetails"></div></div>';
   const select=host.querySelector('#evolutionExerciseSelect'),details=host.querySelector('#evolutionDetails');
   const periodSelect=document.createElement('select');periodSelect.id='evolutionPeriodSelect';periodSelect.innerHTML='<option value="30">Últimos 30 dias</option><option value="90" selected>Últimos 90 dias</option><option value="180">Últimos 6 meses</option><option value="365">Últimos 12 meses</option><option value="all">Todo o histórico</option>';
   const periodLabel=document.createElement('label');periodLabel.htmlFor='evolutionPeriodSelect';periodLabel.textContent='Período de análise';

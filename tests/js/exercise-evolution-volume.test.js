@@ -54,3 +54,34 @@ test('weekly set totals do not depend on load or repetition multiplication',()=>
  });
  assert.equal(result.groups[0].weeks['2026-11-23'].sets,1);
 });
+
+test('weekly activity counts sessions, completed sets, and distinct exercises',()=>{
+ const result=core.aggregateWeeklyActivity({
+  logs:[
+   {session_id:'s1',exercise_id:'e1'},
+   {session_id:'s1',exercise_id:'e1'},
+   {session_id:'s1',exercise_id:'e2'},
+   {session_id:'s2',exercise_id:'e1'},
+   {session_id:'s3',exercise_id:'e3'}
+  ],
+  sessionDateById:new Map([
+   ['s1','2026-11-24'],['s2','2026-11-25'],['s3','2026-11-30']
+  ])
+ });
+ assert.deepEqual(result,[
+  {week:'2026-11-23',sessions:2,exercises:2,sets:4},
+  {week:'2026-11-30',sessions:1,exercises:1,sets:1}
+ ]);
+});
+
+test('weekly activity does not mix sessions from different weeks',()=>{
+ const result=core.aggregateWeeklyActivity({
+  logs:[
+   {session_id:'s1',exercise_id:'e1',completed_at:'2026-11-22'},
+   {session_id:'s2',exercise_id:'e2',completed_at:'2026-11-23'}
+  ]
+ });
+ assert.equal(result.length,2);
+ assert.equal(result[0].week,'2026-11-16');
+ assert.equal(result[1].week,'2026-11-23');
+});

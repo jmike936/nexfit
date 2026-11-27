@@ -36,6 +36,19 @@
   date.setUTCDate(date.getUTCDate()-((date.getUTCDay()+6)%7));
   return date.toISOString().slice(0,10);
  }
+ function aggregateWeeklyActivity({logs=[],sessionDateById=new Map()}={}){
+  const weeks=new Map();
+  for(const log of logs){
+   const date=sessionDateById.get(String(log.session_id))||log.completed_at||'';
+   const week=weekStartKey(date);if(!week||!log.session_id)continue;
+   if(!weeks.has(week))weeks.set(week,{week,sessions:new Set(),exercises:new Set(),sets:0});
+   const summary=weeks.get(week);
+   summary.sessions.add(String(log.session_id));
+   if(log.exercise_id)summary.exercises.add(String(log.exercise_id));
+   summary.sets+=1;
+  }
+  return [...weeks.values()].map(x=>({week:x.week,sessions:x.sessions.size,exercises:x.exercises.size,sets:x.sets})).sort((a,b)=>a.week.localeCompare(b.week));
+ }
  function aggregateWeeklyVolume({logs=[],exerciseById=new Map(),catalogById=new Map(),sessionDateById=new Map()}={}){
   const groups=new Map(),weekSet=new Set();
   for(const log of logs){
@@ -62,5 +75,5 @@
   const weeks=[...weekSet].sort();
   return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalSets-a.totalSets||a.muscle.localeCompare(b.muscle,'pt-BR'))};
  }
- return {canonicalMuscle,weekStartKey,aggregateWeeklyVolume,estimateOneRepMax};
+ return {canonicalMuscle,weekStartKey,aggregateWeeklyActivity,aggregateWeeklyVolume,estimateOneRepMax};
 });

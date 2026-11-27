@@ -207,7 +207,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Comparar períodos equivalentes por exercício, com seleção de 30, 90, 180 ou 365 dias e comparação da média por sessão contra o intervalo imediatamente anterior.
   - [ ] Comparar blocos de treino identificados no programa (micro/mesociclos) quando houver metadados de bloco.
 - [x] Detectar possível estabilidade por exercício com critério conservador (mínimo de 5 sessões em 28 dias, comparação das médias das duas primeiras e duas últimas sessões, tolerância de 5%); diferenciar queda recente e orientar revisão de progressão, recuperação e execução sem prescrever deload automaticamente.
-- [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa.
+- [ ] Resumo semanal: o que melhorou, o que estagnou, aderência ao programa. O resumo objetivo de treinos, séries e exercícios realizados, com comparação à semana anterior, está implementado nesta PR; análise de melhora/estagnação e aderência permanece pendente até existir uma agenda planejada confiável.
 
 ## Prioridade 8 — Wellness e controle de carga
 
