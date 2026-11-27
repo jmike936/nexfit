@@ -1463,6 +1463,19 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
  }
  let sessionPlan=[],sessionIndex=0,sessionExerciseRows=[],sessionLoads={},sessionSetLogs=[],skippedSetKeys=new Set(),skippedExerciseIndices=new Set();
  let previousLoadsByExercise={};
+ function adjustLoad(loadKey,delta){
+  const input=$('sessionLoad');
+  if(!input)return;
+  const raw=input.value.trim();
+  const current=raw===''?0:Number(raw.replace(',','.'));
+  if(!Number.isFinite(current))return;
+  const next=Math.max(0,Math.round((current+delta)*100)/100);
+  input.value=String(next);
+  input.dataset.userEdited='true';
+  sessionLoads[loadKey]=input.value;
+  const hint=$('previousLoadHint');if(hint)hint.textContent='Carga ajustada';
+  persistWorkoutState();
+ }
  function exerciseIdentity(name){return String(name??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR')}
  async function preloadPreviousLoads(exercises,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const u=userRef(),db=expectedDb;if(!u||!db||!exercises?.length||u.id!==expectedUserId)return;
