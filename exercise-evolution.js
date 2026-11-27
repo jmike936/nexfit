@@ -102,14 +102,14 @@ function detectPersonalRecords(points,metricType){
    if(Number.isFinite(point.value)&&point.value>best.duration){best.duration=point.value;labels.push('Duração')}
   }else if(metricType==='volume'){
    if(Number.isFinite(point.value)&&point.value>best.volume){best.volume=point.value;labels.push('Volume')}
-  }else if(metricType==='estimated1RM'){
+  }else if(metricType==='estimated1RM'||metricType==='estimated1RMBrzycki'){
    if(Number.isFinite(point.value)&&point.value>best.estimated1RM){best.estimated1RM=point.value;labels.push('1RM estimado')}
   }else{
    if(Number.isFinite(point.value)&&point.value>best.load){best.load=point.value;labels.push('Carga')}
    if(Number.isFinite(point.reps)&&point.reps>best.reps){best.reps=point.reps;labels.push('Repetições')}
    if(Number.isFinite(point.value)&&point.value>0&&Number.isFinite(point.reps)&&point.reps>=1&&point.reps<=12){
-    const estimate=point.value*(1+point.reps/30);
-    if(estimate>best.estimated1RM){best.estimated1RM=estimate;labels.push('1RM estimado')}
+    const estimate=window.NexfitExerciseEvolutionCore.estimateOneRepMax(point.value,point.reps,metricType==='estimated1RMBrzycki'?'brzycki':'epley');
+    if(estimate&&estimate>best.estimated1RM){best.estimated1RM=estimate;labels.push(metricType==='estimated1RMBrzycki'?'1RM estimado · Brzycki':'1RM estimado · Epley')}
    }
   }
   if(labels.length)flags.set(String(point.sessionId)+'|'+String(point.set),labels);
@@ -168,7 +168,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
   const identityKey=exercise.identityId?'identity:'+exercise.identityId:exercise.catalogId?'catalog:'+exercise.programId+'|'+exercise.catalogId:'legacy-exercise:'+log.exercise_id;
   const addPoint=(metricType,value)=>{
    if(!Number.isFinite(value)||value<=0)return;
-   const key=identityKey+'|'+metricType,label=metricType==='time'?'Tempo':metricType==='volume'?'Volume':metricType==='estimated1RM'?'1RM estimado':'Carga';
+   const key=identityKey+'|'+metricType,label=metricType==='time'?'Tempo':metricType==='volume'?'Volume':metricType==='estimated1RM'?'1RM estimado · Epley':metricType==='estimated1RMBrzycki'?'1RM estimado · Brzycki':'Carga';
    if(!grouped.has(key))grouped.set(key,{name:normalizeHumanText(name)+' · '+label,metricType,points:[],latestDate:date});
    const group=grouped.get(key);
    if(date&&(!group.latestDate||new Date(date)>=new Date(group.latestDate))){group.name=normalizeHumanText(name)+' · '+label;group.latestDate=date}
@@ -179,7 +179,9 @@ async function load(expectedUserId,expectedClient,isCurrent){
   else if(load>0&&reps>0){
    addPoint('load',load);
    addPoint('volume',load*reps);
-   if(reps>=1&&reps<=12)addPoint('estimated1RM',load*(1+reps/30));
+   const epley=evolutionCore.estimateOneRepMax(load,reps,'epley'),brzycki=evolutionCore.estimateOneRepMax(load,reps,'brzycki');
+   if(epley)addPoint('estimated1RM',epley);
+   if(brzycki)addPoint('estimated1RMBrzycki',brzycki);
   }
  }
  const result=[...grouped.values()].map(item=>({...item,points:item.points.sort((a,b)=>new Date(a.date)-new Date(b.date)||a.set-b.set)})).filter(item=>item.points.length).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
@@ -232,7 +234,7 @@ async function render(host){
    const allPoints=item.points,metricType=item.metricType,period=periodSelect.value,periodApi=window.NexfitEvolutionPeriods;
    const split=period==='all'?{current:allPoints,previous:[]}:periodApi.splitPeriods(allPoints,Number(period));
    const points=split.current.length?split.current:[],previousPoints=split.previous;
-   const isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':metricType==='estimated1RM'?'estimativas de 1RM':'cargas';
+   const isTimed=metricType==='time',metricName=isTimed?'duração':metricType==='volume'?'volume':metricType==='estimated1RM'?'1RM estimado · Epley':metricType==='estimated1RMBrzycki'?'1RM estimado · Brzycki':'carga',metricPlural=isTimed?'durações':metricType==='volume'?'volumes':metricType==='estimated1RM'||metricType==='estimated1RMBrzycki'?'estimativas de 1RM':'cargas';
    const personalRecordData=detectPersonalRecords(points,metricType);
    const sessionPoints=sessionSeries(points,metricType);
    const latest=sessionPoints[sessionPoints.length-1],previous=sessionPoints.length>1?sessionPoints[sessionPoints.length-2]:null;
@@ -252,18 +254,18 @@ async function render(host){
    }else if(metricType==='volume'){
     const best=sessionPoints.reduce((result,p)=>!result||p.value>result.value?p:result,null),average=sessionPoints.reduce((sum,p)=>sum+p.value,0)/sessionPoints.length;
     personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · volume por sessão</span><strong>'+kg(personalRecordData.best.volume)+'</strong><small>'+dateLabel(best.date)+'</small></div><div class="personal-record"><span>Volume médio por sessão</span><strong>'+kg(average)+'</strong><small>Com base em '+sessionPoints.length+' sessões</small></div></div>';
-   }else if(metricType==='estimated1RM'){
+   }else if(metricType==='estimated1RM'||metricType==='estimated1RMBrzycki'){
     const best=points.reduce((result,p)=>!result||p.value>result.value?p:result,null);
-    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+kg(personalRecordData.best.estimated1RM)+'</strong><small>'+dateLabel(best.date)+' · Fórmula de Epley</small></div></div><p class="evolution-intro">Estimativa matemática, não um teste de carga máxima.</p>';
+    personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+kg(personalRecordData.best.estimated1RM)+'</strong><small>'+dateLabel(best.date)+' · Fórmula de '+(metricType==='estimated1RMBrzycki'?'Brzycki':'Epley')+'</small></div></div><p class="evolution-intro">Estimativa matemática, não um teste de carga máxima. Epley aceita até 12 repetições; Brzycki, até 10.</p>'; 
    }else{
     const heaviest=points.filter(p=>Number.isFinite(p.value)&&p.value>0).reduce((best,p)=>!best||p.value>best.value?p:best,null);
     const mostReps=points.filter(p=>Number.isFinite(p.reps)&&p.reps>0).reduce((best,p)=>!best||p.reps>best.reps?p:best,null);
-    const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:p.value*(1+p.reps/30)})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
+    const estimated=points.filter(p=>Number.isFinite(p.value)&&p.value>0&&Number.isFinite(p.reps)&&p.reps>=1&&p.reps<=12).map(p=>({...p,estimated1RM:window.NexfitExerciseEvolutionCore.estimateOneRepMax(p.value,p.reps,'epley')})).reduce((best,p)=>!best||p.estimated1RM>best.estimated1RM?p:best,null);
     personalRecords='<div class="personal-records"><div class="personal-record"><span>Recorde pessoal · carga</span><strong>'+(heaviest?kg(personalRecordData.best.load):'—')+'</strong><small>'+(heaviest?dateLabel(heaviest.date)+' · '+heaviest.reps+' repetições':'Sem carga registrada')+'</small></div><div class="personal-record"><span>Recorde pessoal · repetições</span><strong>'+(mostReps?personalRecordData.best.reps+' reps':'—')+'</strong><small>'+(mostReps?dateLabel(mostReps.date)+' · '+kg(mostReps.value):'Sem repetições registradas')+'</small></div><div class="personal-record"><span>Recorde pessoal · 1RM estimado</span><strong>'+(estimated?kg(personalRecordData.best.estimated1RM):'—')+'</strong><small>'+(estimated?dateLabel(estimated.date)+' · '+estimated.value+' kg × '+estimated.reps+' reps · fórmula de Epley':'Requer série entre 1 e 12 repetições')+'</small></div></div>';
    }
-   const metricLabel=isTimed?'Maior duração':metricType==='volume'?'Volume total da sessão':metricType==='estimated1RM'?'1RM estimado':'Maior carga';
-   if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
-   details.innerHTML=periodComparison+plateauNotice+personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':metricType==='volume'?' · volume da série':metricType==='estimated1RM'?' · 1RM estimado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
+   const metricLabel=isTimed?'Maior duração':metricType==='volume'?'Volume total da sessão':metricType==='estimated1RM'||metricType==='estimated1RMBrzycki'?'1RM estimado':'Maior carga';
+   if(!isTimed)personalRecords+='<p class="evolution-intro">O 1RM é uma estimativa matemática (Epley ou Brzycki, conforme selecionado), não um teste de carga máxima. Use como referência e evite testar cargas máximas sem orientação.</p>';
+   details.innerHTML=periodComparison+plateauNotice+personalRecords+'<div class="evolution-stats"><div class="evolution-stat"><span>'+metricLabel+' na última sessão</span><strong>'+formatMetric(latest.value,metricType)+'</strong></div><div class="evolution-stat"><span>Variação vs. sessão anterior</span><strong>'+(delta===null?'—':(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':''))+'</strong></div><div class="evolution-stat"><span>Sessões</span><strong>'+sessions+'</strong></div></div><div class="evolution-panel"><h3>Gráfico de evolução da '+metricName+'</h3>'+chart(points,metricType)+'</div><div class="evolution-panel"><h3>Histórico de séries</h3>'+records.map(p=>{const pr=personalRecordData.flags.get(String(p.sessionId)+'|'+String(p.set));return '<div class="evolution-record"><div><strong>'+dateLabel(p.date)+'</strong><small>Série '+p.set+(isTimed?' · tempo realizado':metricType==='volume'?' · volume da série':metricType==='estimated1RM'||metricType==='estimated1RMBrzycki'?' · 1RM estimado':' · '+p.reps+' repetições')+'</small>'+(pr?'<span class="evolution-pr-badge">PR · '+esc(pr.join(' · '))+'</span>':'')+'</div><b>'+formatMetric(p.value,metricType)+'</b></div>'}).join('')+'</div>';
    if(delta!==null){const note=document.createElement('p');note.className='evolution-intro';note.textContent='Variação entre as duas sessões mais recentes deste período: '+(delta>0?'+':'')+formatMetric(Math.abs(delta),metricType)+(delta<0?' a menos':'')+(deltaPercent!==null?' ('+(delta>0?'+':'')+deltaPercent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%)':'')+'.';details.querySelector('.evolution-stats').after(note)}
   };
   select.addEventListener('change',()=>{if(isCurrent())paint()});periodSelect.addEventListener('change',()=>{if(isCurrent())paint()});paint();
