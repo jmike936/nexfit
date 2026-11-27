@@ -33,3 +33,10 @@ test('history displays and edits optional RPE/RIR values per set',()=>{
  assert.match(history,/data-wh-effort-value=/);
  assert.match(history,/effortValues=\{rpe:/);
 });
+
+test('history details use the requested per-set table columns',()=>{
+ assert.match(history,/<th[^>]*>Exercício<\\/th>/);
+ assert.match(history,/<th[^>]*>Repetições<\\/th>/);
+ assert.match(history,/<th[^>]*>Carga<\\/th>/);
+ assert.match(history,/<tr><td><strong>\+'\+esc\(normalizeHumanText\(e\.name\)\)/);
+});
