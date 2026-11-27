@@ -83,3 +83,8 @@ test('exercise library renders only populated structured guidance using text nod
   assert.match(library, /host\.hidden=host\.childElementCount===0/);
   assert.match(index, /id="exerciseLibraryGuidanceSections" hidden/);
 });
+
+
+test('exercise library closes the exercise detail before a navigation menu changes page', () => {
+  assert.match(library, /document\.querySelectorAll\('\.nav button'\)\.forEach\(button=>button\.addEventListener\('click',closeDetail,\{capture:true\}\)\)/);
+});
