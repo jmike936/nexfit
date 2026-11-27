@@ -39,8 +39,8 @@
  function aggregateWeeklyVolume({logs=[],exerciseById=new Map(),catalogById=new Map(),sessionDateById=new Map()}={}){
   const groups=new Map(),weekSet=new Set();
   for(const log of logs){
-   const load=Number(log.load_kg),reps=Number(log.reps_completed);
-   if(!Number.isFinite(load)||load<=0||!Number.isFinite(reps)||reps<=0)continue;
+   const load=Number(log.load_kg),reps=Number(log.reps_completed),timed=Number(log.duration_seconds)>0;
+   if(!timed&&(!Number.isFinite(load)||load<=0||!Number.isFinite(reps)||reps<=0))continue;
    const exercise=exerciseById.get(String(log.exercise_id));
    if(!exercise?.catalogId)continue;
    const catalog=catalogById.get(String(exercise.catalogId));
@@ -60,7 +60,7 @@
    }
   }
   const weeks=[...weekSet].sort();
-  return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalVolume-a.totalVolume||a.muscle.localeCompare(b.muscle,'pt-BR'))};
+  return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalSets-a.totalSets||a.muscle.localeCompare(b.muscle,'pt-BR'))};
  }
  return {canonicalMuscle,weekStartKey,aggregateWeeklyVolume,estimateOneRepMax};
 });
