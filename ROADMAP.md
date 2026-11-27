@@ -11,8 +11,9 @@ Atualizado em 27/11/2026.
 
 - [x] Configurar Ignore Build Step na Vercel para pular deploy quando a alteração for somente Markdown, Supabase, testes ou workflows do GitHub Actions.
 - [x] Definir que tarefas sem alteração executável do app não incrementam build PWA nem invalidam cache do Service Worker.
-- [ ] Confirmar no primeiro push elegível que a Vercel marca o build como ignorado e que alterações reais de app continuam publicando.
-  - Em 27/11/2026, a configuração foi aplicada pela API da Vercel com comparação entre os SHAs anterior e atual; ignora Markdown, `docs/`, `supabase/`, `tests/` e `.github/`. Sem SHA anterior, permite o build por segurança. A validação prática ainda depende do próximo push elegível.
+- [x] Confirmar no primeiro push elegível que a Vercel marca o build como ignorado para alterações somente documentais.
+  - Validado em 27/11/2026 nos commits `458f81a` e `fce2698`: logs da Vercel confirmam que o comando retornou código 0 e cancelou o deploy por `Ignored Build Step`. A configuração compara os SHAs anterior/atual e ignora Markdown, `docs/`, `supabase/`, `tests/` e `.github/`; sem SHA anterior, permite o build por segurança.
+- [ ] Confirmar que alterações reais do app continuam publicando normalmente após a configuração.
 
 - [x] Desativar deploys de Preview do projeto para evitar consumo da cota por PR/branches; CI do GitHub permanece como validação.
 - [x] Documentar política de publicação: agrupar alterações, não forçar/repetir deploys, reservar produção para merges revisados e confirmar estado READY antes de declarar publicado.
