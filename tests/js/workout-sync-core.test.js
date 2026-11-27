@@ -259,14 +259,14 @@ test('legacy set-log payloads default RPE and RIR to null',()=>{
 test('account change during activity marker lookup stops before creating an activity',async()=>{
  const saved=completedSnapshot(),db=makeSyncAdapter();
  let activeUser='athlete-a';
- db.findActivityByMarker=async()=>{activeUser='athlete-b';return {data:null,error:null}};
+ db.findActivityByMarker=async()=>{db.state.calls.lookup++;activeUser='athlete-b';return {data:null,error:null}};
  const result=await sync.syncWorkoutSnapshot({saved,userId:'athlete-a',db,isCurrent:()=>activeUser==='athlete-a'});
  assert.equal(result.ok,false);
  assert.equal(result.reason,'account_changed');
  assert.equal(db.state.calls.session,1);
  assert.equal(db.state.calls.logs,1);
  assert.equal(db.state.calls.complete,1);
- assert.equal(db.state.calls.lookup,0);
+ assert.equal(db.state.calls.lookup,1);
  assert.equal(db.state.calls.insert,0);
 });
 
