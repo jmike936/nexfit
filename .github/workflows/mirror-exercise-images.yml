@@ -1,0 +1,43 @@
+name: Mirror exercise images
+on:
+  push:
+    branches: [assets/exercise-image-library]
+    paths:
+      - ".github/assets-mirror/manifest.json"
+      - ".github/workflows/mirror-exercise-images.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: assets/exercise-image-library
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download pinned source images
+        run: |
+          python - <<'PY'
+          import json, pathlib, urllib.request
+          manifest=json.load(open(".github/assets-mirror/manifest.json"))
+          for i,item in enumerate(manifest["files"],1):
+              dest=pathlib.Path(item["path"]); dest.parent.mkdir(parents=True,exist_ok=True)
+              req=urllib.request.Request(item["url"],headers={"User-Agent":"NEXFIT-asset-mirror/1.0"})
+              with urllib.request.urlopen(req,timeout=30) as response: data=response.read()
+              if len(data)<100 or data[:4]!=b"RIFF" or data[8:12]!=b"WEBP": raise RuntimeError(f"Invalid WEBP: {item['url']}")
+              dest.write_bytes(data)
+              if i%25==0: print(f"{i}/{len(manifest['files'])}")
+          print(f"Downloaded {len(manifest['files'])} WEBP files.")
+          PY
+      - name: Commit mirrored assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/exercise-images/library
+          git diff --cached --quiet && exit 0
+          git commit -m "Add local copies of catalog exercise images"
+          git push origin HEAD:assets/exercise-image-library
