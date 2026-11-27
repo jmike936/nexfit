@@ -65,3 +65,6 @@ O modelo de dados para avaliações, VBT, resistência, frequência cardíaca, f
 ## Biblioteca de Exercícios
 
 A biblioteca consultável por atletas e personais usa o catálogo canônico `training_exercise_catalog`, com busca por nome, filtro por grupo muscular, imagens de início/fim, instruções e grupos musculares quando disponíveis. Os metadados e instruções ficam em cache local separado por conta; imagens abertas são armazenadas no Cache Storage para reutilização offline. Durante o treino, imagens e mapa muscular ficam recolhidos atrás da ação “Ver execução” e só são carregados ao abrir o painel. Se uma imagem ainda não estiver no cache e não houver conexão, o app informa que a demonstração não está disponível offline.
+
+
+Purpose taxonomy: the exercise library supports a reviewed-purpose filter (`training_exercise_catalog_purposes`); only approved links appear to authenticated users.
