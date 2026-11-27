@@ -76,7 +76,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Impedir que versões concorrentes sejam criadas com o mesmo número.
 - [x] Impedir múltiplas versões pendentes simultâneas do mesmo programa.
 - [x] Evitar abrir uma versão enquanto sua cópia de treinos e exercícios ainda está em andamento.
-- [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (PR #289: cópia pessoal independente com identidades preservadas; aguardando CI e implantação coordenada da migration após existir backup recuperável).
+- [ ] Permitir alterações individuais do atleta/personal sem sobrescrever o programa compartilhado ou os demais treinos do atleta (PR #289 em draft; cópia pessoal independente e preservação de identidades implementadas; CI JavaScript e PostgreSQL passou em 27/11/2026. Implantação bloqueada até existir backup recuperável para aplicar a migration).
 - [ ] Preservar a continuidade do histórico, datas e contagens de execução dos treinos após alterações e confirmação de versões (incluindo compatibilidade com registros anteriores à identidade estável).
   - [ ] Aplicar reconciliação conservadora de identidades legadas por título e composição única do treino; validar as contagens após a execução do SQL.
   - [x] Corrigir fallback de contagem: sessões com identidade estável não contaminam a contagem legada por título; erros de consulta ao histórico deixam de ser exibidos como zero.
