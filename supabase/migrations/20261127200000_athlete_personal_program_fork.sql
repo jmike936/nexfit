@@ -157,8 +157,8 @@ begin
 end;
 $$;
 
-revoke all on function public.nexfit_fork_assigned_program(uuid) from public;
-grant execute on function public.nexfit_fork_assigned_program(uuid) to authenticated;
+revoke all on function public.nexfit_fork_assigned_program(uuid) from public, anon;
+grant execute on function public.nexfit_fork_assigned_program(uuid) to authenticated, service_role;
 
 -- A confirmação de versões pessoais deve ignorar somente o programa de origem.
 -- Outros programas ativos da mesma categoria continuam bloqueando a confirmação.
