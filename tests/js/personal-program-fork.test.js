@@ -43,3 +43,19 @@ test('confirming a personal version excludes only its source from category confl
  assert.match(migration,/p\.id is distinct from \(\s*select source_program_id from public\.training_programs where id = v_program\s*\)/);
  assert.match(migration,/where id = v_program and created_by <> auth\.uid\(\)/);
 });
+
+test('replacing a workout keeps its stable identity and protects prior sessions and set logs',()=>{
+ const start=source.indexOf('async function replaceSubworkout(id){');
+ const end=source.indexOf('async function deleteSubworkout(id){',start);
+ assert.ok(start>=0&&end>start,'replacement function should exist');
+ const replacement=source.slice(start,end);
+ assert.match(source,/data-replace-sub/);
+ assert.match(source,/if\(action==='replace'\)return replaceSubworkout\(workout\.id\)/);
+ assert.match(replacement,/programVersion\.status!=='pending'/);
+ assert.match(replacement,/training_sessions'\)\.select\('id',\{count:'exact',head:true\}\)\.eq\('subworkout_id',item\.id\)/);
+ assert.match(replacement,/training_set_logs'\)\.select\('id',\{count:'exact',head:true\}\)\.in\('exercise_id',exerciseIds\)/);
+ assert.match(replacement,/training_subworkouts'\)\.update\(\{title\}\)\.eq\('id',item\.id\)/);
+ assert.match(replacement,/training_exercises'\)\.delete\(\)\.eq\('subworkout_id',item\.id\)/);
+ assert.doesNotMatch(replacement,/training_sessions'\)\.delete/);
+ assert.doesNotMatch(replacement,/training_set_logs'\)\.delete/);
+});
