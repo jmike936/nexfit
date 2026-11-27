@@ -302,6 +302,15 @@
  let plans=[],current=null,version=null,subworkouts=[],session=null,timer=null,activeRest=null,activeExerciseTimer=null,lastExerciseTimerPersistedSecond=-1,notificationsAllowed=false,showArchivedPlans=false,activeTrainingTab='mine',editorSubworkoutId=null,savingSet=false,savingSetOwner=null,skippingSet=false,skippingExercise=false,finishingSession=false,finishingSessionOwner=null,workoutSyncCoordinator=workoutSyncCore.createSyncCoordinator();
  const dbRef=()=>window.db||db, userRef=()=>window.currentUser||currentUser;
  function canManageProgramLocally(p){const u=userRef();return !!u&&(p.athlete_id===u.id||p.created_by===u.id)}
+ function activePersonalForkSourceIds(userId=userRef()?.id){
+  return new Set(plans.filter(p=>String(p.athlete_id)===String(userId)&&String(p.created_by)===String(userId)&&p.source_program_id&&p.status==='active').map(p=>String(p.source_program_id)));
+ }
+ function isPersonalForkSourceProgram(p,userId=userRef()?.id){
+  return !!p&&String(p.athlete_id)===String(userId)&&String(p.created_by)!==String(userId)&&!p.source_program_id;
+ }
+ function isHiddenByPersonalFork(p,userId=userRef()?.id){
+  return isPersonalForkSourceProgram(p,userId)&&activePersonalForkSourceIds(userId).has(String(p.id));
+ }
  const editIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
  const trashIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
  function go(){if(typeof window.go==='function')window.go('strengthPage');else{document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===section))}home()}
@@ -350,7 +359,8 @@
    return;
   }
   window.__nexfitOfflineMode=false;
-  const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
+  const hiddenForkSources=activePersonalForkSourceIds(renderUserId);
+  const programs=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id&&!hiddenForkSources.has(String(p.id)));
    if(!programs.length){host.innerHTML='<div class="training-empty"><h3>Nenhum treino ativo</h3><p class="muted">Crie um programa e adicione seus treinos no gerenciador.</p></div>';return}
    const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
    const [workoutsQuery,versionsQuery]=await Promise.all([
@@ -367,6 +377,7 @@
    const workouts=[];
    const offlineKey='nexfit-offline-workouts:'+String(renderUserId);
    let offlineSnapshots=[];try{const cached=JSON.parse(localStorage.getItem(offlineKey)||'[]');if(Array.isArray(cached))offlineSnapshots=cached}catch(_){}
+   offlineSnapshots=offlineSnapshots.filter(snapshot=>!isHiddenByPersonalFork(snapshot.program,renderUserId));
    for(const p of programs){
     const versionRow=versionById.get(String(p.current_version_id));
     if(!versionRow)continue;
@@ -418,11 +429,11 @@
     if(!previous||date>previous)lastExecution.set(key,date);
    }
   }
-  const lastExecutionForWorkout=(programId,workout)=>{
+  const lastExecutionForWorkout=(programId,workout,sourceProgramId=null)=>{
    const identityId=String(workout.identity_id||'');
-   if(identityId)return lastExecution.get(workoutHistoryKey(programId,'identity',identityId))||null;
+   if(identityId)return lastExecution.get(workoutHistoryKey(programId,'identity',identityId))||(sourceProgramId?lastExecution.get(workoutHistoryKey(sourceProgramId,'identity',identityId)):null)||null;
    const legacyTitle=String(workout.title||'').trim().toLocaleLowerCase('pt-BR');
-   return legacyTitle?lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||null:null;
+   return legacyTitle?(lastExecution.get(workoutHistoryKey(programId,'legacy-title',legacyTitle))||(sourceProgramId?lastExecution.get(workoutHistoryKey(sourceProgramId,'legacy-title',legacyTitle)):null)||null):null;
   };
   const dateLabel=value=>{
    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return '';
@@ -430,7 +441,7 @@
    return day+'/'+month+'/'+year;
   };
   workouts.sort((a,b)=>{
-   const da=lastExecutionForWorkout(a.program.id,a.workout),db=lastExecutionForWorkout(b.program.id,b.workout);
+   const da=lastExecutionForWorkout(a.program.id,a.workout,a.program.source_program_id),db=lastExecutionForWorkout(b.program.id,b.workout,b.program.source_program_id);
    if(!da&&db)return -1;if(da&&!db)return 1;
    if(da&&db){const diff=da.localeCompare(db);if(diff)return diff}
    return String(a.workout.title||'Treino').localeCompare(String(b.workout.title||'Treino'),'pt-BR',{sensitivity:'base'});
@@ -489,6 +500,24 @@
   });
   host.innerHTML=cards.length?'<div class="training-list">'+cards.join('')+'</div>':'<div class="training-empty"><h3>Nenhum treino cadastrado</h3><p class="muted">Os programas ativos ainda não possuem treinos.</p></div>';
   host.querySelectorAll('[data-start-training]').forEach(button=>button.onclick=()=>runWorkoutStart(button,()=>startListedWorkout(button.dataset.startTraining,button.dataset.version,button.dataset.workout)));
+ }
+ async function copyAssignedProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
+  const userId=expectedUserId,db=expectedDb,source=plans.find(p=>String(p.id)===String(id));
+  const isSameAccount=()=>!!userId&&userRef()?.id===userId;
+  if(!db||!isSameAccount()||!source||!isPersonalForkSourceProgram(source,userId))return false;
+  if(await showWorkoutDialog({title:'Criar cópia pessoal?',message:'Será criada uma cópia independente deste programa. Suas alterações e novos treinos ficarão somente no seu perfil; o programa original do profissional e o histórico existente serão preservados.',confirmLabel:'Criar cópia pessoal',cancelLabel:'Cancelar'})!==true)return false;
+  if(!isSameAccount())return false;
+  const {data,error}=await db.rpc('nexfit_fork_assigned_program',{p_program:id});
+  if(!isSameAccount())return false;
+  if(error){
+   const message=error.message||String(error);
+   await showWorkoutDialog({title:'Não foi possível criar a cópia pessoal',message:/nexfit_fork_assigned_program|function.*exist|schema cache|42883/i.test(message)?'A função de cópia pessoal ainda não está instalada no Supabase. A cópia não foi criada e o programa original permanece intacto.':message,confirmLabel:'Entendi',danger:true});
+   return false;
+  }
+  if(!data){await showWorkoutDialog({title:'Cópia não confirmada',message:'O banco não retornou a identificação da cópia. Atualize a tela antes de tentar novamente.',confirmLabel:'Entendi',danger:true});return false}
+  await showWorkoutDialog({title:'Cópia pessoal criada',message:'Agora você pode editar seus treinos sem alterar o programa original do profissional.',confirmLabel:'Continuar'});
+  await home();
+  return true;
  }
  async function copyPublicProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const isSameAccount=()=>userRef()?.id===expectedUserId;
@@ -642,7 +671,8 @@
  }
  function populateProgramSelectors(){
   const select=$('workoutProgram');if(!select)return;
-  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id);
+  const userId=userRef()?.id;
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&p.current_version_id&&!isPersonalForkSourceProgram(p,userId)&&!isHiddenByPersonalFork(p,userId));
   select.innerHTML='<option value="">Selecione um programa</option>'+active.map(p=>'<option value="'+esc(p.id)+'">'+esc(programCategory(p.description)+' · '+normalizeHumanText(p.title))+'</option>').join('');
  }
  async function toggleProgramVisibility(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
@@ -661,8 +691,14 @@
   const host=$('programManagement');if(!host)return;
   const renderUserId=userRef()?.id,renderDb=dbRef();
   if(!renderUserId||!renderDb)return;
-  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active');
-  host.innerHTML=active.length?active.map(p=>'<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>').join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  const active=plans.filter(p=>canManageProgramLocally(p)&&p.status==='active'&&!isHiddenByPersonalFork(p,renderUserId));
+  host.innerHTML=active.length?active.map(p=>{
+   if(isPersonalForkSourceProgram(p,renderUserId)){
+    return '<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · Programa recebido do profissional · Original preservado</small></div><div class="training-row-actions"><button class="btn" data-fork-program="'+esc(p.id)+'">Criar cópia pessoal</button></div></div>';
+   }
+   return '<div class="training-management-row"><div><strong>'+esc(normalizeHumanText(p.title))+'</strong><small>'+esc(programCategory(p.description))+' · '+(p.source_program_id?'Cópia pessoal · ':'')+(p.is_public?'Público':'Privado')+'</small></div><div class="training-row-actions"><button class="btn alt" data-manage-program="'+esc(p.id)+'">Treinos e exercícios</button><button class="btn alt" data-toggle-public="'+esc(p.id)+'">'+(p.is_public?'Tornar privado':'Tornar público')+'</button><button class="icon-action" data-edit-program="'+esc(p.id)+'" title="Editar programa" aria-label="Editar programa">'+editIcon+'</button><button class="icon-action danger" data-archive-program="'+esc(p.id)+'" title="Excluir programa" aria-label="Excluir programa">'+trashIcon+'</button></div></div>';
+  }).join(''):'<p class="muted">Nenhum programa vigente.</p>';
+  host.querySelectorAll('[data-fork-program]').forEach(b=>b.onclick=()=>copyAssignedProgram(b.dataset.forkProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-manage-program]').forEach(b=>b.onclick=()=>openProgram(b.dataset.manageProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-edit-program]').forEach(b=>b.onclick=()=>editProgram(b.dataset.editProgram,renderUserId,renderDb));
   host.querySelectorAll('[data-toggle-public]').forEach(b=>b.onclick=()=>toggleProgramVisibility(b.dataset.togglePublic,renderUserId,renderDb));
@@ -694,6 +730,7 @@
    return false;
   }
   if(action==='delete')return deleteSubworkout(workout.id);
+  if(action==='replace')return replaceSubworkout(workout.id);
   return openWorkoutEditor(workout.id,expectedUserId,expectedDb);
  }
  async function openIsolatedExerciseEdit(programId,subworkoutIdentity,exerciseIdentity,expectedUserId=userRef()?.id,expectedDb=dbRef(),action='edit'){
@@ -717,7 +754,7 @@
   const host=$('trainingManagement');if(!host)return;
   const renderUserId=userRef()?.id,renderDb=dbRef(),isSameAccount=()=>userRef()?.id===renderUserId;
   if(!renderUserId||!renderDb)return;
-  const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id);
+  const rows=[],programs=plans.filter(x=>canManageProgramLocally(x)&&x.status==='active'&&x.current_version_id&&!isPersonalForkSourceProgram(x,renderUserId));
   const versionIds=[...new Set(programs.map(p=>p.current_version_id).filter(Boolean))];
   const programByVersion=new Map(programs.map(p=>[String(p.current_version_id),p]));
   let workouts=[];
@@ -837,6 +874,7 @@
  async function openProgram(id,expectedUserId=userRef()?.id,expectedDb=dbRef()){
   const db=expectedDb,userId=expectedUserId,program=plans.find(p=>p.id===id);
   if(!db||!userId||userRef()?.id!==userId||!program)return false;
+  if(isPersonalForkSourceProgram(program,userId)){await showWorkoutDialog({title:'Programa compartilhado',message:'Para fazer alterações individuais, crie uma cópia pessoal. O programa original do profissional será preservado.',confirmLabel:'Entendi'});return false}
   const isCurrentProgram=()=>userRef()?.id===userId&&current?.id===program.id&&editorSubworkoutId===null;
   editorSubworkoutId=null;current=program;version=null;subworkouts=[];
   const {data:vers,error}=await db.from('training_program_versions').select('*').eq('program_id',id).order('version_number',{ascending:false});
@@ -982,9 +1020,10 @@
    if(!db||!expectedUserId||!isCurrent())return;
    const workoutIds=workoutRows.map(item=>item.id),exercisesByWorkout=new Map(),sessionCountsByWorkout=new Map(),sessionsByIdentity=new Map(),sessionsByTitle=new Map();
    if(workoutIds.length){
-    const [exerciseQuery,doneQuery]=await Promise.all([
+    const historyProgramIds=[programId,...(current?.id===programId&&current.source_program_id?[current.source_program_id]:[])];
+   const [exerciseQuery,doneQuery]=await Promise.all([
      db.from('training_exercises').select('*').in('subworkout_id',workoutIds).order('position'),
-     db.from('training_sessions').select('subworkout_id').eq('program_id',programId).eq('athlete_id',expectedUserId).eq('status','completed')
+     db.from('training_sessions').select('subworkout_id').in('program_id',historyProgramIds).eq('athlete_id',expectedUserId).eq('status','completed')
     ]);
     if(!isCurrent())return;
     for(const exercise of exerciseQuery.data||[]){const key=String(exercise.subworkout_id);if(!exercisesByWorkout.has(key))exercisesByWorkout.set(key,[]);exercisesByWorkout.get(key).push(exercise)}
@@ -1023,7 +1062,7 @@
     // Um treino novo, com identity_id próprio, nunca herda a contagem de outro treino homônimo.
     if(!s.identity_id){const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');total=legacyTitle?sessionsByTitle.get(legacyTitle)||0:0}
     const exercises=exercisesByWorkout.get(String(s.id))||[];
-    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${exercises.map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
+    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button><button class="btn alt" data-replace-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}">Substituir treino mantendo histórico</button></div><p class="muted">${esc(s.description||'')}</p>${exercises.map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
    }
    if(!isCurrent())return;
    const host=$('subList');if(!host)return;
@@ -1031,6 +1070,7 @@
    host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,null,expectedUserId,db,'add')});
    host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'edit')});
    host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'delete')});
+   host.querySelectorAll('[data-replace-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'replace')});
    host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'edit')});
    host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'delete')});
    host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
@@ -1271,6 +1311,46 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(error){await showWorkoutDialog({title:'Não foi possível salvar o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
+ }
+ async function replaceSubworkout(id){
+  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
+  if(!db||!program||!programVersion||!userId||!item)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
+  if(programVersion.status!=='pending'){
+   await showWorkoutDialog({title:'Prepare uma nova versão',message:'A substituição só pode ser feita em uma versão pendente. A versão vigente e seu histórico permanecem protegidos.',confirmLabel:'Entendi'});
+   return false;
+  }
+  if(await showWorkoutDialog({title:'Substituir treino?',message:'O treino será mantido com a mesma identidade histórica, mas seus exercícios atuais nesta versão serão removidos para você montar a nova composição. As sessões, séries e datas já registradas continuarão preservadas.',confirmLabel:'Continuar',cancelLabel:'Cancelar'})!==true)return false;
+  if(!isCurrentEditor())return false;
+  const titleInput=await showWorkoutDialog({title:'Nome do novo treino',message:'Informe o nome do treino que substituirá “'+item.title+'”.',confirmLabel:'Substituir',cancelLabel:'Cancelar',input:{type:'text',label:'Nome do treino',placeholder:'Ex.: Treino A — Peito e tríceps',maxLength:100}});
+  if(titleInput===null)return false;
+  const title=normalizeHumanText(titleInput);
+  if(!title){await showWorkoutDialog({title:'Nome obrigatório',message:'Informe um nome para o novo treino.',confirmLabel:'Corrigir'});return false}
+  if(!isCurrentEditor())return false;
+  const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
+  if(!isCurrentEditor())return false;
+  if(used.error){await showWorkoutDialog({title:'Não foi possível verificar o histórico',message:used.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if((used.count||0)>0){await showWorkoutDialog({title:'Treino já executado nesta versão',message:'Não é seguro substituir um treino que já possui sessões nesta versão. Crie outra versão antes de continuar; o histórico existente não será alterado.',confirmLabel:'Entendi'});return false}
+  const exercises=await db.from('training_exercises').select('id').eq('subworkout_id',item.id);
+  if(!isCurrentEditor())return false;
+  if(exercises.error){await showWorkoutDialog({title:'Não foi possível verificar os exercícios',message:exercises.error.message,confirmLabel:'Entendi',danger:true});return false}
+  const exerciseIds=(exercises.data||[]).map(row=>row.id);
+  if(exerciseIds.length){
+   const logs=await db.from('training_set_logs').select('id',{count:'exact',head:true}).in('exercise_id',exerciseIds);
+   if(!isCurrentEditor())return false;
+   if(logs.error){await showWorkoutDialog({title:'Não foi possível verificar as séries',message:logs.error.message,confirmLabel:'Entendi',danger:true});return false}
+   if((logs.count||0)>0){await showWorkoutDialog({title:'Exercícios com histórico',message:'Há séries registradas nos exercícios desta versão. A substituição foi cancelada para preservar todos os registros.',confirmLabel:'Entendi'});return false}
+  }
+  const updated=await db.from('training_subworkouts').update({title}).eq('id',item.id);
+  if(!isCurrentEditor())return false;
+  if(updated.error){await showWorkoutDialog({title:'Não foi possível renomear o treino',message:updated.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if(exerciseIds.length){
+   const removed=await db.from('training_exercises').delete().eq('subworkout_id',item.id);
+   if(!isCurrentEditor())return false;
+   if(removed.error){await showWorkoutDialog({title:'Treino renomeado; não foi possível limpar os exercícios',message:removed.error.message+' Você pode revisar os exercícios manualmente sem perder o histórico.',confirmLabel:'Entendi',danger:true});await openWorkoutEditor(item.id,userId,db);return false}
+  }
+  await openWorkoutEditor(item.id,userId,db);
+  return true;
  }
  async function deleteSubworkout(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));

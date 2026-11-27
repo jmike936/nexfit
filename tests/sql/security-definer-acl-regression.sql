@@ -17,6 +17,7 @@ BEGIN
     'public.nexfit_can_manage_program(uuid)',
     'public.nexfit_can_read_program(uuid)',
     'public.nexfit_confirm_program_version(uuid)',
+    'public.nexfit_fork_assigned_program(uuid)',
     'public.nexfit_copy_public_program(uuid)',
     'public.nexfit_create_own_program(text,text,text)',
     'public.nexfit_create_program_for_athlete(text,text,text)',

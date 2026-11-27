@@ -24,8 +24,11 @@ Atualizada em 23/11/2026. Esta revisão inspeciona SQL, ordem de dependências, 
 | 016 unify exercise aliases | Em transação, redireciona exercícios para itens canônicos e exclui aliases do catálogo. | **Sensível a dados.** Verificar todas as referências/FKs do catálogo e prévia dos aliases antes da primeira execução. |
 | 017 reconcile legacy workout identities | Em transação, atualiza identidades de treinos/exercícios com correspondência conservadora; não exclui sessões ou séries. | Operação de dados sensível. Requer backup, validação de candidatos e contagens antes/depois; não executar automaticamente em bancos existentes. |
 | 018 exercise image library seed | Adiciona colunas condicionalmente e atualiza URLs/grupos musculares, preservando valores personalizados conforme os filtros. | Reexecutável em geral; conferir correspondências e URLs no banco de teste antes de aplicar em produção. |
+| 021 athlete personal program fork | Cria índice único parcial para uma cópia pessoal ativa por atleta/origem, adiciona RPC `SECURITY DEFINER` para copiar programa/versão/treinos/exercícios sem copiar sessões/séries e atualiza a RPC de confirmação de versão para ignorar somente o programa de origem. | Aditiva, sem backfill; revisar permissões e testar no PostgreSQL efêmero. O índice pressupõe ausência de duplicatas ativas por atleta/origem. Não aplicar em produção sem backup recuperável e conferência do histórico de migrações. |
 
 ## Dependências relevantes
+
+- 021 depende das colunas `source_program_id`, `is_public` (007), identidades estáveis (012), metadados de exercícios (011/018) e tabelas de notificações/auditoria (002/004). A atualização da RPC `nexfit_confirm_program_version` pressupõe a definição final da migração 004.
 
 - 002 depende de `auth.users` e cria o núcleo de treinamento; 003 depende de `activities` criada em 001.
 - 004, 005, 006, 007 e 008 dependem das tabelas/funções do núcleo 002.
