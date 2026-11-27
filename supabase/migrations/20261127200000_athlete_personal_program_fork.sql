@@ -175,6 +175,10 @@ declare
   v_description text;
   v_category text;
 begin
+  if auth.uid() is null then
+    raise exception 'Autenticação necessária.';
+  end if;
+
   select v.program_id, p.athlete_id, p.current_version_id, p.description
   into v_program, v_athlete, v_old, v_description
   from public.training_program_versions v
