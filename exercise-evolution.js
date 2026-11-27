@@ -133,7 +133,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const sessionMap=new Map(sessions.map(s=>[s.id,s])),ids=sessions.map(s=>s.id);
  const logsQ=await client.from('training_set_logs').select('session_id,exercise_id,set_number,reps_completed,load_kg,duration_seconds,completed_at').in('session_id',ids).order('completed_at',{ascending:true}).limit(10000);
  if(!isCurrent())return null;if(logsQ.error)throw logsQ.error;
- const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||(Number(x.reps_completed)>0&&x.load_kg!==null&&x.load_kg!==undefined));
+ const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||Number(x.reps_completed)>0);
  if(!logs.length)return [];
  const exerciseIds=[...new Set(logs.map(x=>x.exercise_id).filter(Boolean))];
  const exercisesQ=await client.from('training_exercises').select('id,name,identity_id,catalog_exercise_id,subworkout_id').in('id',exerciseIds);
@@ -178,7 +178,6 @@ async function load(expectedUserId,expectedClient,isCurrent){
   if(duration>0)addPoint('time',duration);
   else if(load>0&&reps>0){
    addPoint('load',load);
-   addPoint('volume',load*reps);
    const epley=evolutionCore.estimateOneRepMax(load,reps,'epley'),brzycki=evolutionCore.estimateOneRepMax(load,reps,'brzycki');
    if(epley)addPoint('estimated1RM',epley);
    if(brzycki)addPoint('estimated1RMBrzycki',brzycki);
@@ -189,11 +188,11 @@ async function load(expectedUserId,expectedClient,isCurrent){
  return result;
 }
 function renderWeeklyVolumePanel(data){
- if(!data?.groups?.length||!data?.weeks?.length)return '<div class="evolution-panel"><h3>Volume semanal por grupo muscular</h3><p class="evolution-intro">Ainda não há séries com carga, repetições e grupo muscular identificado para calcular o volume.</p></div>';
- const weeks=data.weeks.slice(-4),formatVolume=value=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1})+' kg',formatSets=value=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1});
+ if(!data?.groups?.length||!data?.weeks?.length)return '<div class="evolution-panel"><h3>Séries semanais por grupo muscular</h3><p class="evolution-intro">Ainda não há séries registradas com grupo muscular identificado para este resumo.</p></div>';
+ const weeks=data.weeks.slice(-4),formatSets=value=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1});
  const weekLabel=key=>{const [year,month,day]=key.split('-');return day+'/'+month};
- const rows=data.groups.map(group=>'<tr><td><strong>'+esc(group.muscle)+'</strong><small>'+formatSets(group.totalSets)+' séries equivalentes</small></td>'+weeks.map(week=>'<td>'+formatVolume(group.weeks[week]?.volume||0)+'</td>').join('')+'</tr>').join('');
- return '<div class="evolution-panel"><h3>Volume semanal por grupo muscular</h3><p class="evolution-intro">Volume calculado por carga × repetições. Quando um exercício tem mais de um músculo principal, o volume e as séries são distribuídos igualmente entre eles. Exercícios por tempo ou sem carga ficam fora deste cálculo.</p><div class="evolution-volume-scroll" role="region" aria-label="Tabela de volume semanal, rolável horizontalmente"><table class="evolution-volume-table"><thead><tr><th>Grupo muscular</th>'+weeks.map(week=>'<th>Semana '+weekLabel(week)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+ const rows=data.groups.map(group=>'<tr><td><strong>'+esc(group.muscle)+'</strong><small>'+formatSets(group.totalSets)+' séries distribuídas</small></td>'+weeks.map(week=>'<td>'+formatSets(group.weeks[week]?.sets||0)+'</td>').join('')+'</tr>').join('');
+ return '<div class="evolution-panel"><h3>Séries semanais por grupo muscular</h3><p class="evolution-intro">Contagem das séries registradas, sem multiplicar carga por repetições. Quando um exercício tem mais de um músculo principal, suas séries são distribuídas igualmente entre esses grupos. Séries por tempo também são contabilizadas quando vinculadas a um exercício do catálogo.</p><div class="evolution-volume-scroll" role="region" aria-label="Tabela de séries semanais por grupo muscular, rolável horizontalmente"><table class="evolution-volume-table"><thead><tr><th>Grupo muscular</th>'+weeks.map(week=>'<th>Semana '+weekLabel(week)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function chart(points,metricType){
  const series=sessionSeries(points,metricType);if(!series.length)return '<div class="evolution-chart-empty">Ainda não há registros para este exercício.</div>';

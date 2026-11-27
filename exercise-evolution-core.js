@@ -39,8 +39,8 @@
  function aggregateWeeklyVolume({logs=[],exerciseById=new Map(),catalogById=new Map(),sessionDateById=new Map()}={}){
   const groups=new Map(),weekSet=new Set();
   for(const log of logs){
-   const load=Number(log.load_kg),reps=Number(log.reps_completed);
-   if(!Number.isFinite(load)||load<=0||!Number.isFinite(reps)||reps<=0)continue;
+   const load=Number(log.load_kg),reps=Number(log.reps_completed),timed=Number(log.duration_seconds)>0;
+   if(!timed&&(!Number.isFinite(load)||load<=0||!Number.isFinite(reps)||reps<=0))continue;
    const exercise=exerciseById.get(String(log.exercise_id));
    if(!exercise?.catalogId)continue;
    const catalog=catalogById.get(String(exercise.catalogId));
@@ -50,19 +50,17 @@
    const date=sessionDateById.get(String(log.session_id))||log.completed_at||'';
    const week=weekStartKey(date);if(!week)continue;
    weekSet.add(week);
-   const share=1/muscles.length,volume=load*reps*share;
+   const share=1/muscles.length;
    for(const muscle of muscles){
-    if(!groups.has(muscle))groups.set(muscle,{muscle,totalVolume:0,totalSets:0,weeks:{}});
+    if(!groups.has(muscle))groups.set(muscle,{muscle,totalSets:0,weeks:{}});
     const group=groups.get(muscle);
-    if(!group.weeks[week])group.weeks[week]={volume:0,sets:0};
-    group.weeks[week].volume+=volume;
+    if(!group.weeks[week])group.weeks[week]={sets:0};
     group.weeks[week].sets+=share;
-    group.totalVolume+=volume;
     group.totalSets+=share;
    }
   }
   const weeks=[...weekSet].sort();
-  return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalVolume-a.totalVolume||a.muscle.localeCompare(b.muscle,'pt-BR'))};
+  return {weeks,groups:[...groups.values()].sort((a,b)=>b.totalSets-a.totalSets||a.muscle.localeCompare(b.muscle,'pt-BR'))};
  }
  return {canonicalMuscle,weekStartKey,aggregateWeeklyVolume,estimateOneRepMax};
 });
