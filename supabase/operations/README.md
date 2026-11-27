@@ -23,5 +23,7 @@ Os arquivos originais permanecem na raiz. As cópias nesta pasta são idênticas
 A correção versionada está em `../migrations/20261124000100_harden_public_schema_privileges.sql`. Ela é uma migration de banco, não uma alteração do runtime/PWA. A migration não foi executada no projeto Supabase de produção nesta etapa. O rollback restaura permissões que a auditoria classificou como excessivas e, portanto, não deve ser usado como procedimento normal.
 
 | `audit-exercise-catalog-readonly.sql` | Auditoria da biblioteca | Somente SELECT: estrutura de campos, cobertura por categoria, lacunas de músculos/instruções/imagens, duplicidades e vínculos dos exercícios usados nos treinos. |
+| `audit-exercise-catalog-legacy-category-readonly.sql` | Auditoria da categoria legada | Somente SELECT: compara `category` com o grupo principal estruturado sem classificar ou corrigir divergências automaticamente. |
+| `audit-exercise-guidance-and-legacy-categories-readonly.sql` | Auditoria editorial e de categorias | Somente leitura: mede cobertura de orientações e apresenta contexto para revisão manual de categorias legadas. |
 
 O diagnóstico `audit-exercise-catalog-readonly.sql` é somente leitura e deve ser executado no DBeaver conectado ao projeto Supabase que será auditado. Envie os resultados de todas as consultas para avaliar a cobertura real; não compartilhe credenciais ou dados pessoais. O script não altera o banco.

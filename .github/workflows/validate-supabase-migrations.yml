@@ -58,6 +58,10 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f supabase/operations/preview_legacy_workout_identity_reconciliation.sql
       - name: Verify exercise catalog taxonomy security and seed
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/exercise-catalog-taxonomy.sql
+      - name: Execute read-only legacy catalog category audits
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/operations/audit-exercise-catalog-legacy-category-readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/operations/audit-exercise-guidance-and-legacy-categories-readonly.sql
       - name: Verify structured exercise guidance columns
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/exercise-guidance-columns.sql
       - name: Verify athlete and professional RLS isolation
