@@ -730,6 +730,7 @@
    return false;
   }
   if(action==='delete')return deleteSubworkout(workout.id);
+  if(action==='replace')return replaceSubworkout(workout.id);
   return openWorkoutEditor(workout.id,expectedUserId,expectedDb);
  }
  async function openIsolatedExerciseEdit(programId,subworkoutIdentity,exerciseIdentity,expectedUserId=userRef()?.id,expectedDb=dbRef(),action='edit'){
@@ -1061,7 +1062,7 @@
     // Um treino novo, com identity_id próprio, nunca herda a contagem de outro treino homônimo.
     if(!s.identity_id){const legacyTitle=String(s.title||'').trim().toLocaleLowerCase('pt-BR');total=legacyTitle?sessionsByTitle.get(legacyTitle)||0:0}
     const exercises=exercisesByWorkout.get(String(s.id))||[];
-    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></div><p class="muted">${esc(s.description||'')}</p>${exercises.map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
+    html+=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3>${esc(normalizeHumanText(s.title))}</h3><span class="tag">${total} ${total===1?'treino registrado':'treinos registrados'}</span><button class="icon-action" data-edit-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button><button class="btn alt" data-replace-sub="${s.id}" data-workout-identity="${esc(s.identity_id)}">Substituir treino mantendo histórico</button></div><p class="muted">${esc(s.description||'')}</p>${exercises.map((e,i)=>`<div class="item"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>${i+1}. ${esc(normalizeHumanText(e.name))}</strong><span><button class="icon-action" data-edit-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Editar em nova versão" aria-label="Editar em nova versão">${editIcon}</button><button class="icon-action danger" data-delete-ex="${e.id}" data-workout-identity="${esc(s.identity_id)}" data-exercise-identity="${esc(e.identity_id)}" title="Remover em nova versão" aria-label="Remover em nova versão">${trashIcon}</button></span></div><div class="muted">${(e.sets||[]).map(x=>(x.mode==='countdown'?formatWorkoutTime(x.target_seconds)+' alvo':x.mode==='stopwatch'?'Cronômetro livre':(x.reps??'—')+' reps'+(x.load_kg!=null?' · '+x.load_kg+' kg':''))).join(' / ')} · descanso ${e.rest_seconds}s</div></div>`).join('')}<button class="btn alt" data-add-ex="${s.id}" data-workout-identity="${esc(s.identity_id)}">Adicionar exercício</button><button class="btn" data-start="${s.id}">Iniciar treino</button></div>`;
    }
    if(!isCurrent())return;
    const host=$('subList');if(!host)return;
@@ -1069,6 +1070,7 @@
    host.querySelectorAll('[data-add-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,null,expectedUserId,db,'add')});
    host.querySelectorAll('[data-edit-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'edit')});
    host.querySelectorAll('[data-delete-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'delete')});
+   host.querySelectorAll('[data-replace-sub]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedWorkoutEdit(programId,b.dataset.workoutIdentity,'',expectedUserId,db,'replace')});
    host.querySelectorAll('[data-edit-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'edit')});
    host.querySelectorAll('[data-delete-ex]').forEach(b=>b.onclick=()=>{if(isCurrent())openIsolatedExerciseEdit(programId,b.dataset.workoutIdentity,b.dataset.exerciseIdentity,expectedUserId,db,'delete')});
    host.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{if(isCurrent())startSession(b.dataset.start,null,expectedUserId,db)});
@@ -1309,6 +1311,46 @@ async function loadExerciseCatalog(expectedDb=dbRef()){
    if(error){await showWorkoutDialog({title:'Não foi possível salvar o treino',message:error.message,confirmLabel:'Entendi',danger:true});return false}
    await refresh();return true;
   });
+ }
+ async function replaceSubworkout(id){
+  const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
+  if(!db||!program||!programVersion||!userId||!item)return false;
+  const isCurrentEditor=()=>userRef()?.id===userId&&current?.id===program.id&&version?.id===programVersion.id&&editorSubworkoutId===null;
+  if(programVersion.status!=='pending'){
+   await showWorkoutDialog({title:'Prepare uma nova versão',message:'A substituição só pode ser feita em uma versão pendente. A versão vigente e seu histórico permanecem protegidos.',confirmLabel:'Entendi'});
+   return false;
+  }
+  if(await showWorkoutDialog({title:'Substituir treino?',message:'O treino será mantido com a mesma identidade histórica, mas seus exercícios atuais nesta versão serão removidos para você montar a nova composição. As sessões, séries e datas já registradas continuarão preservadas.',confirmLabel:'Continuar',cancelLabel:'Cancelar'})!==true)return false;
+  if(!isCurrentEditor())return false;
+  const titleInput=await showWorkoutDialog({title:'Nome do novo treino',message:'Informe o nome do treino que substituirá “'+item.title+'”.',confirmLabel:'Substituir',cancelLabel:'Cancelar',input:{type:'text',label:'Nome do treino',placeholder:'Ex.: Treino A — Peito e tríceps',maxLength:100}});
+  if(titleInput===null)return false;
+  const title=normalizeHumanText(titleInput);
+  if(!title){await showWorkoutDialog({title:'Nome obrigatório',message:'Informe um nome para o novo treino.',confirmLabel:'Corrigir'});return false}
+  if(!isCurrentEditor())return false;
+  const used=await db.from('training_sessions').select('id',{count:'exact',head:true}).eq('subworkout_id',item.id);
+  if(!isCurrentEditor())return false;
+  if(used.error){await showWorkoutDialog({title:'Não foi possível verificar o histórico',message:used.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if((used.count||0)>0){await showWorkoutDialog({title:'Treino já executado nesta versão',message:'Não é seguro substituir um treino que já possui sessões nesta versão. Crie outra versão antes de continuar; o histórico existente não será alterado.',confirmLabel:'Entendi'});return false}
+  const exercises=await db.from('training_exercises').select('id').eq('subworkout_id',item.id);
+  if(!isCurrentEditor())return false;
+  if(exercises.error){await showWorkoutDialog({title:'Não foi possível verificar os exercícios',message:exercises.error.message,confirmLabel:'Entendi',danger:true});return false}
+  const exerciseIds=(exercises.data||[]).map(row=>row.id);
+  if(exerciseIds.length){
+   const logs=await db.from('training_set_logs').select('id',{count:'exact',head:true}).in('exercise_id',exerciseIds);
+   if(!isCurrentEditor())return false;
+   if(logs.error){await showWorkoutDialog({title:'Não foi possível verificar as séries',message:logs.error.message,confirmLabel:'Entendi',danger:true});return false}
+   if((logs.count||0)>0){await showWorkoutDialog({title:'Exercícios com histórico',message:'Há séries registradas nos exercícios desta versão. A substituição foi cancelada para preservar todos os registros.',confirmLabel:'Entendi'});return false}
+  }
+  const updated=await db.from('training_subworkouts').update({title}).eq('id',item.id);
+  if(!isCurrentEditor())return false;
+  if(updated.error){await showWorkoutDialog({title:'Não foi possível renomear o treino',message:updated.error.message,confirmLabel:'Entendi',danger:true});return false}
+  if(exerciseIds.length){
+   const removed=await db.from('training_exercises').delete().eq('subworkout_id',item.id);
+   if(!isCurrentEditor())return false;
+   if(removed.error){await showWorkoutDialog({title:'Treino renomeado; não foi possível limpar os exercícios',message:removed.error.message+' Você pode revisar os exercícios manualmente sem perder o histórico.',confirmLabel:'Entendi',danger:true});await openWorkoutEditor(item.id,userId,db);return false}
+  }
+  await openWorkoutEditor(item.id,userId,db);
+  return true;
  }
  async function deleteSubworkout(id){
   const db=dbRef(),program=current,programVersion=version,userId=userRef()?.id,item=subworkouts.find(x=>String(x.id)===String(id));
