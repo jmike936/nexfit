@@ -48,6 +48,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Auditar a cobertura do catálogo por grupo, modalidade, equipamento e padrão; consulta no DBeaver confirmou cobertura estrutural de 197/197 exercícios nas quatro dimensões, sem vínculos inválidos (25/11/2026).
 - [x] Expandir filtros por grupo, modalidade, equipamento e padrão de movimento na Biblioteca; validar a cobertura estrutural dos 197 exercícios no Supabase (197/197 nas quatro dimensões, sem vínculos inválidos; auditoria final em 25/11/2026).
 - [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.
+  - [x] Auditar o schema: não há metadados de finalidade; modalidades atuais (Musculação, Cardio, Funcional, Mobilidade e Alongamento) não substituem objetivos. Proposta de vocabulário e critérios criada em [docs/propostas/finalidades-exercicios.md](docs/propostas/finalidades-exercicios.md); aguarda validação antes de migration/classificação.
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
 - [x] Implementar a estrutura aditiva e a interface da Biblioteca para dicas, erros comuns, estabilizadores e cuidados importantes; migration e fallback legado preparados, PR #277, build 1.4.9 publicado.
 - [x] Confirmar no Supabase real a presença das quatro colunas opcionais de orientação estruturada (`execution_tips`, `common_mistakes`, `stabilizer_muscles`, `safety_notes`), todas como arrays.
