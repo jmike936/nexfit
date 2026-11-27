@@ -133,7 +133,7 @@ async function load(expectedUserId,expectedClient,isCurrent){
  const sessionMap=new Map(sessions.map(s=>[s.id,s])),ids=sessions.map(s=>s.id);
  const logsQ=await client.from('training_set_logs').select('session_id,exercise_id,set_number,reps_completed,load_kg,duration_seconds,completed_at').in('session_id',ids).order('completed_at',{ascending:true}).limit(10000);
  if(!isCurrent())return null;if(logsQ.error)throw logsQ.error;
- const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||(Number(x.reps_completed)>0&&x.load_kg!==null&&x.load_kg!==undefined));
+ const logs=(logsQ.data||[]).filter(x=>Number(x.duration_seconds)>0||Number(x.reps_completed)>0);
  if(!logs.length)return [];
  const exerciseIds=[...new Set(logs.map(x=>x.exercise_id).filter(Boolean))];
  const exercisesQ=await client.from('training_exercises').select('id,name,identity_id,catalog_exercise_id,subworkout_id').in('id',exerciseIds);
