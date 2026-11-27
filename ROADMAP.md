@@ -184,6 +184,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Concluir auditoria RLS ponta a ponta: validar policies extras/permissivas, chamadas PostgREST, Storage/Auth e chave pública no front-end.
   - [x] Analisar os retornos reais de RLS/Storage, funções `SECURITY DEFINER`, grants efetivos e default privileges; identificar grants diretos a `anon` que a migration 19 não removia.
   - [x] Preparar migration idempotente de hardening, rollback emergencial e regressões SQL em CI; preservar CRUD autenticado e acesso de `service_role`.
+  - [x] Corrigir o `search_path` mutável da função `nexfit_cleanup_deleted_workout_activity()` com `search_path = ''`, mantendo `SECURITY INVOKER` e sem alterar corpo, trigger ou permissões; PR #285 integrada após CI aprovado. Migration ainda não aplicada em produção.
   - [ ] Aplicar a migration 20 no Supabase real após backup e validação do aviso sobre os default privileges de `supabase_admin`; executar novamente as consultas de auditoria e confirmar os privilégios efetivos.
     - [ ] Bloqueio operacional: o backup pelo painel do Supabase não está disponível para o usuário; não aplicar hardening em produção até existir cópia recuperável verificada ou estratégia alternativa de recuperação aprovada.
 - [ ] Separar o JS da raiz em módulos (`src/`), sem alterar o comportamento.
