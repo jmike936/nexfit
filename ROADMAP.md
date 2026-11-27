@@ -146,6 +146,7 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Executar a auditoria somente leitura do catálogo no DBeaver e revisar os resultados reais; catálogo com 197 exercícios, 197 instruções de execução preenchidas e 361/361 exercícios de fichas vinculados a IDs canônicos.
     - [x] Criar e revisar instruções originais em português para todos os 197 exercícios ativos; confirmar cobertura de 197/197, sem alterar os campos históricos de `training_exercises`.
     - [ ] Auditar os valores legados de `category` contra o grupo principal estruturado; tratar divergências com revisão conservadora, sem alterar grupos ou músculos automaticamente.
+      - [x] Incluir as duas consultas diagnósticas somente leitura na validação PostgreSQL do CI; a auditoria dos resultados reais e a revisão editorial continuam pendentes.
     - [x] Definir a taxonomia estruturada de grupo de treino, modalidade, equipamento e padrão de movimento, com vocabulários controlados e arquitetura aditiva; preservar `category` e os campos de músculos.
     - [x] Auditar RLS, políticas, grants e default privileges reais do catálogo; manter leitura autenticada e negar acesso `anon` nas novas tabelas.
     - [x] Preparar migration, rollback e auditoria somente leitura em PR #271; concessões explícitas para `anon`, `authenticated` e `service_role`.
