@@ -50,8 +50,9 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Expandir filtros por finalidade (força, hipertrofia, aquecimento/mobilidade), quando houver vocabulário e metadados validados.
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
 - [x] Implementar a estrutura aditiva e a interface da Biblioteca para dicas, erros comuns, estabilizadores e cuidados importantes; migration e fallback legado preparados, PR #277, build 1.4.9 publicado.
-- [ ] Aplicar `supabase/migrations/20261125000200_structured_exercise_guidance.sql` no Supabase e confirmar as quatro colunas opcionais.
+- [x] Confirmar no Supabase real a presença das quatro colunas opcionais de orientação estruturada (`execution_tips`, `common_mistakes`, `stabilizer_muscles`, `safety_notes`), todas como arrays.
 - [ ] Curar e revisar editorialmente o conteúdo técnico dos exercícios em lotes; manter campos vazios até revisão e medir cobertura por campo.
+  - [x] Medir cobertura no Supabase: 191/191 exercícios ativos possuem conteúdo nos quatro campos estruturados (27/11/2026); a revisão editorial qualitativa continua pendente.
 - [ ] Suportar vídeos demonstrativos próprios/licenciados, com carregamento sob demanda, fallback de imagem e política de cache/offline que não armazene vídeos grandes automaticamente.
 - [ ] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico.
 - [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
@@ -138,7 +139,7 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
     - [x] Internalizar as imagens demonstrativas no GitHub do NEXFIT e migrar o catálogo e as fichas existentes para caminhos locais `/exercise-images/library/...` e `/exercise-images/custom/...`; PR #282 publicada em produção, testes de integridade no CI e zero URLs externas restantes no catálogo/fichas.
     - [ ] Validar visualmente o carregamento online e offline em iOS/Android após a publicação, incluindo cache de imagens já consultadas.
-  - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
+  - [x] Revisar e padronizar a nomenclatura dos exercícios da biblioteca: corrigidos 12 nomes indevidamente em CAIXA ALTA, preservando UUIDs e `normalized_name`; 128 registros correspondentes de fichas foram sincronizados sem alterar identidades.
   - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
   - [x] Reutilizar o ID canônico do catálogo e o mesmo cache de imagens na biblioteca e durante a execução, sem criar registros ou cópias de arquivos de imagem.
