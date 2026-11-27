@@ -23,6 +23,7 @@ function formatExerciseName(value){
  }).join('');
 }
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeVideoUrl=value=>{try{const raw=String(value||'').trim();if(!raw)return '';const url=new URL(raw,window.location.origin);const media=/\\.(?:mp4|webm)$/i.test(url.pathname);if(!media)return '';if(url.protocol==='https:')return url.href;if(url.origin===window.location.origin&&url.pathname.startsWith('/exercise-videos/')&&!url.pathname.split('/').includes('..'))return url.href;return ''}catch(_){return ''}};
 const safeImageUrl=value=>{try{const raw=String(value||'').trim();if(!raw)return '';const url=new URL(raw,window.location.origin);if(url.protocol==='https:')return url.href;if(url.origin===window.location.origin&&(url.pathname.startsWith('/assets/exercises/')||url.pathname.startsWith('/exercise-images/'))&&!url.pathname.split('/').includes('..'))return url.href;return ''}catch(_){return ''}};
 function cacheKey(){return CACHE_KEY_PREFIX+activeUserId}
 function readCache(){try{const raw=localStorage.getItem(cacheKey());if(!raw)return null;const parsed=JSON.parse(raw);return Array.isArray(parsed.items)?parsed.items:null}catch(_){return null}}
@@ -97,6 +98,7 @@ async function loadImage(url,img){
 }
 function closeDetail(){
  const modal=$('exerciseLibraryModal');if(modal)modal.hidden=true;
+ const video=$('exerciseLibraryVideo');if(video){video.pause();video.removeAttribute('src');video.load();video.hidden=true}const videoWrap=$('exerciseLibraryVideoWrap');if(videoWrap)videoWrap.hidden=true;const videoButton=$('exerciseLibraryVideoLoad');if(videoButton)videoButton.hidden=false;
  activeItem=null;
  objectUrls.forEach(url=>URL.revokeObjectURL(url));objectUrls=[];
 }
@@ -136,6 +138,8 @@ function openDetail(id){
  $('exerciseLibraryTaxonomySummary').textContent=taxonomyParts.join(' · ')||'Taxonomia estruturada ainda não disponível; exibindo a classificação legada.';
  $('exerciseLibraryInstructions').textContent=item.execution_instructions||'As instruções deste exercício ainda não foram cadastradas.';
  renderGuidanceSections(item);
+ const videoUrl=safeVideoUrl(item.demonstration_video_url),videoWrap=$('exerciseLibraryVideoWrap'),video=$('exerciseLibraryVideo'),videoButton=$('exerciseLibraryVideoLoad');
+ if(video){video.pause();video.removeAttribute('src');video.load();video.hidden=true}if(videoWrap)videoWrap.hidden=!videoUrl;if(videoButton)videoButton.hidden=!videoUrl;
  const start=$('exerciseLibraryStartImage'),end=$('exerciseLibraryEndImage'),startWrap=$('exerciseLibraryStartWrap'),endWrap=$('exerciseLibraryEndWrap');
  start.src='';end.src='';start.hidden=!safeImageUrl(item.demonstration_image_url);end.hidden=!safeImageUrl(item.demonstration_end_image_url);
  startWrap.hidden=start.hidden;endWrap.hidden=end.hidden;
@@ -147,7 +151,7 @@ function openDetail(id){
 }
 async function fetchCatalog(){
  if(!db||!currentUser?.id)throw Error('Entre na sua conta para acessar a biblioteca.');
- let response=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,execution_instructions,primary_muscles,secondary_muscles,execution_tips,common_mistakes,stabilizer_muscles,safety_notes').eq('is_active',true).order('name');
+ let response=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,demonstration_end_image_url,demonstration_video_url,execution_instructions,primary_muscles,secondary_muscles,execution_tips,common_mistakes,stabilizer_muscles,safety_notes').eq('is_active',true).order('name');
  if(response.error){
   if(/column .* does not exist|could not find .* column|schema cache/i.test(response.error.message||'')){
    const fallback=await db.from('training_exercise_catalog').select('id,name,category,demonstration_image_url,execution_instructions,primary_muscles').eq('is_active',true).order('name');
@@ -209,6 +213,7 @@ function init(){
  ['exerciseLibrarySearch','exerciseLibraryCategory','exerciseLibraryModality','exerciseLibraryEquipment','exerciseLibraryPattern','exerciseLibraryPurpose'].forEach(id=>$(id)?.addEventListener(id==='exerciseLibrarySearch'?'input':'change',render));
  $('exerciseLibraryRefresh').addEventListener('click',load);
  $('exerciseLibraryClose').addEventListener('click',closeDetail);
+ $('exerciseLibraryVideoLoad')?.addEventListener('click',()=>{const url=safeVideoUrl(activeItem?.demonstration_video_url),video=$('exerciseLibraryVideo');if(!url||!video)return;video.src=url;video.hidden=false;video.load();$('exerciseLibraryVideoLoad').hidden=true;});
  $('exerciseLibraryModal').addEventListener('click',event=>{if(event.target===$('exerciseLibraryModal'))closeDetail()});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('exerciseLibraryModal').hidden)closeDetail()});
  document.querySelector('[data-page="exerciseLibraryPage"]')?.addEventListener('click',()=>{if(!items.length||activeUserId!==currentUser?.id)load()});
