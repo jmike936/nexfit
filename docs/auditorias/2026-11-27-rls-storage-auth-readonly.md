@@ -46,6 +46,19 @@ Foram encontradas 11 funções `SECURITY DEFINER` no schema `public`.
 
 Os resultados não justificam revogar indiscriminadamente EXECUTE de `authenticated` ou `service_role`.
 
+### Revisão dos corpos das 11 funções SECURITY DEFINER
+
+Os corpos foram lidos diretamente do catálogo PostgreSQL em transação somente leitura. A revisão estática encontrou verificações vinculadas a `auth.uid()` nos fluxos de mutação e nos helpers de autorização: propriedade da ficha, vínculo profissional ativo e permissão de gestão, titularidade do atleta na confirmação de versão, ou disponibilidade pública/ativa no fluxo de cópia de programas. Os helpers retornam booleano e usam a identidade da sessão, sem receber um UUID de usuário arbitrário como parâmetro.
+
+**Risco de privacidade a avaliar:** três RPCs aceitam e-mail e diferenciam mensagens para conta inexistente de conta existente:
+- `nexfit_create_program_for_athlete(p_email, ...)`;
+- `nexfit_request_access_by_email(p_email)`;
+- `share_workout_by_email(p_plan_id, p_email, ...)`.
+
+Como essas funções são executáveis por usuários autenticados, as respostas podem permitir inferir se determinado e-mail possui conta NEXFIT. O comportamento pode ser necessário aos fluxos atuais, mas recomenda-se avaliar resposta genérica, limitação de tentativas e/ou mecanismo de convite que não confirme a existência da conta. Nenhuma função foi alterada nesta auditoria.
+
+Esta revisão foi estática: não executou chamadas RPC com tokens de dois usuários diferentes nem tentou cenários de abuso, concorrência ou enumeração em produção.
+
 ### Storage
 
 - Existe um único bucket: `athlete-avatars`.
