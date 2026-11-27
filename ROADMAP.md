@@ -185,7 +185,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
 - [ ] Adicionar lint e verificação automática no GitHub Actions a cada PR.
-- [ ] Reescrever o README: o que é o app, arquitetura, como configurar o Supabase, ordem dos SQLs, como rodar e publicar.
+- [x] Reescrever o README: apresenta o app e sua arquitetura, configuração/segurança do Supabase, ordem dos SQLs, execução local, testes automatizados e política de publicação.
 - [ ] Concluir auditoria RLS ponta a ponta: validar policies extras/permissivas, chamadas PostgREST, Storage/Auth e chave pública no front-end.
   - [x] Analisar os retornos reais de RLS/Storage, funções `SECURITY DEFINER`, grants efetivos e default privileges; identificar grants diretos a `anon` que a migration 19 não removia.
   - [x] Preparar migration idempotente de hardening, rollback emergencial e regressões SQL em CI; preservar CRUD autenticado e acesso de `service_role`.
@@ -201,7 +201,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Detectar e destacar PRs automaticamente (carga, repetições, 1RM estimado, duração), com aviso de comemoração ao concluir o treino. Corrigido o repasse dos recordes para a tela de conclusão e a detecção no primeiro treino, sem histórico anterior.
   - [x] Calcular e destacar recordes pessoais de carga, repetições, 1RM estimado (Epley) e duração na tela Evolução, identificando as séries que estabeleceram cada recorde.
   - [x] Exibir aviso de comemoração ao concluir o treino quando uma nova melhor marca de carga, repetições, 1RM estimado (Epley) ou duração superar o histórico de sessões concluídas; a comparação só ocorre após sincronização confirmada e usa identidade estável do exercício.
-- [x] Exibir volume semanal por grupo muscular (séries × repetições × carga), aproveitando os músculos principais do catálogo e distribuindo o volume igualmente quando houver mais de um músculo principal no exercício.
+- [x] Exibir resumo semanal por grupo muscular, contando séries registradas (sem multiplicar carga × repetições), aproveitando os músculos principais do catálogo e distribuindo as séries igualmente quando houver mais de um músculo principal no exercício (PR #293).
 - [ ] Gráfico de tendência por exercício (carga, volume, 1RM estimado), comparando blocos/meses.
   - [x] Incluir gráficos por sessão para carga, volume total por sessão e 1RM estimado, mantendo a evolução de duração separada.
   - [x] Comparar períodos equivalentes por exercício, com seleção de 30, 90, 180 ou 365 dias e comparação da média por sessão contra o intervalo imediatamente anterior.
