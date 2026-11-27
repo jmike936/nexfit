@@ -182,7 +182,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Reaplicar as 19 migrações no mesmo banco descartável para verificar idempotência estrutural; validar separadamente os backfills com dados representativos.
   - [x] Testar isolamento RLS de programas, versões, treinos, exercícios, sessões e séries entre dois atletas, personal com leitura, personal com gestão e profissional sem vínculo.
   - [x] Auditar estaticamente as tabelas públicas e restringir EXECUTE de helpers SECURITY DEFINER; testar isolamento de fotos no PostgreSQL descartável.
-  - [ ] Executar `supabase/operations/audit-rls-storage-readonly.sql` no projeto Supabase real e revisar policies extras/permissivas, grants, Auth e Storage antes de declarar a auditoria completa.
+  - [x] Executar a auditoria somente leitura no Supabase real em 27/11/2026: 29/29 tabelas `public` e 10/10 `storage` com RLS; bucket `athlete-avatars` privado e policies por UUID; 11 funções `SECURITY DEFINER` sem EXECUTE para `anon`; relatório em `docs/auditorias/2026-11-27-rls-storage-auth-readonly.md`. A revisão ponta a ponta continua aberta para testes PostgREST com identidades reais, configuração Auth e verificação da chave pública no cliente.
   - [x] Validar os backfills sensíveis 008, 010, 016 e 017 com fixtures sintéticas, incluindo preservação de sessões/séries e integridade das referências do catálogo (PostgreSQL 16 descartável; fixtures representativas aprovadas no CI).
 - [ ] Criar testes automatizados para as regras críticas: identidade estável, reconciliação de histórico legado, contagem de execuções, evolução de carga/tempo e cálculo de volume.
 - [ ] Criar testes de integração para sincronização offline (reconexão, retomada, concorrência entre abas/dispositivos).
