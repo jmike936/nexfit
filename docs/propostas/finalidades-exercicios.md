@@ -42,13 +42,21 @@ Vocabulário inicial proposto:
 - RLS habilitado nas duas tabelas. `anon` não recebe acesso; clientes autenticados têm somente leitura; `service_role` mantém acesso administrativo.
 - Nenhum exercício foi classificado automaticamente. A interface de filtro não deve ser liberada até haver vínculos aprovados.
 
-## Plano de validação
+## Curadoria piloto implantada
 
-1. Fazer uma classificação piloto de exercícios de diferentes grupos e modalidades, com justificativa por vínculo.
-2. Revisar casos ambíguos e medir quantos exercícios ficam sem finalidade.
-3. Inserir apenas vínculos aprovados, com data e nota de revisão.
-4. Implementar o filtro na Biblioteca com seleção múltipla e estado vazio informativo, sem esconder exercícios não classificados.
+- 21 exercícios receberam a finalidade **Força**.
+- 134 exercícios receberam a finalidade **Hipertrofia**.
+- São 136 exercícios distintos com ao menos uma finalidade aprovada (155 vínculos, pois alguns exercícios atendem a mais de uma finalidade).
+- Nenhum exercício recebeu **Aquecimento** ou **Mobilidade** nesta rodada: não há itens do catálogo cuja finalidade principal esteja suficientemente clara para classificar sem confundir preparação, cardio ou mobilidade com a simples execução de um exercício leve.
+- Os vínculos aprovados registram data e justificativa e são os únicos retornados pela API autenticada.
 
-## Próxima decisão editorial
+## Próximas etapas de curadoria
 
-O vocabulário está implantado como estrutura técnica. A etapa pendente é a curadoria dos vínculos exercício-finalidade; não se deve inferir finalidade apenas pela modalidade, equipamento ou grupo muscular.
+1. Revisar casos limítrofes de força e hipertrofia com o responsável técnico do catálogo.
+2. Avaliar a inclusão de exercícios específicos de aquecimento e mobilidade, sem atribuir esses rótulos a exercícios apenas por serem leves ou funcionais.
+3. Expandir os vínculos aprovados por lotes, mantendo justificativa e rastreabilidade.
+4. Acompanhar cobertura e permitir que exercícios sem classificação continuem aparecendo normalmente quando nenhum filtro de finalidade estiver selecionado.
+
+## Estado atual
+
+O filtro por finalidade foi integrado à Biblioteca na versão 1.5.1 e publicado em produção. Ele só mostra finalidades com vínculos aprovados; por isso, neste momento, as opções disponíveis são Força e Hipertrofia. Sem filtro selecionado, todos os exercícios permanecem visíveis, inclusive os ainda não classificados.
