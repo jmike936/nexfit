@@ -23,3 +23,10 @@ test('volume and estimated-1RM records have metric-specific labels and summaries
  assert.match(evolution,/Volume total da sessão/);
  assert.match(evolution,/1RM estimado/);
 });
+
+test('exercise evolution exposes independent Epley and Brzycki estimate series',()=>{
+ assert.match(evolution,/estimateOneRepMax\(load,reps,'epley'\)/);
+ assert.match(evolution,/estimateOneRepMax\(load,reps,'brzycki'\)/);
+ assert.match(evolution,/estimated1RMBrzycki/);
+ assert.match(evolution,/Fórmula de '\+\(metricType==='estimated1RMBrzycki'\?'Brzycki':'Epley'\)/);
+});
