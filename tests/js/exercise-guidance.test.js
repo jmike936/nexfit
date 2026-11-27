@@ -23,6 +23,7 @@ test('exercise guidance reuses cached images and provides an offline fallback', 
   assert.match(workout, /if\(!navigator\.onLine\)\{showGuidanceImageFallback\(img\);return\}/);
   assert.match(workout, /Demonstração visual indisponível offline/);
   assert.match(workout, /parsed\.protocol==='https:'/);
+  assert.match(workout, /parsed\.pathname\.startsWith\('\/exercise-images\/'\)/);
 });
 
 test('exercise guidance modal is replaced between exercises and starts at the top', () => {
