@@ -56,8 +56,8 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
 - [x] Implementar a estrutura aditiva e a interface da Biblioteca para dicas, erros comuns, estabilizadores e cuidados importantes; migration e fallback legado preparados, PR #277, build 1.4.9 publicado.
 - [x] Confirmar no Supabase real a presença das quatro colunas opcionais de orientação estruturada (`execution_tips`, `common_mistakes`, `stabilizer_muscles`, `safety_notes`), todas como arrays.
-- [ ] Curar e revisar editorialmente o conteúdo técnico dos exercícios em lotes; manter campos vazios até revisão e medir cobertura por campo.
-  - [x] Medir cobertura no Supabase: 191/191 exercícios ativos possuem conteúdo nos quatro campos estruturados (27/11/2026); a revisão editorial qualitativa continua pendente.
+- [x] Curar e revisar editorialmente o conteúdo técnico dos exercícios em lotes; manter campos vazios até revisão e medir cobertura por campo.
+  - [x] Medir cobertura no Supabase: 191/191 exercícios ativos possuem conteúdo nos quatro campos estruturados (27/11/2026); revisão qualitativa concluída, sem campos editoriais vazios.
 - [x] Suportar vídeos demonstrativos próprios/licenciados em MP4/WebM: coluna opcional `demonstration_video_url`, carregamento somente após ação do usuário, fallback para imagens e exclusão do cache automático do Service Worker; build 1.5.2 publicado. Nenhum vídeo foi vinculado ainda porque não há arquivos/URLs de vídeo fornecidos no acervo.
 - [x] Permitir ao personal selecionar exercícios diretamente da biblioteca ao montar/editar treinos, mantendo vínculo com o ID canônico; seletor com busca e filtros estruturados na inclusão/edição, coberto por `tests/js/workout-catalog-picker.test.js`.
 - [ ] Criar curadoria e processo de revisão do conteúdo técnico antes de publicar orientações aos atletas.
@@ -101,6 +101,8 @@ Evolução planejada da Biblioteca NEXFIT:
 
 ## Prioridade 4 — Experiência e desempenho
 
+- [x] Restaurar os controles `+` e `−` de ajuste de carga durante a execução do treino; correção publicada na PR #288 e validada em dispositivo móvel (27/11/2026).
+
 - [x] Melhorar a sugestão de carga durante o descanso.
 - [x] Revisar transições entre séries, exercícios e descansos: avanço protegido contra callbacks duplicados/atrasados, validação da etapa ativa, encerramento consistente de timers e retomada idempotente do descanso.
 - [x] Ajustar a navegação de retorno durante a execução: ao tocar em Voltar dentro de um exercício, retornar à seleção/lista de exercícios do treino sem encerrar a sessão nem exigir confirmação de saída; solicitar “Sair sem finalizar” somente quando o atleta escolher sair do treino inteiro. Preservar séries já registradas e permitir selecionar outro exercício não iniciado (por exemplo, em caso de dor/lesão), sem marcar automaticamente o exercício anterior como concluído ou pulado.
@@ -121,6 +123,8 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Histórico: reduzir colunas retornadas nas consultas de sessões, exercícios e séries; evitar consultas `.in()` vazias e indexar séries por exercício/número para eliminar buscas repetidas durante a renderização.
 
 ## Prioridade 5 — Comunicação e orientação visual
+
+- [x] Corrigir a navegação da Biblioteca: ao selecionar um menu com o detalhe de exercício aberto, fechar o detalhe e trazer a tela selecionada para primeiro plano; correção publicada na PR #288 e validada em dispositivo móvel (27/11/2026).
 - [x] Substituir alertas, confirmações e prompts nativos por mensagens e diálogos consistentes em todas as áreas do aplicativo. Exceção intencional: `promptEvent.prompt()` permanece para acionar a API nativa de instalação PWA do navegador, não sendo um diálogo de alerta/entrada do app.
   - [x] Metas: substituir alertas por mensagens consistentes e trocar prompt/confirm nativos por diálogo acessível para atualizar progresso e excluir metas.
   - [x] Histórico: substituir prompt/confirm nativos na edição e exclusão de atividades por diálogos próprios, mantendo a validação de data, duração e observações.
@@ -176,6 +180,7 @@ Evolução planejada da Biblioteca NEXFIT:
   - [x] Analisar os retornos reais de RLS/Storage, funções `SECURITY DEFINER`, grants efetivos e default privileges; identificar grants diretos a `anon` que a migration 19 não removia.
   - [x] Preparar migration idempotente de hardening, rollback emergencial e regressões SQL em CI; preservar CRUD autenticado e acesso de `service_role`.
   - [ ] Aplicar a migration 20 no Supabase real após backup e validação do aviso sobre os default privileges de `supabase_admin`; executar novamente as consultas de auditoria e confirmar os privilégios efetivos.
+    - [ ] Bloqueio operacional: o backup pelo painel do Supabase não está disponível para o usuário; não aplicar hardening em produção até existir cópia recuperável verificada ou estratégia alternativa de recuperação aprovada.
 - [ ] Separar o JS da raiz em módulos (`src/`), sem alterar o comportamento.
 
 ## Prioridade 7 — Análise de evolução do atleta
