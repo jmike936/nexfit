@@ -136,13 +136,23 @@ BEGIN
   second_fork := public.nexfit_fork_assigned_program('a2000000-0000-4000-8000-000000000001');
   IF second_fork <> fork_id THEN RAISE EXCEPTION 'Fork RPC is not idempotent'; END IF;
 
-  INSERT INTO public.training_program_versions
-    (id,program_id,version_number,created_by,change_note,status)
-  VALUES
-    ('c2000000-0000-4000-8000-000000000002',fork_id,2,auth.uid(),'Ajuste individual','pending');
+END $;
+RESET ROLE;
 
+-- Create a pending version as the database owner, then confirm it as the athlete.
+INSERT INTO public.training_program_versions
+  (id,program_id,version_number,created_by,change_note,status)
+VALUES
+  ('c2000000-0000-4000-8000-000000000002',
+   current_setting('nexfit.test_personal_fork_id')::uuid,2,
+   '20000000-0000-4000-8000-000000000001','Ajuste individual','pending');
+
+SET ROLE authenticated;
+SET request.jwt.claim.sub='20000000-0000-4000-8000-000000000001';
+DO $
+DECLARE fork_id uuid := current_setting('nexfit.test_personal_fork_id')::uuid;
+BEGIN
   PERFORM public.nexfit_confirm_program_version('c2000000-0000-4000-8000-000000000002');
-
   IF (SELECT current_version_id FROM public.training_programs WHERE id=fork_id)
      <> 'c2000000-0000-4000-8000-000000000002'::uuid THEN
     RAISE EXCEPTION 'Personal version could not be confirmed alongside the source program';
@@ -152,7 +162,7 @@ BEGIN
       <> 'c2000000-0000-4000-8000-000000000001'::uuid THEN
     RAISE EXCEPTION 'Confirming the personal version changed the source program';
   END IF;
-END $$;
+END $;
 RESET ROLE;
 
 -- A different athlete and the linked professional cannot fork another athlete's assignment.
