@@ -32,6 +32,7 @@ jobs:
           node --test tests/js/workout-history.test.js
           node --test tests/js/legacy-identity-preview.test.js
           node --check exercise-evolution-core.js
+          node --test tests/js/one-rep-max-estimates.test.js
           node --test tests/js/exercise-evolution-volume.test.js
           node --check evolution-periods.js
           node --test tests/js/evolution-periods.test.js
