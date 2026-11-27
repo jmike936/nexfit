@@ -226,3 +226,9 @@ Evolução planejada da Biblioteca NEXFIT:
 - [ ] Integração com sensores de VBT (Bluetooth) ou medição por câmera.
 - [ ] Modalidades de resistência: distância, pace, FC e zonas, parciais.
 - [ ] Integrações: Apple Health, Health Connect, Garmin, Strava.
+
+
+## Prioridade 0 — Correções funcionais reportadas (27/11/2026)
+
+- [ ] Restaurar os controles de incremento e decremento (+/−) da carga na tela de execução do treino; investigar regressão, validar toque em dispositivos móveis e garantir atualização correta do valor e persistência da série.
+- [ ] Corrigir a navegação a partir do detalhe de um exercício na Biblioteca: ao selecionar qualquer item da navegação/menu, encerrar/ocultar o detalhe do exercício e apresentar a tela de destino em primeiro plano, sem manter o detalhe sobreposto ou o menu em segundo plano.
