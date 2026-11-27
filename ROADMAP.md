@@ -58,7 +58,7 @@ Evolução planejada da Biblioteca NEXFIT:
 - [x] Criar vocabulário de finalidades e filtro cumulativo na Biblioteca; migration `20261127173903_exercise_catalog_purposes.sql`, RLS e testes de CI implementados. Publicado no app 1.5.1 / build 20261127.002.
   - [x] Cadastrar Força, Hipertrofia, Aquecimento e Mobilidade em relação muitos-para-muitos, com aprovação e rastreabilidade dos vínculos.
   - [x] Curadoria piloto: 21 exercícios com Força, 134 com Hipertrofia e 136 exercícios distintos classificados (155 vínculos aprovados).
-  - [ ] Curar Aquecimento e Mobilidade somente quando houver exercícios específicos e justificativa técnica; nenhum foi classificado nesta rodada.
+  - [x] Revisar a existência de exercícios específicos para Aquecimento e Mobilidade: auditoria do catálogo ativo encontrou zero vínculos e nenhum candidato inequívoco; seis menções a alongamento/mobilidade nas instruções são de exercícios de força, não justificam classificação. Nenhum vínculo criado. Relatório em `docs/auditorias/2026-11-27-warmup-mobility-purpose-review.md`.
   - [x] Adicionar filtro por finalidade na Biblioteca; somente finalidades com vínculos aprovados aparecem, e os exercícios sem classificação continuam visíveis quando o filtro está limpo.
   - [x] Validar filtro e migration no CI (PR #283 aprovada e integrada).
 - [x] Preservar e apresentar o papel dos equipamentos no detalhe do exercício (principal, acessório e alternativa), mantendo compatibilidade com cache legado sem papel.
