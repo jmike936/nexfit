@@ -149,7 +149,7 @@ VALUES
 
 SET ROLE authenticated;
 SET request.jwt.claim.sub='20000000-0000-4000-8000-000000000001';
-DO $
+DO $$
 DECLARE fork_id uuid := current_setting('nexfit.test_personal_fork_id')::uuid;
 BEGIN
   PERFORM public.nexfit_confirm_program_version('c2000000-0000-4000-8000-000000000002');
