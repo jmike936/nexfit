@@ -26,10 +26,10 @@ Atualizado em 27/11/2026.
 - [x] Internalizar no GitHub do NEXFIT os 277 arquivos WEBP do inventário do catálogo, deduplicados por URL e organizados por slug/posição em `public/exercise-images/library/`.
 - [x] Adicionar 24 imagens próprias (12 pares início/fim) em `public/exercise-images/custom/`, com manifesto de associação aos exercícios do catálogo.
 - [x] Registrar origem, commit imutável e licença CC0-1.0 no manifesto; validar existência e assinatura RIFF/WEBP de todos os arquivos espelhados e personalizados em teste automatizado do CI.
-- [ ] Migrar as URLs do Supabase para caminhos próprios (`/exercise-images/...`) após a integração ser publicada em produção.
+- [x] Migrar o catálogo e os registros existentes de `training_exercises` para caminhos próprios (`/exercise-images/...`) após a publicação de produção; conferência final: zero URLs externas no catálogo e nos exercícios das fichas.
 - [x] Preparar a Biblioteca e a tela de execução para aceitar imagens HTTPS legadas e caminhos locais seguros em `/exercise-images/`, mantendo cache offline e carregamento sob demanda.
 
-Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença CC0-1.0. Os 277 arquivos do inventário foram espelhados na branch da PR #282; as 24 imagens próprias também foram versionadas. A PR inclui suporte do app a `/exercise-images/` e testes de integridade. A migração final do Supabase para caminhos locais depende da publicação desses assets e do código.
+Fonte inventariada: `MarvinNazari/exercise-images`, commit `2786aefa4b36a08faeca8114e0d1eb0af3ef6732`, licença CC0-1.0. A PR #282 foi integrada e publicada em produção (build 1.5.0). Os 277 arquivos do inventário e as 24 imagens próprias estão versionados; 301 caminhos distintos usados pelo catálogo foram conferidos contra os manifestos. O Supabase e 223 registros existentes de `training_exercises` foram migrados para caminhos locais; não restam URLs GitHub externas nesses campos. Dois exercícios do catálogo permanecem sem demonstração por falta de imagem correspondente confiável.
 
 ## Benchmark externo — Biblioteca SmartWorkout
 
@@ -136,7 +136,8 @@ Evolução planejada da Biblioteca NEXFIT:
     - [x] Revisar as classificações de confiança média/baixa e resolver os quatro equipamentos inicialmente pendentes com evidência das instruções; cobertura final de equipamento 197/197.
     - [x] Integrar a leitura da taxonomia na Biblioteca de Exercícios com filtros por grupo, modalidade, equipamento e padrão de movimento; fallback automático para `category` quando as tabelas/vínculos ainda não estiverem disponíveis; PR #272 aprovada no CI e integrada no build 1.4.6.
     - [x] Auditar as referências visuais do snapshot CC0 e validar a cobertura no catálogo real: 183/197 exercícios com imagens de início e fim (92,9%); 14 permanecem sem imagem por ausência de correspondência visual suficientemente fiel. A confirmação foi feita por consulta somente leitura no DBeaver em 25/11/2026.
-    - [ ] Concluir a internalização no fluxo de produção: após publicar a PR #282, migrar os campos `demonstration_image_url` e `demonstration_end_image_url` do Supabase para caminhos locais `/exercise-images/library/...` ou `/exercise-images/custom/...`; validar carregamento online/offline na Biblioteca e na tela “Ver execução”. A cópia dos binários, a origem/licença, os manifestos e os testes de integridade já estão preparados na PR #282.
+    - [x] Internalizar as imagens demonstrativas no GitHub do NEXFIT e migrar o catálogo e as fichas existentes para caminhos locais `/exercise-images/library/...` e `/exercise-images/custom/...`; PR #282 publicada em produção, testes de integridade no CI e zero URLs externas restantes no catálogo/fichas.
+    - [ ] Validar visualmente o carregamento online e offline em iOS/Android após a publicação, incluindo cache de imagens já consultadas.
   - [ ] Revisar e padronizar a nomenclatura dos exercícios da biblioteca, corrigindo nomes indevidamente em CAIXA ALTA e preservando siglas, abreviações e nomes próprios quando apropriado.
   - [x] Corrigir a apresentação dos papéis dos equipamentos na biblioteca; testes automatizados adicionados para papéis e compatibilidade com cache legado.
   - [x] Pré-carregar os metadados e instruções da biblioteca no dispositivo, com cache local por conta e atualização quando houver conexão; imagens são armazenadas no Cache Storage quando consultadas.
