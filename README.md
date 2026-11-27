@@ -68,3 +68,6 @@ A biblioteca consultável por atletas e personais usa o catálogo canônico `tra
 
 
 Purpose taxonomy: the exercise library supports a reviewed-purpose filter (`training_exercise_catalog_purposes`); only approved links appear to authenticated users.
+
+
+Demonstration videos are optional, direct MP4/WebM assets and load only after the user requests playback; they are excluded from automatic Service Worker caching.
