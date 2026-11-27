@@ -29,6 +29,8 @@ test('personal fork preserves workout history continuity from its source program
 test('fork RPC is athlete-scoped, idempotent, and copies without moving history',()=>{
  assert.match(migration,/p\.athlete_id = v_user/);
  assert.match(migration,/p\.created_by <> v_user/);
+ assert.match(migration,/if auth\.uid\(\) is null then/);
+ assert.match(migration,/to authenticated, service_role/);
  assert.match(migration,/p\.source_program_id = v_source\.id/);
  assert.match(migration,/for update;/);
  assert.match(migration,/training_programs_one_active_personal_fork_uidx/);
