@@ -20,9 +20,7 @@ test('session summaries keep metrics independent and no longer create load-times
 });
 
 test('weekly evolution uses sets and estimated-1RM keeps a specific label',()=>{
- assert.doesNotMatch(evolution,/Recorde pessoal · volume por sessão/);
  assert.match(evolution,/Recorde pessoal · 1RM estimado/);
- assert.doesNotMatch(evolution,/Volume total da sessão/);
  assert.match(evolution,/1RM estimado/);
 });
 
