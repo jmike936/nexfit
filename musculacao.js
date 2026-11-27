@@ -2202,11 +2202,15 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
     db.from('training_sessions').select('id').eq('athlete_id',expectedUserId).eq('status','completed').neq('id',completedSessionId).order('started_at',{ascending:false}).limit(500),
     db.from('training_exercises').select('id,identity_id,name').in('identity_id',identities)
    ]);
-   if(userRef()?.id!==expectedUserId||sessionsQ.error||exercisesQ.error||!sessionsQ.data?.length||!exercisesQ.data?.length)return [];
-   const sessionIds=sessionsQ.data.map(row=>row.id),exerciseIds=exercisesQ.data.map(row=>row.id);
-   const logsQ=await db.from('training_set_logs').select('exercise_id,reps_completed,load_kg,duration_seconds').in('session_id',sessionIds).in('exercise_id',exerciseIds).limit(10000);
-   if(userRef()?.id!==expectedUserId||logsQ.error)return [];
-   return api.detectNewRecords({currentLogs,currentExercises:exercises,historicalLogs:logsQ.data||[],historicalExercises:exercisesQ.data||[]});
+   if(userRef()?.id!==expectedUserId||sessionsQ.error||exercisesQ.error)return [];
+   const sessionIds=(sessionsQ.data||[]).map(row=>row.id),exerciseIds=(exercisesQ.data||[]).map(row=>row.id);
+   let historicalLogs=[];
+   if(sessionIds.length&&exerciseIds.length){
+    const logsQ=await db.from('training_set_logs').select('exercise_id,reps_completed,load_kg,duration_seconds').in('session_id',sessionIds).in('exercise_id',exerciseIds).limit(10000);
+    if(userRef()?.id!==expectedUserId||logsQ.error)return [];
+    historicalLogs=logsQ.data||[];
+   }
+   return api.detectNewRecords({currentLogs,currentExercises:exercises,historicalLogs,historicalExercises:exercisesQ.data||[]});
   }catch(error){console.warn('Não foi possível comparar recordes pessoais',error);return []}
  }
  function renderPersonalRecordCelebration(records){
@@ -2267,6 +2271,7 @@ $('finishWorkout').onclick=async()=>{const unfinished=sessionExerciseRows.map((_
    completedSets,totalSets,completedExercises,totalExercises:sessionExerciseRows.length,
    skippedExercises:progress.filter(item=>item.status!=='done').length,
    allExercisesDone:progress.length>0&&progress.every(item=>item.status==='done'),
+   personalRecords,
    synced:!!synced
   };
   if(synced)clearPersistedWorkout(userId);
