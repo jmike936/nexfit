@@ -7,6 +7,8 @@ Atualizado em 27/11/2026.
 - [x] **Detalhar exercícios e séries no histórico de atividades do atleta:** ao abrir uma atividade concluída, permitir consultar os exercícios realizados e os dados de cada série em formato de tabela, com as colunas **Exercício | Repetições | Carga**. Cada linha representa uma série, com o exercício identificado e colunas de repetições/carga. PR #293 integrada e publicada em produção em 27/11/2026.
 - [x] **Tornar a evolução mais compreensível:** revisar a apresentação dos indicadores para que o atleta entenda facilmente o que está evoluindo. Não apresentar a evolução como uma operação ou combinação pouco intuitiva de **carga × repetições**; usar indicadores e rótulos claros. O resumo semanal agora conta séries por grupo muscular, sem multiplicar carga por repetições; as métricas de carga, repetições e 1RM permanecem separadas. PR #293 integrada e publicada em produção em 27/11/2026.
 - [ ] **Corrigir a responsividade da página Evolução em celulares:** reduzir a ocupação visual e reorganizar as informações dos exercícios exibidas na parte inferior da página. Garantir tipografia, espaçamentos, cartões/listas e gráficos proporcionais à largura da tela, sem exigir redução do zoom do navegador; manter leitura confortável e acesso aos dados em telas pequenas.
+  - [x] Implementar compactação dos registros de séries, cartões de comparação e títulos dos painéis em telas de até 520px (PR #306 integrada em 27/11/2026); preservar todos os registros e a versão desktop.
+  - [ ] Validar visualmente em iOS/Safari e Android após publicação, ajustando eventuais problemas encontrados.
 
 ## Publicação e cota da Vercel
 
