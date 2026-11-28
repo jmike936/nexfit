@@ -74,6 +74,16 @@ const css=`
  #strengthPage .evolution-record strong{font-size:13px}
  #strengthPage .evolution-record small{font-size:11px}
  #strengthPage .evolution-record b{font-size:13px}
+ #strengthPage .evolution-record{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin:7px 0;padding:9px 10px;background:#111922;border:1px solid #354454;border-radius:10px}
+ #strengthPage .evolution-record>div{min-width:0}
+ #strengthPage .evolution-record strong{font-size:12px;line-height:1.3}
+ #strengthPage .evolution-record small{font-size:10px;line-height:1.35;overflow-wrap:anywhere}
+ #strengthPage .evolution-record b{font-size:13px;max-width:112px;white-space:normal;text-align:right;overflow-wrap:anywhere}
+ #strengthPage .evolution-pr-badge{font-size:9px;padding:2px 6px}
+ #strengthPage .evolution-panel h3{font-size:15px;line-height:1.35}
+ #strengthPage .evolution-period-summary>div{min-width:0;padding:10px}
+ #strengthPage .evolution-period-summary strong{font-size:15px;overflow-wrap:anywhere}
+ #strengthPage .evolution-period-summary small{line-height:1.35}
 }
 `;
 const style=document.createElement('style');style.textContent=css;document.head.append(style);
